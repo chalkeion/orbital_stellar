@@ -61,22 +61,39 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
 
     const source = new EventSource(url);
     let __pn_dev_id: string | undefined;
+    let devtoolsModule: typeof import("./devtools") | null = null;
+    const devState = { connected: false, error: null as string | null, lastEvent: null as number | null };
+    let devtoolsPromise: Promise<typeof import("./devtools")> | null = null;
 
-    // In development, dynamically register this connection with the devtools
     if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
-      import("./devtools").then((mod) => {
+      devtoolsPromise = import("./devtools");
+      devtoolsPromise.then((mod) => {
+        devtoolsModule = mod;
         try {
-          __pn_dev_id = mod.registerConnection({ serverUrl, address: addr, url, connected: false, error: null });
-        } catch (e) {
+          __pn_dev_id = mod.registerConnection({
+            serverUrl,
+            address: addr,
+            url,
+            connected: devState.connected,
+            error: devState.error,
+          });
+          if (devState.lastEvent && __pn_dev_id) {
+            mod.updateConnection(__pn_dev_id, { lastEvent: devState.lastEvent });
+          }
+        } catch {
           // ignore
         }
+      }).catch(() => {
+        devtoolsPromise = null;
       });
     }
 
     source.onopen = () => {
       setState((prev) => ({ ...prev, connected: true, error: null }));
-      if (__pn_dev_id) {
-        import("./devtools").then((mod) => mod.updateConnection(__pn_dev_id!, { connected: true, error: null }));
+      devState.connected = true;
+      devState.error = null;
+      if (devtoolsModule && __pn_dev_id) {
+        devtoolsModule.updateConnection(__pn_dev_id, { connected: true, error: null });
       }
     };
 
@@ -94,8 +111,9 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
 
         if (!allowed) return;
 
-        if (__pn_dev_id) {
-          import("./devtools").then((mod) => mod.updateConnection(__pn_dev_id!, { lastEvent: Date.now() }));
+        devState.lastEvent = Date.now();
+        if (devtoolsModule && __pn_dev_id) {
+          devtoolsModule.updateConnection(__pn_dev_id, { lastEvent: devState.lastEvent });
         }
 
         setState((prev) => ({ ...prev, event: incoming as T }));
@@ -110,15 +128,21 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
         connected: false,
         error: "Connection lost — retrying...",
       }));
-      if (__pn_dev_id) {
-        import("./devtools").then((mod) => mod.updateConnection(__pn_dev_id!, { connected: false, error: "Connection lost — retrying..." }));
+      devState.connected = false;
+      devState.error = "Connection lost — retrying...";
+      if (devtoolsModule && __pn_dev_id) {
+        devtoolsModule.updateConnection(__pn_dev_id, { connected: false, error: devState.error });
       }
     };
 
     return () => {
       source.close();
-      if (__pn_dev_id) {
-        import("./devtools").then((mod) => mod.unregisterConnection(__pn_dev_id!)).catch(() => {});
+      if (devtoolsModule && __pn_dev_id) {
+        devtoolsModule.unregisterConnection(__pn_dev_id);
+      } else if (devtoolsPromise) {
+        devtoolsPromise.then((mod) => {
+          if (__pn_dev_id) mod.unregisterConnection(__pn_dev_id);
+        }).catch(() => {});
       }
     };
     // ✅ eventKey is a serialised string — stable even when the caller passes
