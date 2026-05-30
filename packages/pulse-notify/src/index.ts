@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+export { useStellarEventSuspense } from "./useStellarEventSuspense.js";
 import type { NormalizedEvent } from "@orbital/pulse-core";
 
 export type UseEventConfig = {
