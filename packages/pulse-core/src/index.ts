@@ -437,6 +437,11 @@ export type CoreConfig = {
   streamKey?: string;
   /** Number of consecutive cursor store failures before marking it unhealthy. Defaults to 5. */
   cursorFailureThreshold?: number;
+  /** Soroban RPC configuration. */
+  soroban?: {
+    /** Pagination limit for RPC `getEvents` calls. Must be 1–10,000. Defaults to 100. */
+    pageLimit?: number;
+  };
 };
 
 // Error class for invalid network validation
