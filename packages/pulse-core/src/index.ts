@@ -559,3 +559,17 @@ export type ContractSubscribeOptions = {
  * function handlePayment(e: events.PaymentEvent) { ... }
  */
 export * as events from "./events.js";
+
+// ---------------------------------------------------------------------------
+// Phase 1 — new RPC-shaped contract subscription API
+// ---------------------------------------------------------------------------
+
+export type ContractFilter = {
+  type?: "system" | "contract" | "diagnostic";
+  contractIds?: string[];
+  topics?: string[][];
+};
+
+export type ContractSubscriptionConfig = {
+  filters: ContractFilter[];
+};

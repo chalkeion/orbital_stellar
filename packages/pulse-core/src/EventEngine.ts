@@ -18,8 +18,10 @@ import type {
   ClaimableClaimedEvent,
   ClaimableCreatedEvent,
   ContractEmittedEvent,
+  ContractFilter,
   ContractInvokedEvent,
   ContractSubscribeOptions,
+  ContractSubscriptionConfig,
   ContractSubscriptionFilter,
   CoreConfig,
   DataEvent,
@@ -90,10 +92,24 @@ const STELLAR_MAX_TRUSTLINE_LIMIT = "922337203685.4775807";
 
 const noop: Logger = { info: () => { }, warn: () => { }, error: () => { } };
 
+/**
+ * Produces a stable, order-independent string key for a ContractFilter array.
+ * Used to deduplicate subscribeContract(config) calls.
+ */
+function stableFilterKey(filters: ContractFilter[]): string {
+  const normalized = filters.map((f) => ({
+    type: f.type,
+    contractIds: f.contractIds ? [...f.contractIds].sort() : undefined,
+    topics: f.topics,
+  }));
+  return JSON.stringify(normalized);
+}
+
 export class EventEngine {
   private server: Horizon.Server;
   private registry: Map<string, Watcher> = new Map();
   private contractRegistry: Map<string, { watcher: Watcher; filters: ContractSubscriptionFilter[] }> = new Map();
+  private contractConfigRegistry: Map<string, Watcher> = new Map();
   private subscriptionNames: Map<string, string> = new Map();
   private stopStream: HorizonStreamStopper | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -312,7 +328,48 @@ export class EventEngine {
    * @param id - A caller-chosen identifier for this subscription (used to unsubscribe).
    * @param options - Optional filters; omitting filters matches all contract events.
    */
-  subscribeContract(id: string, options?: ContractSubscribeOptions): Watcher {
+  subscribeContract(id: string, options?: ContractSubscribeOptions): Watcher;
+  /**
+   * Subscribes to Soroban contract events using an RPC-shaped filter config.
+   * Deduplicates by a stable key over the filter shape — repeated calls with
+   * semantically equal configs return the same Watcher instance.
+   * Throws synchronously when filters.length > 5 or any filter's contractIds.length > 5.
+   * @param config - Filter configuration mirroring the RPC getEvents filter shape.
+   */
+  subscribeContract(config: ContractSubscriptionConfig): Watcher;
+  subscribeContract(
+    idOrConfig: string | ContractSubscriptionConfig,
+    options?: ContractSubscribeOptions
+  ): Watcher {
+    // New config-object overload
+    if (typeof idOrConfig === "object") {
+      const config = idOrConfig;
+      if (config.filters.length > 5) {
+        throw new Error(
+          `ContractSubscriptionConfig.filters must have ≤ 5 entries, got ${config.filters.length}`
+        );
+      }
+      for (let i = 0; i < config.filters.length; i++) {
+        const f = config.filters[i]!;
+        if (f.contractIds !== undefined && f.contractIds.length > 5) {
+          throw new Error(
+            `ContractSubscriptionConfig.filters[${i}].contractIds must have ≤ 5 entries, got ${f.contractIds.length}`
+          );
+        }
+      }
+
+      const key = stableFilterKey(config.filters);
+      const existing = this.contractConfigRegistry.get(key);
+      if (existing) return existing;
+
+      const watcher = new Watcher(key);
+      watcher.addStopHandler(() => this.contractConfigRegistry.delete(key));
+      this.contractConfigRegistry.set(key, watcher);
+      return watcher;
+    }
+
+    // Legacy string-id overload
+    const id = idOrConfig;
     const existing = this.contractRegistry.get(id);
     if (existing) {
       if (options?.filter) {
