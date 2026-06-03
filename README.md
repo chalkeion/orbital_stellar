@@ -260,6 +260,4 @@ The list above is the curated **all-contributors** set. For the full commit hist
 
 ## Community
 
-- GitHub Discussions: _(enable via repo settings — see Drips funding plan)_
-- Twitter: _(handle pending)_
-- Discord: _(invite pending)_
+
