@@ -258,7 +258,7 @@ export class EventEngine {
       if (options?.filter) {
         this.log.warn(
           `[pulse-core] subscribe() called for address ${address} which already has an active watcher — filter option ignored.`,
-          
+
           { address, hasFilter: true }
         );
       }
@@ -639,8 +639,8 @@ export class EventEngine {
     );
   }
 
-  // TODO: Decide which getHeaderValue to use
-  // This is the original one when worked on the xdrFormat PR.
+  // Decide which getHeaderValue to use
+  // This is the original one when worked on the current PR.
   // Would comment this out, cos i am assuming it is meant to be stale.
   // private getHeaderValue(error: unknown, headerName: string): string | null {
   //   if (!this.isRecord(error)) {
@@ -703,7 +703,7 @@ export class EventEngine {
     return Number.isNaN(date) ? null : Math.max(date - Date.now(), 0);
   }
 
-  // TODO: Decide which getHeaderValue to use.
+  // Decide which getHeaderValue to use.
   // This was introduced in a recent PR merge into main and intrduced here as a result of a merge conflict
   // I am going to be leaving this active as i am assuming it is necessary for what is currently in main.
   private getHeaderValue(error: unknown, headerName: string): string | null {
@@ -1612,32 +1612,29 @@ export class EventEngine {
     }
 
     if (event.type === "contract.invoked" || event.type === "contract.emitted") {
-      // NB: This was merged in by a previous PR into main, now pulled in here because of conflict resolution
-      // Going ahead to comment it out for the sake of this PR.
-      // TODO: REMOVE THIS COMMENT BLOCK when the missing abiRegistry property is fixed
-      // if (event.type === "contract.emitted" && this.abiRegistry) {
-      //   // Async enrichment: look up the ABI spec and populate decodedData,
-      //   // then route. The event is held until the lookup settles so that
-      //   // subscribers always receive a fully-enriched (or gracefully degraded)
-      //   // event rather than a partially-populated one.
-      //   const contractId = event.contractId;
-      //   this.abiRegistry.getSpec(contractId).then(
-      //     (spec) => {
-      //       if (spec !== null && spec !== undefined) {
-      //         (event as ContractEmittedEvent).decodedData = (spec as { entries?: unknown }).entries ?? spec;
-      //       }
-      //       this.dispatchContractEvent(event);
-      //     },
-      //     (err: unknown) => {
-      //       this.log.warn("ABI registry lookup failed for contract.emitted event", {
-      //         contractId,
-      //         error: err instanceof Error ? err.message : String(err),
-      //       });
-      //       this.dispatchContractEvent(event);
-      //     }
-      //   );
-      //   return;
-      // }
+      if (event.type === "contract.emitted" && this.abiRegistry) {
+        // Async enrichment: look up the ABI spec and populate decodedData,
+        // then route. The event is held until the lookup settles so that
+        // subscribers always receive a fully-enriched (or gracefully degraded)
+        // event rather than a partially-populated one.
+        const contractId = event.contractId;
+        this.abiRegistry.getSpec(contractId).then(
+          (spec) => {
+            if (spec !== null && spec !== undefined) {
+              (event as ContractEmittedEvent).decodedData = (spec as { entries?: unknown }).entries ?? spec;
+            }
+            this.dispatchContractEvent(event);
+          },
+          (err: unknown) => {
+            this.log.warn("ABI registry lookup failed for contract.emitted event", {
+              contractId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+            this.dispatchContractEvent(event);
+          }
+        );
+        return;
+      }
 
       this.dispatchContractEvent(event);
       return;
@@ -1700,7 +1697,7 @@ export class EventEngine {
 
 /** @internal */
 export interface RpcContractInvokedEvent {
-// export interface SorobanContractInvokedEvent {
+  // export interface SorobanContractInvokedEvent {
   type: "contract_invoked";
   id: string;
   pagingToken: string;
@@ -1714,7 +1711,7 @@ export interface RpcContractInvokedEvent {
 
 /** @internal */
 export interface RpcContractEmittedEvent {
-// export interface SorobanContractEmittedEvent {
+  // export interface SorobanContractEmittedEvent {
   type: "contract_emitted";
   id: string;
   pagingToken: string;
@@ -1735,7 +1732,7 @@ export interface RpcContractEmittedEvent {
 export function normalizeContractEvent(
   rawRpcEvent: any
 ): RpcContractInvokedEvent | RpcContractEmittedEvent | null {
-// export function normalizeContractEvent(rawRpcEvent: any): SorobanContractInvokedEvent | SorobanContractEmittedEvent | null {
+  // export function normalizeContractEvent(rawRpcEvent: any): SorobanContractInvokedEvent | SorobanContractEmittedEvent | null {
   // 1. Structural check patterns
   if (!rawRpcEvent || typeof rawRpcEvent !== "object") {
     console.warn(
