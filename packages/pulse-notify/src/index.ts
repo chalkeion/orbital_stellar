@@ -159,7 +159,7 @@ function amountToStroop(amount: string): bigint | null {
   const [whole, frac = ""] = amount.split(".");
   const fracPadded = frac.slice(0, 7).padEnd(7, "0");
   try {
-    return BigInt(whole) * 10_000_000n + BigInt(fracPadded);
+    return BigInt(whole ?? "0") * 10_000_000n + BigInt(fracPadded);
   } catch {
     return null;
   }
@@ -185,16 +185,16 @@ export function useStellarPayment(
   return { ...base, amountStroop };
 }
 
-export function useStellarActivity(
+export function useStellarActivity<T extends NormalizedEvent = NormalizedEvent>(
   serverUrl: string,
   address: string,
   options?: {
-    initialEvent?: NormalizedEvent | null;
+    initialEvent?: T | null;
     filter?: (event: NormalizedEvent) => boolean;
     withCredentials?: boolean;
   }
-) {
-  return useStellarEvent(serverUrl, address, {
+): EventState<T> {
+  return useStellarEvent<T>(serverUrl, address, {
     event: "*",
     initialEvent: options?.initialEvent,
     filter: options?.filter,
