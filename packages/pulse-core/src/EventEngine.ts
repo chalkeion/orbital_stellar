@@ -291,31 +291,36 @@ export class EventEngine {
   }
 
   private route(event: NormalizedEventOrPending): void {
-    if (event.type === "account.options_changed") {
-      const watcher = this.registry.get(event.source);
-      if (watcher) {
-        watcher.emit("account.options_changed", event);
-        watcher.emit("*", event);
+    switch (event.type) {
+      case "account.options_changed": {
+        const watcher = this.registry.get(event.source);
+        if (watcher) {
+          watcher.emit("account.options_changed", event);
+          watcher.emit("*", event);
+        }
+        return;
       }
-      return;
-    }
 
-    const toWatcher = this.registry.get(event.to);
-    if (toWatcher) {
-      toWatcher.emit(
-        "payment.received",
-        this.withResolvedType(event, "payment.received")
-      );
-      toWatcher.emit("*", this.withResolvedType(event, "payment.received"));
-    }
+      case "unknown": {
+        const toWatcher = this.registry.get(event.to);
+        if (toWatcher) {
+          toWatcher.emit(
+            "payment.received",
+            this.withResolvedType(event, "payment.received")
+          );
+          toWatcher.emit("*", this.withResolvedType(event, "payment.received"));
+        }
 
-    const fromWatcher = this.registry.get(event.from);
-    if (fromWatcher) {
-      fromWatcher.emit(
-        "payment.sent",
-        this.withResolvedType(event, "payment.sent")
-      );
-      fromWatcher.emit("*", this.withResolvedType(event, "payment.sent"));
+        const fromWatcher = this.registry.get(event.from);
+        if (fromWatcher) {
+          fromWatcher.emit(
+            "payment.sent",
+            this.withResolvedType(event, "payment.sent")
+          );
+          fromWatcher.emit("*", this.withResolvedType(event, "payment.sent"));
+        }
+        return;
+      }
     }
   }
 
