@@ -2,15 +2,19 @@ import type { NormalizedEvent, Watcher, WatcherNotification } from "@orbital/pul
 import { createHmac, timingSafeEqual } from "crypto";
 
 import { DeadLetterStore } from "./MemoryDeadLetterStore.js";
+import { exponentialJittered } from "./backoff.js";
+import type { BackoffStrategy } from "./backoff.js";
 import type { Tracer, VerifyWebhookOptions, WebhookConfig } from "./types.js";
 import { DEFAULT_MAX_AGE_MS, DEFAULT_CLOCK_SKEW_MS } from "./types.js";
 export { DeadLetterStore } from "./MemoryDeadLetterStore.js";
 export { NOOP_WEBHOOK_METRICS, CountingWebhookMetrics } from "./metrics.js";
-export type { WebhookMetrics } from "./types.js";
+export type { WebhookAttemptStatus, WebhookMetrics, WebhookTerminalOutcome } from "./types.js";
+export { exponentialJittered, linear, cappedExponential, constant } from "./backoff.js";
+export type { BackoffStrategy } from "./backoff.js";
 export { PostgresDeadLetterStore } from "./PostgresDeadLetterStore.js";
 export { RedisRetryQueue } from "./RedisRetryQueue.js";
 export { verifyWebhookEdge, verifyWebhookEdgeRaw } from "./edge.js";
-export type { DeadLetterEntry, DeadLetterFilter as MemoryDeadLetterFilter } from "./MemoryDeadLetterStore.js";
+export type { DeadLetterEntry, DeadLetterFilter as MemoryDeadLetterFilter, DeliveryHealth } from "./MemoryDeadLetterStore.js";
 export type { DeadLetterFilter, DeadLetterInput, DeadLetterRecord, PgLike } from "./PostgresDeadLetterStore.js";
 export type { RedisLike, RedisRetryQueueOptions } from "./RedisRetryQueue.js";
 export type { RetryQueue, RetryRecord } from "./RetryQueue.js";
@@ -28,6 +32,8 @@ export type WebhookFailureRaw = {
   attempts: number;
   /** The original event that we tried to deliver. */
   originalEvent: NormalizedEvent;
+  /** ID of the dead-letter store entry recorded for this terminal failure. */
+  dlqId: string;
 };
 
 /**
@@ -44,8 +50,9 @@ export type WebhookDroppedRaw = {
   originalEvent: NormalizedEvent;
 };
 
-type ResolvedWebhookConfig = Omit<Required<WebhookConfig>, "url" | "tracer" | "urlValidator" | "metrics"> & {
+type ResolvedWebhookConfig = Omit<Required<WebhookConfig>, "url" | "tracer" | "urlValidator" | "metrics" | "backoff"> & {
   urls: string[];
+  backoff: BackoffStrategy;
   tracer?: Tracer;
   urlValidator?: WebhookConfig["urlValidator"];
   metrics?: WebhookConfig["metrics"];
@@ -66,6 +73,7 @@ export class WebhookDelivery {
       deliveryTimeoutMs: 10000,
       maxConcurrentRetries: 100,
       random: Math.random,
+      backoff: exponentialJittered,
       ...config,
       tracer: config.tracer,
       urls: Array.isArray(config.url) ? [...config.url] : [config.url],
@@ -148,15 +156,22 @@ export class WebhookDelivery {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+      const successMs = Date.now() - startMs;
       span?.setAttribute("webhook.status", res.status);
-      span?.setAttribute("webhook.latency_ms", Date.now() - startMs);
+      span?.setAttribute("webhook.latency_ms", successMs);
+      this.config.metrics?.recordAttempt(url, attempt, successMs, "success");
+      this.config.metrics?.recordTerminal(url, "success");
+      this.dlq.recordSuccess(url);
     } catch (err) {
-      span?.setAttribute("webhook.latency_ms", Date.now() - startMs);
+      const failureMs = Date.now() - startMs;
+      span?.setAttribute("webhook.latency_ms", failureMs);
       span?.setAttribute("webhook.error", this.getErrorMessage(err));
 
       if (this.watcher.stopped) return;
 
       const errorMessage = this.getErrorMessage(err);
+      this.config.metrics?.recordAttempt(url, attempt, failureMs, "failure");
+      this.dlq.recordFailure(url);
 
       if (attempt < this.config.retries) {
         // Enforce the retry cap — evict the newest pending retry when at limit.
@@ -166,6 +181,7 @@ export class WebhookDelivery {
           const newest = this.retryTimers.get(newestTimer)!;
           clearTimeout(newestTimer);
           this.retryTimers.delete(newestTimer);
+          this.config.metrics?.recordTerminal(newest.url, "dropped");
           this.watcher.emit("webhook.dropped", {
             ...newest.event,
             raw: {
@@ -177,8 +193,7 @@ export class WebhookDelivery {
           } as unknown as NormalizedEvent);
         }
 
-        const exponentialDelay = Math.pow(2, attempt - 1) * 1000;
-        const delay = Math.floor(this.config.random() * exponentialDelay);
+        const delay = this.config.backoff(attempt, this.config.random);
         const retryTimer = setTimeout(() => {
           this.retryTimers.delete(retryTimer);
           void this.deliverToUrl(event, url, attempt + 1);
@@ -207,6 +222,10 @@ export class WebhookDelivery {
     errorMessage: string,
     attempt: number,
   ): void {
+    // Persist the dead-lettered event before announcing the terminal failure so
+    // `webhook.failed` consumers can correlate via `dlqId`.
+    const dlqId = this.dlq.add(url, event, errorMessage, attempt);
+    this.config.metrics?.recordTerminal(url, "failure");
     this.watcher.emit("webhook.failed", {
       ...event,
       raw: {
@@ -214,6 +233,7 @@ export class WebhookDelivery {
         url,
         attempts: attempt,
         originalEvent: event,
+        dlqId,
       } satisfies WebhookFailureRaw,
     } as unknown as NormalizedEvent);
   }

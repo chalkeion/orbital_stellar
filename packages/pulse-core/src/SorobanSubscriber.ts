@@ -1,4 +1,5 @@
 import type { ContractSubscriptionFilter, ContractAddress } from "./index.js";
+import { SorobanRpcError } from "./errors.js";
 
 /**
  * SorobanSubscriber — polls a Soroban RPC for contract events and forwards
@@ -19,6 +20,9 @@ export interface CursorStore {
   getCursor(): Promise<string | undefined>;
   saveCursor(cursor: string): Promise<void>;
 }
+
+/** Alias for {@link CursorStore}; the name used by the subscriber test suite. */
+export type CursorStoreLike = CursorStore;
 
 /** A single event returned by the Soroban RPC. */
 export interface SorobanEvent {
@@ -59,7 +63,11 @@ export interface ReconnectingPayload {
 export interface SorobanSubscriberOptions {
   rpc: SorobanRpc;
   cursorStore: CursorStore;
-  onEvent: (event: SorobanEvent) => Promise<void>;
+  /**
+   * Default handler invoked for every event. Optional when per-subscription
+   * handlers (see {@link SorobanSubscription.onEvent}) are used instead.
+   */
+  onEvent?: (event: SorobanEvent) => Promise<void>;
   /**
    * When set, the subscriber operates in bounded-replay mode: polling stops
    * (and `onDone` is called) once every event whose ledger is strictly less
@@ -69,16 +77,36 @@ export interface SorobanSubscriberOptions {
   endLedger?: number;
   /** Called once when a bounded replay run has delivered all events up to endLedger. */
   onDone?: () => void;
+  /** Max events to request per `getEvents` call. Must be 1–10,000. Defaults to 100. */
+  pageLimit?: number;
+  /** @deprecated Alias for {@link SorobanSubscriberOptions.pageLimit}. */
   pageSize?: number;
+  /** Max distinct event IDs remembered for cross-poll de-duplication. Defaults to 10,000. */
+  dedupCacheSize?: number;
   /** Interval for the self-driving {@link SorobanSubscriber.start} poll loop. Defaults to 2000ms. */
   pollIntervalMs?: number;
+  /** Delay before retrying after a retryable RPC error. Defaults to 1000ms. */
+  retryDelayMs?: number;
+  /** Injectable timer scheduler (for testing). Defaults to `globalThis.setTimeout`. */
+  setTimeoutFn?: typeof setTimeout;
+  /** Injectable timer canceller (for testing). Defaults to `globalThis.clearTimeout`. */
+  clearTimeoutFn?: typeof clearTimeout;
+  /** Notified when a retryable {@link SorobanRpcError} is caught and a retry is scheduled. */
+  onRetryableError?: (error: SorobanRpcError) => void;
+  /** Notified when a terminal (non-retryable) {@link SorobanRpcError} is caught. */
+  onTerminalError?: (error: unknown) => void;
 }
+
+const MIN_PAGE_LIMIT = 1;
+const MAX_PAGE_LIMIT = 10_000;
+const DEFAULT_PAGE_LIMIT = 100;
+const DEFAULT_DEDUP_CACHE_SIZE = 10_000;
 
 export class SorobanSubscriber {
   private readonly rpc: SorobanRpc;
   private readonly cursorStore: CursorStore;
-  private readonly onEvent: (event: SorobanEvent) => Promise<void>;
-  private readonly pageSize: number;
+  private readonly onEvent?: (event: SorobanEvent) => Promise<void>;
+  private readonly pageLimit: number;
 
   private isStopped = false;
 
@@ -96,7 +124,12 @@ export class SorobanSubscriber {
   private isPolling = false;
 
   /** Active multi-filter subscriptions. Empty means single legacy `onEvent` mode. */
-  private readonly subscriptions: SorobanSubscription[] = [];
+  subscriptions: SorobanSubscription[] = [];
+
+  // --- Cross-poll de-duplication state ---
+  /** Insertion-ordered set of recently-delivered event IDs (bounded FIFO window). */
+  private readonly seen = new Set<string>();
+  private readonly dedupCacheSize: number;
 
   // --- Bounded-replay mode state (set when `endLedger` is provided) ---
   /** Exclusive upper-bound ledger; replay stops once an event reaches it. */
@@ -115,14 +148,39 @@ export class SorobanSubscriber {
   /** ISO timestamp of the most recently delivered event, or null. */
   lastEventAt: string | null = null;
 
+  // --- Retry state ---
+  private readonly retryDelayMs: number;
+  private readonly setTimeoutFn: typeof setTimeout;
+  private readonly clearTimeoutFn: typeof clearTimeout;
+  private readonly onRetryableError?: (error: SorobanRpcError) => void;
+  private readonly onTerminalError?: (error: unknown) => void;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor(options: SorobanSubscriberOptions) {
+    const pageLimit = options.pageLimit ?? options.pageSize ?? DEFAULT_PAGE_LIMIT;
+    if (
+      !Number.isFinite(pageLimit) ||
+      pageLimit < MIN_PAGE_LIMIT ||
+      pageLimit > MAX_PAGE_LIMIT
+    ) {
+      throw new RangeError(
+        `pageLimit must be between 1 and 10,000 (received ${pageLimit})`
+      );
+    }
+
     this.rpc = options.rpc;
     this.cursorStore = options.cursorStore;
     this.onEvent = options.onEvent;
-    this.pageSize = options.pageSize ?? 100;
+    this.pageLimit = pageLimit;
+    this.dedupCacheSize = options.dedupCacheSize ?? DEFAULT_DEDUP_CACHE_SIZE;
     this.endLedger = options.endLedger;
     this.onDone = options.onDone;
     this.pollIntervalMs = options.pollIntervalMs ?? 2000;
+    this.retryDelayMs = options.retryDelayMs ?? 1000;
+    this.setTimeoutFn = options.setTimeoutFn ?? globalThis.setTimeout;
+    this.clearTimeoutFn = options.clearTimeoutFn ?? globalThis.clearTimeout;
+    this.onRetryableError = options.onRetryableError;
+    this.onTerminalError = options.onTerminalError;
   }
 
   /** True when operating in bounded-replay mode (an `endLedger` was supplied). */
@@ -166,7 +224,7 @@ export class SorobanSubscriber {
    * Executes a single poll cycle:
    *   1. Reads the current cursor from the store.
    *   2. Fetches the next page of events from the RPC.
-   *   3. Forwards each event to `onEvent` and advances the cursor.
+   *   3. Forwards each event to its handler(s) and advances the cursor.
    *
    * If the subscriber is stopped before or during the poll the method returns
    * early without emitting any further events.
@@ -199,6 +257,7 @@ export class SorobanSubscriber {
    *
    * - Marks the subscriber as stopped so no new polls begin.
    * - Aborts any in-flight `getEvents` request.
+   * - Cancels any pending retry timer.
    * - Awaits the in-flight poll so that, once this Promise resolves, the
    *   caller is guaranteed no further events will be emitted.
    *
@@ -213,6 +272,10 @@ export class SorobanSubscriber {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
+    if (this.retryTimer !== null) {
+      this.clearTimeoutFn(this.retryTimer);
+      this.retryTimer = null;
+    }
     this.inflightAbort?.abort();
     // Only await the in-flight poll when we are NOT already inside it.
     // Awaiting from within onEvent would deadlock because the poll is waiting
@@ -220,6 +283,11 @@ export class SorobanSubscriber {
     if (this.inflightPoll && !this.isPolling) {
       await this.inflightPoll;
     }
+  }
+
+  /** Alias for {@link stop}; mirrors the lifecycle vocabulary of EventEngine. */
+  async shutdown(): Promise<void> {
+    await this.stop();
   }
 
   // ---------------------------------------------------------------------------
@@ -233,10 +301,6 @@ export class SorobanSubscriber {
     let activeSubs = [...this.subscriptions];
     if (activeSubs.length === 0) {
       activeSubs = [{ id: "__legacy__", filters: [] }];
-    }
-
-    if (activeSubs.length === 0) {
-      return;
     }
 
     let rpcCalls: ContractSubscriptionFilter[][] = [];
@@ -267,7 +331,7 @@ export class SorobanSubscriber {
     const promises = rpcCalls.map((filters) =>
       this.rpc.getEvents(
         currentCursor,
-        this.pageSize,
+        this.pageLimit,
         signal,
         filters.length > 0 ? filters : undefined
       )
@@ -279,6 +343,19 @@ export class SorobanSubscriber {
     } catch (err) {
       // An aborted request is expected during shutdown — swallow it silently.
       if (this.isAbortError(err)) return;
+      // Route classified RPC errors to the retry/terminal handlers when present.
+      if (err instanceof SorobanRpcError) {
+        if (err.retryable) {
+          if (this.onRetryableError) {
+            this.onRetryableError(err);
+            this.scheduleRetry();
+            return;
+          }
+        } else if (this.onTerminalError) {
+          this.onTerminalError(err);
+          return;
+        }
+      }
       throw err;
     }
 
@@ -320,8 +397,14 @@ export class SorobanSubscriber {
           }
         }
 
-        await this.onEvent(event);
+        // Cross-poll de-duplication: suppress IDs we've already delivered.
+        if (this.seen.has(event.id)) continue;
+
+        // Deliver before recording so a throwing handler leaves the ID
+        // un-recorded (and therefore re-deliverable on a later poll).
+        await this.dispatch(event);
         this.lastEventAt = new Date().toISOString();
+        this.recordSeen(event.id);
 
         if (this.isReplayMode) {
           // Replay progress is ephemeral and must never touch the durable store.
@@ -333,6 +416,75 @@ export class SorobanSubscriber {
     } finally {
       this.isPolling = false;
     }
+  }
+
+  /**
+   * Routes a single event to its handler(s).
+   *
+   * - Legacy mode (no subscriptions): invokes the constructor `onEvent`.
+   * - Subscription mode: invokes the `onEvent` of every subscription whose
+   *   filters match the event, falling back to the constructor `onEvent`.
+   */
+  private async dispatch(event: SorobanEvent): Promise<void> {
+    if (this.subscriptions.length === 0) {
+      if (this.onEvent) await this.onEvent(event);
+      return;
+    }
+
+    for (const sub of this.subscriptions) {
+      if (this.eventMatchesSubscription(event, sub)) {
+        const handler = sub.onEvent ?? this.onEvent;
+        if (handler) await handler(event);
+      }
+    }
+  }
+
+  /** True when any of the subscription's filters matches the event. */
+  private eventMatchesSubscription(
+    event: SorobanEvent,
+    sub: SorobanSubscription
+  ): boolean {
+    // A subscription with no filters matches every event.
+    if (sub.filters.length === 0) return true;
+    return sub.filters.some((filter) => this.eventMatchesFilter(event, filter));
+  }
+
+  /** True when the event satisfies a single filter (currently contractId scoped). */
+  private eventMatchesFilter(
+    event: SorobanEvent,
+    filter: ContractSubscriptionFilter
+  ): boolean {
+    const contractIds = filter.contractIds as ContractAddress[] | undefined;
+    if (contractIds && contractIds.length > 0) {
+      return (
+        event.contractId !== undefined &&
+        contractIds.includes(event.contractId as ContractAddress)
+      );
+    }
+    // No contractId constraint → matches.
+    return true;
+  }
+
+  /** Records a delivered event ID, evicting the oldest entries past the cap. */
+  private recordSeen(id: string): void {
+    this.seen.add(id);
+    while (this.seen.size > this.dedupCacheSize) {
+      const oldest = this.seen.values().next().value;
+      if (oldest === undefined) break;
+      this.seen.delete(oldest);
+    }
+  }
+
+  /** Schedules a single deferred re-poll using the injectable timer. */
+  private scheduleRetry(): void {
+    if (this.isStopped) return;
+    this.retryTimer = this.setTimeoutFn(() => {
+      this.retryTimer = null;
+      if (this.isStopped) return;
+      this.inflightPoll = (this.inflightPoll ?? Promise.resolve()).then(() =>
+        this.pollOnce()
+      );
+    }, this.retryDelayMs);
   }
 
   /**

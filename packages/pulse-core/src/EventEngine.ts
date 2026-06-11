@@ -1,7 +1,8 @@
 import { Horizon } from "@stellar/stellar-sdk";
 import { Watcher } from "./Watcher.js";
-import { EngineAlreadyStartedError, HorizonStreamError } from "./errors.js";
+import { EngineAlreadyStartedError, HorizonStreamError, NetworkMismatchError } from "./errors.js";
 import { SorobanSubscriber } from "./SorobanSubscriber.js";
+import { SorobanRpcClient } from "./SorobanRpcClient.js";
 import type { SorobanRpcLike, SorobanEvent } from "./SorobanSubscriber.js";
 import { toAccountAddress, toContractAddress } from "./address.js";
 import { toStellarAmount } from "./amount.js";
@@ -49,7 +50,7 @@ import type {
   Logger,
   CursorStore,
 } from "./index.js";
-import { UnknownNetworkError } from "./index.js";
+import { UnknownNetworkError, NETWORK_PASSPHRASES } from "./index.js";
 
 type PendingPaymentEvent = Omit<PaymentEvent, "type"> & { type: "unknown" };
 type NormalizedEventOrPending =
@@ -158,6 +159,7 @@ export class EventEngine {
   private filters: Map<string, (event: NormalizedEvent) => boolean> = new Map();
   private log: Required<NonNullable<CoreConfig["logger"]>>;
   private cursorStore?: CursorStore;
+  private readonly network: Network;
   private streamKey: string;
   private cursorFailureThreshold: number;
   private consecutiveCursorFailures = 0;
@@ -205,6 +207,8 @@ export class EventEngine {
     this.streamKey = config.streamKey ?? "pulse-core-cursor";
     this.cursorFailureThreshold = config.cursorFailureThreshold ?? 5;
     this.abiRegistry = config.abiRegistry;
+    this.cursorStore = config.cursorStore;
+    this.network = config.network;
   }
 
   /**
@@ -309,11 +313,17 @@ export class EventEngine {
     const existingWatcher = this.registry.get(address);
     if (existingWatcher) {
       if (options?.filter) {
-        this.log.warn(
-          `[pulse-core] subscribe() called for address ${address} which already has an active watcher — filter option ignored.`,
-
-          { address, hasFilter: true }
-        );
+        const name = this.subscriptionNames.get(address);
+        if (name !== undefined) {
+          this.log.warn(
+            `[pulse-core] subscribe() called for ${name} (${address}) which already has an active watcher — filter option ignored.`,
+          );
+        } else {
+          this.log.warn(
+            "[pulse-core] subscribe() called for an address that already has an active watcher. Filter option ignored.",
+            { address, hasFilter: true }
+          );
+        }
       }
       return existingWatcher;
     }
@@ -531,6 +541,16 @@ export class EventEngine {
       return false;
     }
 
+    // Guard against pointing at the wrong network: if a Soroban RPC's network
+    // has been cached, its passphrase must match the engine's configured network.
+    const cachedNetwork = SorobanRpcClient.getCachedNetwork();
+    if (cachedNetwork) {
+      const expected = NETWORK_PASSPHRASES[this.network];
+      if (cachedNetwork.passphrase !== expected) {
+        throw new NetworkMismatchError(expected, cachedNetwork.passphrase);
+      }
+    }
+
     this.openStream(false);
     if (this.contractRegistry.size > 0 && this.sorobanSubscriber) {
       this.sorobanSubscriber.start();
@@ -669,7 +689,8 @@ export class EventEngine {
           this.pendingReconnectSuccessAttempt = null;
           this.reconnectAttempt = 0;
           this.log.info(
-            `[pulse-core] SSE reconnect succeeded on attempt ${attempt}.`,
+            "[pulse-core] SSE reconnect succeeded.",
+            { attempt },
           );
           this.notifyWatchers("engine.reconnected", {
             type: "engine.reconnected",
@@ -707,7 +728,8 @@ export class EventEngine {
     const nextAttempt = this.reconnectAttempt + 1;
     if (nextAttempt > this.reconnectConfig.maxRetries) {
       this.log.error(
-        `[pulse-core] SSE reconnect stopped after ${this.reconnectAttempt} failed attempts.`,
+        "[pulse-core] SSE reconnect stopped.",
+        { failedAttempts: this.reconnectAttempt },
       );
       return;
     }
@@ -722,12 +744,14 @@ export class EventEngine {
       delayMs = retryAfterMs ?? 60000;
 
       this.log.warn(
-        `[pulse-core] SSE rate limited by Horizon, reconnect scheduled in ${delayMs}ms.`,
+        "[pulse-core] SSE rate limited by Horizon, reconnect scheduled.",
+        { attempt: nextAttempt, delayMs },
       );
       this.notifyWatchers("engine.rate_limited", {
         type: "engine.rate_limited",
         attempt: nextAttempt,
         delayMs,
+        source: "horizon",
         emittedAt: new Date().toISOString(),
       });
     } else {
@@ -738,12 +762,14 @@ export class EventEngine {
       delayMs = Math.floor(Math.random() * exponentialDelay);
 
       this.log.warn(
-        `[pulse-core] SSE reconnect attempt ${nextAttempt} scheduled in ${delayMs}ms.`,
+        "[pulse-core] SSE reconnect attempt scheduled.",
+        { attempt: nextAttempt, delayMs },
       );
       this.notifyWatchers("engine.reconnecting", {
         type: "engine.reconnecting",
         attempt: nextAttempt,
         delayMs,
+        source: "horizon",
         emittedAt: new Date().toISOString(),
       });
     }
@@ -1529,8 +1555,8 @@ export class EventEngine {
       return filter(event);
     } catch (err) {
       this.log.warn(
-        `[pulse-core] subscribe() filter threw for address ${address} — treating as reject.`,
-        err as Record<string, unknown>
+        "[pulse-core] subscribe() filter threw for address. Treating as reject.",
+        { address, error: err }
       );
       return false;
     }

@@ -25,6 +25,7 @@ export function toBigInt(amount: StellarAmount): bigint {
   if (abs === "") throw new Error("Invalid StellarAmount");
 
   const parts = abs.split(".");
+  if (parts.length > 2) throw new Error("Invalid StellarAmount");
   const whole = parts[0] || "0";
   const frac = parts[1] ?? "";
 

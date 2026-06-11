@@ -1,4 +1,4 @@
-import type { WebhookMetrics } from "./types.js";
+import type { WebhookAttemptStatus, WebhookMetrics, WebhookTerminalOutcome } from "./types.js";
 
 export const NOOP_WEBHOOK_METRICS: WebhookMetrics = {
   recordAttempt: () => undefined,
@@ -11,38 +11,35 @@ export class CountingWebhookMetrics implements WebhookMetrics {
     Array<{
       attempt: number;
       durationMs: number;
-      status: number | "timeout" | "error";
+      status: WebhookAttemptStatus;
     }>
   >();
-  private readonly terminalOutcomes = new Map<
-    string,
-    "success" | "failed" | "dropped"
-  >();
+  private readonly terminalOutcomes = new Map<string, WebhookTerminalOutcome>();
 
   recordAttempt(
     url: string,
     attempt: number,
     durationMs: number,
-    status: number | "timeout" | "error",
+    status: WebhookAttemptStatus,
   ): void {
     const existing = this.attemptsByUrl.get(url) ?? [];
     existing.push({ attempt, durationMs, status });
     this.attemptsByUrl.set(url, existing);
   }
 
-  recordTerminal(url: string, outcome: "success" | "failed" | "dropped"): void {
+  recordTerminal(url: string, outcome: WebhookTerminalOutcome): void {
     this.terminalOutcomes.set(url, outcome);
   }
 
   getAttempts(url: string): Array<{
     attempt: number;
     durationMs: number;
-    status: number | "timeout" | "error";
+    status: WebhookAttemptStatus;
   }> {
     return [...(this.attemptsByUrl.get(url) ?? [])];
   }
 
-  getTerminalOutcome(url: string): "success" | "failed" | "dropped" | undefined {
+  getTerminalOutcome(url: string): WebhookTerminalOutcome | undefined {
     return this.terminalOutcomes.get(url);
   }
 }
