@@ -1,22 +1,35 @@
 import { CursorStore } from "./CursorStore.js";
+import type { StellarAmount } from "./amount.js";
+import type { AccountAddress, MuxedAddress, ContractAddress } from "./address.js";
 export { SorobanRpcClient } from "./SorobanRpcClient.js";
 export type { SorobanRpcClientOptions } from "./SorobanRpcClient.js";
 export { EventEngine } from "./EventEngine.js";
 export { SorobanSubscriber } from "./SorobanSubscriber.js";
-export type { SorobanSubscriberOptions, ReconnectingPayload } from "./SorobanSubscriber.js";
-export { validateContractFilters } from "./contractFilters.js";
-export { Watcher } from "./Watcher.js";
-export { SorobanSubscriber } from "./SorobanSubscriber.js";
 export type {
   SorobanSubscriberOptions,
+  ReconnectingPayload,
   SorobanRpc,
   SorobanEvent,
   CursorStore as SorobanCursorStore,
 } from "./SorobanSubscriber.js";
+export { validateContractFilters } from "./contractFilters.js";
+export { Watcher } from "./Watcher.js";
+export type { StellarAmount } from "./amount.js";
+export type { AccountAddress, MuxedAddress, ContractAddress } from "./address.js";
 export { EngineAlreadyStartedError, HorizonStreamError } from "./errors.js";
 export { StrKey } from "@stellar/stellar-sdk";
 export { CursorStore } from "./CursorStore.js";
 export { MemoryCursorStore } from "./MemoryCursorStore.js";
+export { FileCursorStore } from "./FileCursorStore.js";
+export { PostgresCursorStore } from "./PostgresCursorStore.js";
+export type { PgLike } from "./PostgresCursorStore.js";
+export { RedisCursorStore } from "./RedisCursorStore.js";
+export { S3CursorStore } from "./S3CursorStore.js";
+export { cacheCursorStore } from "./cacheCursorStore.js";
+export { coalesceCursorStore, CoalescingStore } from "./coalesceCursorStore.js";
+export type { CoalescingStoreOptions } from "./coalesceCursorStore.js";
+export { migrateCursors } from "./migrateCursors.js";
+export type { MigrateCursorsResult } from "./migrateCursors.js";
 
 /** The Stellar network to connect to. */
 export type Network = "mainnet" | "testnet";
@@ -41,7 +54,6 @@ export type EngineStatus = {
   };
 };
 
-
 /** Passphrase strings for each supported Stellar network. */
 export const NETWORK_PASSPHRASES = {
   mainnet: "Public Global Stellar Network ; September 2015",
@@ -49,25 +61,17 @@ export const NETWORK_PASSPHRASES = {
 } as const satisfies Record<Network, string>;
 
 /** Event types for payment-related events (received, sent, or self-payment). */
-export type PaymentEventType =
-  | "payment.received"
-  | "payment.sent"
-  | "payment.self";
+export type PaymentEventType = "payment.received" | "payment.sent" | "payment.self";
 /** Event type for account options changes. */
 export type AccountOptionsEventType = "account.options_changed";
 export type LiquidityPoolEventType = "lp.deposited" | "lp.withdrawn";
-export type TrustAuthEventType =
-  | "trustline.authorized"
-  | "trustline.deauthorized";
+export type TrustAuthEventType = "trustline.authorized" | "trustline.deauthorized";
 /** Event type for account creation. */
 export type AccountEventType = "account.created";
 export type ClaimableCreatedEventType = "claimable.created";
 export type ClaimableClaimedEventType = "claimable.claimed";
 /** Event types for trustline lifecycle events (added, removed, or limit updated). */
-export type TrustlineEventType =
-  | "trustline.added"
-  | "trustline.removed"
-  | "trustline.updated";
+export type TrustlineEventType = "trustline.added" | "trustline.removed" | "trustline.updated";
 /** Event type for account merges (one account merged into another). */
 export type AccountMergeEventType = "account.merged";
 /** Notification types emitted by the EventEngine during reconnection. */
@@ -79,10 +83,7 @@ export type WatcherNotificationType =
   | "engine.cursor_store_unhealthy"
   | "engine.cursor_expired";
 
-export type OfferEventType =
-  | "offer.created"
-  | "offer.updated"
-  | "offer.deleted";
+export type OfferEventType = "offer.created" | "offer.updated" | "offer.deleted";
 export type BumpSequenceEventType = "account.bump_sequence";
 export type DataEventType = "data.set" | "data.cleared";
 
@@ -307,7 +308,7 @@ export type AccountMergeEvent = {
  * namespace export:
  *
  * ```ts
- * import type { events } from "@orbital/pulse-core";
+ * import type { events } from "@orbital-stellar/pulse-core";
  * type Payment = events.PaymentEvent;
  * type AccountCreated = events.AccountCreatedEvent;
  * ```
@@ -340,7 +341,6 @@ export type NormalizedEvent = (
   readonly timestampDate: Date;
 };
 
-
 /**
  * A notification emitted by the EventEngine during reconnection attempts.
  *
@@ -366,8 +366,6 @@ export type WatcherNotification = {
   emittedAt: string;
   /** The cursor value that was expired or lost, if applicable. */
   lostCursor?: string;
-  /** The source engine that encountered the expired cursor. */
-  source?: "horizon" | "soroban";
 };
 
 /**
@@ -392,26 +390,13 @@ export interface Logger {
   info(message: string, meta?: Record<string, unknown>): void;
   warn(message: string, meta?: Record<string, unknown>): void;
   error(message: string, meta?: Record<string, unknown>): void;
-}
-
-/**
- * Core configuration for initializing the EventEngine.
- *
- * @example
- * const config: CoreConfig = {
- *   network: "testnet",
- *   reconnect: { initialDelayMs: 2000, maxRetries: 5 }
- * };
- */
-export interface Logger {
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
+  /** Optional verbose channel for per-request / per-event diagnostics. */
+  debug?(message: string, meta?: Record<string, unknown>): void;
 }
 
 /**
  * Minimal interface for an ABI registry client.
- * Satisfied by `AbiRegistryClient` from `@orbital/abi-registry`, or any
+ * Satisfied by `AbiRegistryClient` from `@orbital-stellar/abi-registry`, or any
  * object with a compatible `getSpec` method (useful for testing).
  */
 export interface AbiRegistryClientLike {
@@ -432,6 +417,8 @@ export type CoreConfig = {
   streamKey?: string;
   /** Number of consecutive cursor store failures before marking it unhealthy. Defaults to 5. */
   cursorFailureThreshold?: number;
+  /** Optional ABI registry client used to enrich `contract.emitted` events with `decodedData`. */
+  abiRegistry?: AbiRegistryClientLike;
   /** Soroban RPC configuration. */
   soroban?: {
     /** Pagination limit for RPC `getEvents` calls. Must be 1–10,000. Defaults to 100. */
@@ -479,10 +466,10 @@ export type ContractInvokedEvent = {
   function: string;
   /** Ordered list of arguments passed to the function. */
   args: unknown[];
-  /** The ledger sequence number where the invocation occurred. */
-  ledger: number;
-  /** The transaction hash of the transaction containing this invocation. */
-  txHash: string;
+  /** The ledger sequence number where the invocation occurred, when available. */
+  ledger?: number;
+  /** The transaction hash of the transaction containing this invocation, when available. */
+  txHash?: string;
   /** ISO 8601 timestamp of the invocation. */
   timestamp: string;
   /** The original raw record from the Soroban API. */
@@ -505,6 +492,14 @@ export type ContractEmittedEvent = {
    * decode error, or when no registry is configured.
    */
   decodedData?: unknown;
+  /** Ledger sequence number where the event was emitted, when available. */
+  ledger?: number;
+  /** Unique event identifier from the Soroban RPC, when available. */
+  eventId?: string;
+  /** Transaction hash containing this event, when available. */
+  txHash?: string;
+  /** Whether the emitting contract call succeeded, when available. */
+  inSuccessfulContractCall?: boolean;
   timestamp: string;
   /** The original raw record from the Soroban API. */
   raw: unknown;
@@ -548,7 +543,7 @@ export type ContractSubscribeOptions = {
  * @see {@link events} for the full list of narrower per-event types.
  *
  * @example
- * import type { events } from "@orbital/pulse-core";
+ * import type { events } from "@orbital-stellar/pulse-core";
  * function handlePayment(e: events.PaymentEvent) { ... }
  */
 export * as events from "./events.js";
