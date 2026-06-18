@@ -1,6 +1,7 @@
 import { CursorStore } from "./CursorStore.js";
 import type { StellarAmount } from "./amount.js";
 import type { AccountAddress, MuxedAddress, ContractAddress } from "./address.js";
+
 export { SorobanRpcClient } from "./SorobanRpcClient.js";
 export type { SorobanRpcClientOptions } from "./SorobanRpcClient.js";
 export { EventEngine } from "./EventEngine.js";
@@ -12,6 +13,7 @@ export type {
   SorobanEvent,
   CursorStore as SorobanCursorStore,
 } from "./SorobanSubscriber.js";
+
 export { validateContractFilters } from "./contractFilters.js";
 export { Watcher } from "./Watcher.js";
 export type { StellarAmount } from "./amount.js";
@@ -67,8 +69,8 @@ export type SourceStatus = {
 export type EngineStatus = {
   running: boolean;
   watcherCount: number;
-  lastEventAt: string | null;
   contractWatcherCount?: number;
+  lastEventAt: string | null;
   reconnectAttempt: number;
   pausedSources?: ("horizon" | "soroban")[];
   sources: {
@@ -497,6 +499,8 @@ export type ContractInvokedEvent = {
   timestamp: string;
   /** The original raw record from the Soroban API. */
   raw?: RawSorobanEvent;
+  decodedData?: unknown;
+  inSuccessfulContractCall?: boolean;
 };
 
 /**
