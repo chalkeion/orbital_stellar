@@ -38,16 +38,16 @@
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^15.0.1",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.3",
     "@types/pg": "^8.11.11",
-    "@vitest/coverage-v8": "^4.1.7",
-    "fast-check": "^3.22.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "fast-check": "^4.8.0",
     "pg": "^8.11.5",
-    "tsx": "^4.21.0",
-    "vite": "^7.3.3",
-    "vitest": "^4.1.7"
+    "tsx": "^4.22.4",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   }
 }

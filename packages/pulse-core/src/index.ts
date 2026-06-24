@@ -1,6 +1,7 @@
 import { CursorStore } from "./CursorStore.js";
 import type { StellarAmount } from "./amount.js";
 import type { AccountAddress, MuxedAddress, ContractAddress } from "./address.js";
+
 export { SorobanRpcClient } from "./SorobanRpcClient.js";
 export type { SorobanRpcClientOptions } from "./SorobanRpcClient.js";
 export { EventEngine } from "./EventEngine.js";
@@ -12,6 +13,7 @@ export type {
   SorobanEvent,
   CursorStore as SorobanCursorStore,
 } from "./SorobanSubscriber.js";
+
 export { validateContractFilters } from "./contractFilters.js";
 export { Watcher } from "./Watcher.js";
 export type { StellarAmount } from "./amount.js";
@@ -31,6 +33,29 @@ export type { CoalescingStoreOptions } from "./coalesceCursorStore.js";
 export { migrateCursors } from "./migrateCursors.js";
 export type { MigrateCursorsResult } from "./migrateCursors.js";
 
+export { isEventType } from "./eventTypeGuard.js";
+export * from "./raw-horizon.js";
+export * from "./raw-soroban.js";
+import type { RawSorobanEvent } from "./raw-soroban.js";
+
+import {
+  RawHorizonPayment,
+  RawHorizonSetOptions,
+  RawHorizonCreateAccount,
+  RawHorizonManageSellOffer,
+  RawHorizonManageBuyOffer,
+  RawHorizonBumpSequence,
+  RawHorizonManageData,
+  RawHorizonChangeTrust,
+  RawHorizonAccountMerge,
+  RawHorizonCreateClaimableBalance,
+  RawHorizonClaimClaimableBalance,
+  RawHorizonLiquidityPoolDeposit,
+  RawHorizonLiquidityPoolWithdraw,
+  RawHorizonAllowTrust,
+  RawHorizonSetTrustLineFlags,
+} from "./raw-horizon.js";
+
 /** The Stellar network to connect to. */
 export type Network = "mainnet" | "testnet";
 
@@ -44,8 +69,8 @@ export type SourceStatus = {
 export type EngineStatus = {
   running: boolean;
   watcherCount: number;
-  lastEventAt: string | null;
   contractWatcherCount?: number;
+  lastEventAt: string | null;
   reconnectAttempt: number;
   pausedSources?: ("horizon" | "soroban")[];
   sources: {
@@ -137,7 +162,7 @@ export type PaymentEvent = {
   /** ISO 8601 timestamp of the payment. */
   timestamp: string;
   /** The original raw record from the Horizon API. */
-  raw: unknown;
+  raw?: RawHorizonPayment;
 };
 
 /**
@@ -153,7 +178,7 @@ export type AccountOptionsEvent = {
   /** ISO 8601 timestamp of the options change. */
   timestamp: string;
   /** The original raw record from the Horizon API. */
-  raw: unknown;
+  raw?: RawHorizonSetOptions;
 };
 
 export type OfferEvent = {
@@ -165,7 +190,7 @@ export type OfferEvent = {
   amount: StellarAmount;
   price: string;
   timestamp: string;
-  raw: unknown;
+  raw?: RawHorizonManageSellOffer | RawHorizonManageBuyOffer;
 };
 
 export type BumpSequenceEvent = {
@@ -173,7 +198,7 @@ export type BumpSequenceEvent = {
   source: AccountAddress;
   bump_to: string;
   timestamp: string;
-  raw: unknown;
+  raw?: RawHorizonBumpSequence;
 };
 
 export type ClaimableBalanceClaimant = {
@@ -189,7 +214,7 @@ export type ClaimableCreatedEvent = {
   asset: string;
   amount: StellarAmount;
   timestamp: string;
-  raw: unknown;
+  raw?: RawHorizonCreateClaimableBalance;
 };
 
 export type ClaimableClaimedEvent = {
@@ -197,7 +222,7 @@ export type ClaimableClaimedEvent = {
   claimant: AccountAddress;
   balanceId: string;
   timestamp: string;
-  raw: unknown;
+  raw?: RawHorizonClaimClaimableBalance;
 };
 
 export type DataEvent = {
@@ -209,7 +234,7 @@ export type DataEvent = {
   /** The decoded bytes of `value` as a Uint8Array, or null when `value` is null or invalid base64. */
   decoded: Uint8Array | null;
   timestamp: string;
-  raw: unknown;
+  raw?: RawHorizonManageData;
 };
 
 export type LiquidityPoolReserve = {
@@ -224,7 +249,7 @@ export type LiquidityPoolDepositEvent = {
   reserves_deposited: LiquidityPoolReserve[];
   shares_received: string;
   timestamp: string;
-  raw: unknown;
+  raw?: RawHorizonLiquidityPoolDeposit;
 };
 
 export type LiquidityPoolWithdrawEvent = {
@@ -234,7 +259,7 @@ export type LiquidityPoolWithdrawEvent = {
   reserves_received: LiquidityPoolReserve[];
   shares_redeemed: string;
   timestamp: string;
-  raw: unknown;
+  raw?: RawHorizonLiquidityPoolWithdraw;
 };
 
 export type TrustAuthEvent = {
@@ -245,7 +270,7 @@ export type TrustAuthEvent = {
   timestamp: string;
   /** The original Horizon operation type ("allow_trust" or "set_trust_line_flags"). */
   operation: string;
-  raw: unknown;
+  raw?: RawHorizonAllowTrust | RawHorizonSetTrustLineFlags;
 };
 
 /**
@@ -263,7 +288,7 @@ export type AccountCreatedEvent = {
   /** ISO 8601 timestamp of the account creation. */
   timestamp: string;
   /** The original raw record from the Horizon API. */
-  raw: unknown;
+  raw?: RawHorizonCreateAccount;
 };
 
 /**
@@ -281,7 +306,7 @@ export type TrustlineEvent = {
   /** ISO 8601 timestamp of the trustline change. */
   timestamp: string;
   /** The original raw record from the Horizon API. */
-  raw: unknown;
+  raw?: RawHorizonChangeTrust;
 };
 
 /**
@@ -297,7 +322,7 @@ export type AccountMergeEvent = {
   /** ISO 8601 timestamp of the merge. */
   timestamp: string;
   /** The original raw record from the Horizon API. */
-  raw: unknown;
+  raw?: RawHorizonAccountMerge;
 };
 
 /**
@@ -473,7 +498,9 @@ export type ContractInvokedEvent = {
   /** ISO 8601 timestamp of the invocation. */
   timestamp: string;
   /** The original raw record from the Soroban API. */
-  raw: unknown;
+  raw?: RawSorobanEvent;
+  decodedData?: unknown;
+  inSuccessfulContractCall?: boolean;
 };
 
 /**
@@ -502,7 +529,7 @@ export type ContractEmittedEvent = {
   inSuccessfulContractCall?: boolean;
   timestamp: string;
   /** The original raw record from the Soroban API. */
-  raw: unknown;
+  raw?: RawSorobanEvent;
 };
 
 export type ContractEvent = ContractInvokedEvent | ContractEmittedEvent;
