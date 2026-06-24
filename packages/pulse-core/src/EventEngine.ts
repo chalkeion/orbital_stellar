@@ -45,6 +45,22 @@ import type {
   WatcherNotificationType,
   Logger,
   CursorStore,
+  RawHorizonPayment,
+  RawHorizonSetOptions,
+  RawHorizonCreateAccount,
+  RawHorizonManageSellOffer,
+  RawHorizonManageBuyOffer,
+  RawHorizonBumpSequence,
+  RawHorizonManageData,
+  RawHorizonChangeTrust,
+  RawHorizonAccountMerge,
+  RawHorizonCreateClaimableBalance,
+  RawHorizonClaimClaimableBalance,
+  RawHorizonLiquidityPoolDeposit,
+  RawHorizonLiquidityPoolWithdraw,
+  RawHorizonAllowTrust,
+  RawHorizonSetTrustLineFlags,
+  RawSorobanEvent,
 } from "./index.js";
 import { UnknownNetworkError, NETWORK_PASSPHRASES } from "./index.js";
 
@@ -960,7 +976,7 @@ export class EventEngine {
         amount: toStellarAmount(r.amount as string),
         asset,
         timestamp: r.created_at as string,
-        raw: record,
+        raw: record as RawHorizonPayment,
       };
     }
 
@@ -994,7 +1010,7 @@ export class EventEngine {
         source: toAccountAddress(r.account as string),
         destination: toAccountAddress(r.into as string),
         timestamp: r.created_at as string,
-        raw: record,
+        raw: record as RawHorizonAccountMerge,
       };
     }
 
@@ -1002,37 +1018,6 @@ export class EventEngine {
       return this.normalizeCreateClaimableBalance(r, record);
     }
 
-  private route(event: NormalizedEventOrPending): void {
-    switch (event.type) {
-      case "account.options_changed": {
-        const watcher = this.registry.get(event.source);
-        if (watcher) {
-          watcher.emit("account.options_changed", event);
-          watcher.emit("*", event);
-        }
-        return;
-      }
-
-      case "unknown": {
-        const toWatcher = this.registry.get(event.to);
-        if (toWatcher) {
-          toWatcher.emit(
-            "payment.received",
-            this.withResolvedType(event, "payment.received")
-          );
-          toWatcher.emit("*", this.withResolvedType(event, "payment.received"));
-        }
-
-        const fromWatcher = this.registry.get(event.from);
-        if (fromWatcher) {
-          fromWatcher.emit(
-            "payment.sent",
-            this.withResolvedType(event, "payment.sent")
-          );
-          fromWatcher.emit("*", this.withResolvedType(event, "payment.sent"));
-        }
-        return;
-      }
     if (r.type === "claim_claimable_balance") {
       return this.normalizeClaimClaimableBalance(r, record);
     }
@@ -1100,7 +1085,7 @@ export class EventEngine {
       amount: toStellarAmount(amount),
       price: r.price as string,
       timestamp: r.created_at,
-      raw,
+      raw: raw as RawHorizonManageSellOffer | RawHorizonManageBuyOffer,
     };
   }
 
@@ -1122,7 +1107,7 @@ export class EventEngine {
       account: toAccountAddress(r.account),
       starting_balance: r.starting_balance,
       timestamp: r.created_at,
-      raw,
+      raw: raw as RawHorizonCreateAccount,
     };
   }
 
@@ -1138,7 +1123,7 @@ export class EventEngine {
       source: toAccountAddress(r.source_account),
       bump_to: r.bump_to as string,
       timestamp: r.created_at,
-      raw,
+      raw: raw as RawHorizonBumpSequence,
     };
   }
 
@@ -1179,7 +1164,7 @@ export class EventEngine {
       value,
       decoded,
       timestamp: typeof r.created_at === "string" ? r.created_at : "",
-      raw,
+      raw: raw as RawHorizonManageData,
     };
   }
 
@@ -1206,7 +1191,7 @@ export class EventEngine {
       asset,
       limit,
       timestamp: r.created_at,
-      raw,
+      raw: raw as RawHorizonChangeTrust,
     };
   }
 
@@ -1261,7 +1246,7 @@ export class EventEngine {
       source: toAccountAddress(r.source_account as string),
       changes,
       timestamp: r.created_at as string,
-      raw,
+      raw: raw as RawHorizonSetOptions,
     };
   }
 
@@ -1314,7 +1299,7 @@ export class EventEngine {
       asset,
       amount: toStellarAmount(r.amount as string),
       timestamp: r.created_at as string,
-      raw,
+      raw: raw as RawHorizonCreateClaimableBalance,
     };
   }
 
@@ -1340,7 +1325,7 @@ export class EventEngine {
       claimant: toAccountAddress(r.source_account as string),
       balanceId: r.balance_id as string,
       timestamp: r.created_at as string,
-      raw,
+      raw: raw as RawHorizonClaimClaimableBalance,
     };
   }
 
@@ -1382,7 +1367,7 @@ export class EventEngine {
       reserves_deposited: r.reserves_deposited as LiquidityPoolReserve[],
       shares_received: r.shares_received as string,
       timestamp: r.created_at as string,
-      raw,
+      raw: raw as RawHorizonLiquidityPoolDeposit,
     };
   }
 
@@ -1419,7 +1404,7 @@ export class EventEngine {
       reserves_received: r.reserves_received as LiquidityPoolReserve[],
       shares_redeemed: r.shares as string,
       timestamp: r.created_at as string,
-      raw,
+      raw: raw as RawHorizonLiquidityPoolWithdraw,
     };
   }
 
@@ -1444,7 +1429,7 @@ export class EventEngine {
       asset,
       timestamp: r.created_at,
       operation: "allow_trust",
-      raw,
+      raw: raw as RawHorizonAllowTrust,
     };
   }
 
@@ -1480,7 +1465,7 @@ export class EventEngine {
       asset,
       timestamp: r.created_at,
       operation: "set_trust_line_flags",
-      raw,
+      raw: raw as RawHorizonSetTrustLineFlags,
     };
   }
 
@@ -1499,7 +1484,7 @@ export class EventEngine {
       ...(typeof r.ledger === "number" ? { ledger: r.ledger } : {}),
       ...(typeof r.txHash === "string" ? { txHash: r.txHash } : {}),
       timestamp: r.created_at,
-      raw,
+      raw: raw as RawSorobanEvent,
     };
   }
 
@@ -1520,7 +1505,7 @@ export class EventEngine {
       ...(typeof r.txHash === "string" ? { txHash: r.txHash } : {}),
       inSuccessfulContractCall: Boolean(r.inSuccessfulContractCall),
       timestamp: r.created_at,
-      raw,
+      raw: raw as RawSorobanEvent,
     };
   }
 
@@ -1837,7 +1822,6 @@ export class EventEngine {
 
 /** @internal */
 export interface RpcContractInvokedEvent {
-  // export interface SorobanContractInvokedEvent {
   type: "contract_invoked";
   id: string;
   pagingToken: string;
@@ -1846,12 +1830,12 @@ export interface RpcContractInvokedEvent {
   ledger: number;
   ledgerClosedAt: string;
   inSuccessfulContractCall: boolean;
-  raw: unknown;
+  raw: RawSorobanEvent;
+  decodedData?: unknown;
 }
 
 /** @internal */
 export interface RpcContractEmittedEvent {
-  // export interface SorobanContractEmittedEvent {
   type: "contract_emitted";
   id: string;
   pagingToken: string;
@@ -1862,7 +1846,8 @@ export interface RpcContractEmittedEvent {
   topics: string[];
   value: string;
   inSuccessfulContractCall: boolean;
-  raw: unknown;
+  raw: RawSorobanEvent;
+  decodedData?: unknown;
 }
 
 /**
@@ -1871,8 +1856,19 @@ export interface RpcContractEmittedEvent {
  */
 export function normalizeContractEvent(
   rawRpcEvent: any,
-  logger?: Logger,
+  xdrFormatOrLogger?: "base64" | "json" | Logger,
+  loggerOption?: Logger,
 ): RpcContractInvokedEvent | RpcContractEmittedEvent | null {
+  let xdrFormat: "base64" | "json" = "base64";
+  let logger = loggerOption;
+
+  if (xdrFormatOrLogger !== undefined) {
+    if (typeof xdrFormatOrLogger === "string") {
+      xdrFormat = xdrFormatOrLogger;
+    } else {
+      logger = xdrFormatOrLogger as Logger;
+    }
+  }
   // 1. Structural check patterns
   if (!rawRpcEvent || typeof rawRpcEvent !== "object") {
     logger?.warn("[pulse-core] Dropping malformed Soroban event: payload is not a valid object.", {
@@ -1943,7 +1939,10 @@ export function normalizeContractEvent(
       return null;
     }
 
-    return {
+    const isJson =
+      xdrFormat === "json" || typeof value === "object" || rawRpcEvent.decodedData !== undefined;
+
+    const norm: any = {
       type: "contract_emitted",
       id: String(e.id),
       pagingToken: String(e.pagingToken),
@@ -1952,10 +1951,16 @@ export function normalizeContractEvent(
       ledger: Number(ledger),
       ledgerClosedAt: String(ledgerClosedAt),
       topics: (topic as unknown[]).map((t) => String(t)),
-      value: String(value),
+      value: isJson ? "" : String(value),
       inSuccessfulContractCall: Boolean(inSuccessfulContractCall),
       raw: rawRpcEvent,
     };
+
+    if (isJson) {
+      norm.decodedData = rawRpcEvent.decodedData !== undefined ? rawRpcEvent.decodedData : value;
+    }
+
+    return norm;
   }
 
   logger?.warn(
