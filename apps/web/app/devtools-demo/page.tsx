@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useStellarEvent } from "@orbital/pulse-notify";
+import { useStellarEvent } from "@orbital-stellar/pulse-notify";
 
 function HookRow({ serverUrl, address }: { serverUrl: string; address: string }) {
   const { event, connected, error } = useStellarEvent(serverUrl, address, { event: "*" });

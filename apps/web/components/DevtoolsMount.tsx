@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 
-export default function DevtoolsMount(): JSX.Element | null {
+export default function DevtoolsMount(): React.ReactElement | null {
   const [Dev, setDev] = useState<React.ComponentType | null>(null);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
     let mounted = true;
-    import("@orbital/pulse-notify")
+    import("@orbital-stellar/pulse-notify/devtools")
       .then((mod) => {
         if (mounted && mod && mod.PulseNotifyDevtools) setDev(() => mod.PulseNotifyDevtools);
       })

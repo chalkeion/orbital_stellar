@@ -24,6 +24,7 @@
 10. [Render live payments in React with type narrowing](#10-render-live-payments-in-react-with-type-narrowing)
 11. [Stand up an SSE endpoint in Next.js](#11-stand-up-an-sse-endpoint-in-nextjs)
 12. [Subscribe to Soroban contract events 🛠️](#12-subscribe-to-soroban-contract-events-)
+13. [Unit test webhooks with deterministic jitter](#13-unit-test-webhooks-with-deterministic-jitter)
 
 ---
 
@@ -32,7 +33,7 @@
 The shortest path. Subscribe, attach a handler, wait for events. ✅
 
 ```ts
-import { EventEngine } from "@orbital/pulse-core";
+import { EventEngine } from "@orbital-stellar/pulse-core";
 
 const engine = new EventEngine({ network: "testnet" });
 engine.start();
@@ -53,7 +54,7 @@ Send a test payment from the [Stellar Laboratory](https://laboratory.stellar.org
 One Horizon connection, many watchers. The engine fans events out internally — no extra network cost per subscriber. ✅
 
 ```ts
-import { EventEngine } from "@orbital/pulse-core";
+import { EventEngine } from "@orbital-stellar/pulse-core";
 
 const engine = new EventEngine({ network: "mainnet" });
 engine.start();
@@ -77,7 +78,7 @@ for (const address of accounts) {
 Pass a `filter` function on `subscribe()` to suppress events you don't want delivered. The filter runs before any `on(…)` handler fires. ✅
 
 ```ts
-import { EventEngine, type NormalizedEvent } from "@orbital/pulse-core";
+import { EventEngine, type NormalizedEvent } from "@orbital-stellar/pulse-core";
 
 const engine = new EventEngine({ network: "mainnet" });
 engine.start();
@@ -102,7 +103,7 @@ A predicate that throws is treated as `false` (suppress, with a warn log) — th
 Lifecycle notifications surface alongside operation events on every watcher. Surface them as toasts, banners, or structured logs. ✅
 
 ```ts
-import { EventEngine } from "@orbital/pulse-core";
+import { EventEngine } from "@orbital-stellar/pulse-core";
 
 const engine = new EventEngine({ network: "mainnet" });
 engine.start();
@@ -135,7 +136,7 @@ The engine parses `Retry-After` headers on 429 responses and uses that exact del
 Self-hosted node, regional mirror, or futurenet. The `network` field still picks the chain context; `horizonUrl` overrides the HTTP target. ✅
 
 ```ts
-import { EventEngine } from "@orbital/pulse-core";
+import { EventEngine } from "@orbital-stellar/pulse-core";
 
 const engine = new EventEngine({
   network: "mainnet",
@@ -154,9 +155,11 @@ The URL must be `http://` or `https://`. The engine validates the URL at constru
 
 `WebhookDelivery` attaches to a watcher and POSTs every event to your endpoint with HMAC-SHA256 signing, exponential backoff retry, and a configurable per-attempt timeout. ✅
 
+**Sender side** — attach delivery to the watcher:
+
 ```ts
-import { EventEngine } from "@orbital/pulse-core";
-import { WebhookDelivery } from "@orbital/pulse-webhooks";
+import { EventEngine } from "@orbital-stellar/pulse-core";
+import { WebhookDelivery } from "@orbital-stellar/pulse-webhooks";
 
 const engine = new EventEngine({ network: "mainnet" });
 engine.start();
@@ -171,7 +174,38 @@ new WebhookDelivery(watcher, {
 });
 ```
 
-Each request carries `x-orbital-signature` (hex HMAC-SHA256 over `${timestamp}.${body}`), `x-orbital-timestamp`, and `x-orbital-attempt`. Verify on the receiver side with `verifyWebhook` (Node) or `verifyWebhookEdge` (edge runtimes).
+**Receiver side** — verify the signature and enforce the replay window with `maxAgeMs`:
+
+```ts
+import { verifyWebhook } from "@orbital-stellar/pulse-webhooks";
+import express from "express";
+
+const app = express();
+
+app.post(
+  "/hooks/stellar",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const signature = req.header("x-orbital-signature");
+    const timestamp = req.header("x-orbital-timestamp");
+    if (!signature || !timestamp) return res.sendStatus(400);
+
+    const event = verifyWebhook(
+      req.body.toString(),
+      signature,
+      process.env.WEBHOOK_SECRET!,
+      timestamp,
+      { maxAgeMs: 5 * 60 * 1000 }, // reject signatures older than 5 minutes
+    );
+    if (!event) return res.sendStatus(401);
+
+    console.log(`Verified ${event.type}`);
+    res.sendStatus(200);
+  },
+);
+```
+
+Each request carries `x-orbital-signature` (hex HMAC-SHA256 over `${timestamp}.${body}`), `x-orbital-timestamp`, and `x-orbital-attempt`. Always pass `maxAgeMs` to bound replay — a signature without a replay window is valid indefinitely. The default is `300_000` (5 minutes), matching the recommendation in `SECURITY.md`.
 
 ---
 
@@ -180,7 +214,7 @@ Each request carries `x-orbital-signature` (hex HMAC-SHA256 over `${timestamp}.$
 `verifyWebhookEdge` uses Web Crypto, so it runs on Cloudflare Workers, Vercel Edge, Deno, and browsers — anywhere without Node's `crypto` module. ✅
 
 ```ts
-import { verifyWebhookEdge } from "@orbital/pulse-webhooks";
+import { verifyWebhookEdge } from "@orbital-stellar/pulse-webhooks";
 
 export default {
   async fetch(request: Request, env: { WEBHOOK_SECRET: string }) {
@@ -200,6 +234,7 @@ export default {
       signature,
       env.WEBHOOK_SECRET,
       timestamp,
+      { maxAgeMs: 5 * 60 * 1000 }, // reject signatures older than 5 minutes
     );
     if (!event) return new Response("Invalid signature", { status: 401 });
 
@@ -239,8 +274,8 @@ The `webhook.failed` event (see recipe 9) fires per-URL, so you can detect which
 When a delivery exhausts its retries, the watcher emits `webhook.failed` with the original event in `raw.originalEvent` and the failed URL in `raw.url`. Catch it and persist to a DLQ. ✅
 
 ```ts
-import { EventEngine, type NormalizedEvent } from "@orbital/pulse-core";
-import { WebhookDelivery } from "@orbital/pulse-webhooks";
+import { EventEngine, type NormalizedEvent } from "@orbital-stellar/pulse-core";
+import { WebhookDelivery, type WebhookFailureRaw } from "@orbital-stellar/pulse-webhooks";
 
 const engine = new EventEngine({ network: "mainnet" });
 engine.start();
@@ -253,8 +288,8 @@ new WebhookDelivery(watcher, {
   retries: 3,
 });
 
-watcher.on("webhook.failed", async (event: NormalizedEvent & { raw: { error: string; url: string; attempts: number; originalEvent: NormalizedEvent } }) => {
-  const { url, error, attempts, originalEvent } = event.raw;
+watcher.on("webhook.failed", async (event) => {
+  const { url, error, attempts, originalEvent } = event.raw as WebhookFailureRaw;
   await persistToDLQ({
     url,
     error,
@@ -277,8 +312,8 @@ declare function persistToDLQ(record: unknown): Promise<void>;
 
 ```tsx
 "use client";
-import { useStellarEvent } from "@orbital/pulse-notify";
-import type { NormalizedEvent } from "@orbital/pulse-core";
+import { useStellarEvent } from "@orbital-stellar/pulse-notify";
+import type { NormalizedEvent } from "@orbital-stellar/pulse-core";
 
 type WalletEvents = Extract<
   NormalizedEvent,
@@ -317,7 +352,7 @@ The hooks expect a backend that re-emits Orbital events as Server-Sent Events. T
 
 ```ts
 // app/api/events/[address]/route.ts
-import { EventEngine } from "@orbital/pulse-core";
+import { EventEngine } from "@orbital-stellar/pulse-core";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -376,7 +411,7 @@ Phase 1, lands in `v1.0`. Subscribes to smart-contract events by contract ID and
 
 ```ts
 // 🛠️ Planned API — Phase 1 (Q2–Q3 2026)
-import { EventEngine } from "@orbital/pulse-core";
+import { EventEngine } from "@orbital-stellar/pulse-core";
 
 const engine = new EventEngine({
   network: "mainnet",
@@ -397,6 +432,36 @@ watcher.on("contract.emitted", (event) => {
 ```
 
 Decoding to typed `decodedData` requires the ABI Registry client (also Phase 1). Until then, raw XDR is exposed in `event.raw`. Track Phase 1 progress in [`ROADMAP.md`](../ROADMAP.md).
+
+---
+
+## 13. Unit test webhooks with deterministic jitter
+
+Inject a custom RNG into `WebhookDelivery` to make exponential backoff delays deterministic in your test suite. ✅
+
+```ts
+import { Watcher } from "@orbital-stellar/pulse-core";
+import { WebhookDelivery } from "@orbital-stellar/pulse-webhooks";
+import { vi } from "vitest";
+
+// A simple seeded RNG for deterministic results
+let seed = 12345;
+const seededRandom = () => {
+  seed = (seed * 16807) % 2147483647;
+  return (seed - 1) / 2147483646;
+};
+
+const watcher = new Watcher("GABC...");
+
+new WebhookDelivery(watcher, {
+  url: "https://example.com/webhook",
+  secret: "top-secret",
+  retries: 3,
+  random: seededRandom, // 👈 Inject RNG here
+});
+```
+
+Combine this with `vi.useFakeTimers()` to verify that retries happen after the exact jittered delay you expect without waiting for real-world wall clock time.
 
 ---
 
