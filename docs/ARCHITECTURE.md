@@ -29,16 +29,16 @@
 
 Orbital is three planes sharing one vocabulary — the **normalized event**:
 
-- **Subscription plane** — `@orbital/pulse-core` opens and maintains a
+- **Subscription plane** — `@orbital-stellar/pulse-core` opens and maintains a
   connection to Stellar (Horizon today, Stellar RPC + Soroban in Phase 1),
   normalizes raw operations into a typed `NormalizedEvent` union, and routes
   each event to per-address `Watcher` subscribers.
-- **Delivery plane** — `@orbital/pulse-webhooks` attaches to a `Watcher`,
+- **Delivery plane** — `@orbital-stellar/pulse-webhooks` attaches to a `Watcher`,
   signs each event with HMAC-SHA256, and POSTs it to one or more HTTPS
   endpoints with retry, timeout, and SSRF safety. A second export
   (`verifyWebhookEdge`) lets receivers verify the signature on Cloudflare
   Workers, Vercel Edge, Deno, and browsers without Node `crypto`.
-- **Consumption plane** — `@orbital/pulse-notify` opens a browser
+- **Consumption plane** — `@orbital-stellar/pulse-notify` opens a browser
   `EventSource` to a backend that re-emits the events as Server-Sent
   Events, and re-renders React components on each event.
 
@@ -49,18 +49,18 @@ flowchart LR
     RPC["Stellar RPC<br/>Soroban — 🛠️ Phase 1"]
   end
 
-  subgraph Subscribe["Subscription plane<br/>@orbital/pulse-core"]
+  subgraph Subscribe["Subscription plane<br/>@orbital-stellar/pulse-core"]
     Engine["EventEngine"]
     Normalize["Normalize<br/>13 op types → 21 events"]
     Watcher["Watcher<br/>per-address pub/sub"]
   end
 
-  subgraph Deliver["Delivery plane<br/>@orbital/pulse-webhooks"]
+  subgraph Deliver["Delivery plane<br/>@orbital-stellar/pulse-webhooks"]
     Sign["HMAC-SHA256<br/>+ retry + SSRF + timeout"]
     Verify["verifyWebhook<br/>verifyWebhookEdge"]
   end
 
-  subgraph Consume["Consumption plane<br/>@orbital/pulse-notify"]
+  subgraph Consume["Consumption plane<br/>@orbital-stellar/pulse-notify"]
     Hooks["useStellarEvent<br/>useStellarPayment<br/>useStellarActivity"]
   end
 
@@ -90,12 +90,26 @@ together inside a single Next.js route handler — about 50 lines of glue.
 | **`WebhookDelivery`** | Attaches to a `Watcher`, signs each event, POSTs it with retry + timeout + concurrent-retry cap. Emits `webhook.failed` / `webhook.dropped` on terminal failure. | `packages/pulse-webhooks/src/index.ts` | ✅ |
 | **`verifyWebhook`** | Node-side HMAC verifier using `crypto.timingSafeEqual`. | `packages/pulse-webhooks/src/index.ts` | ✅ |
 | **`verifyWebhookEdge`** | Edge-runtime HMAC verifier using Web Crypto API + constant-time XOR. | `packages/pulse-webhooks/src/edge.ts` | ✅ |
+| **`@orbital-stellar/abi-registry`** | Shared Soroban ABI package that exports the canonical registry client, publisher interface, and scval conversion helpers. | `packages/abi-registry/src/index.ts` | ✅ |
 | **`useStellarEvent<T>`** | React hook that opens an `EventSource`, parses incoming SSE messages, optionally filters by event type, and re-renders on each event. Stable dep-array via sorted `eventKey`. | `packages/pulse-notify/src/index.ts` | ✅ |
 | **`useStellarPayment` / `useStellarActivity`** | Convenience wrappers over `useStellarEvent`. | `packages/pulse-notify/src/index.ts` | ✅ |
 | **Reference composition** | A Next.js Node-runtime route handler that subscribes to an address and streams events as SSE; plus a `webhook-sample` route that returns an HMAC-signed payload for the demo. | `apps/web/app/api/events/[address]/route.ts`, `apps/web/app/api/webhook-sample/route.ts` | ✅ |
 | **Soroban subscriber** | Subscribes to Stellar RPC for contract events, decodes via the ABI Registry, normalizes into the same `NormalizedEvent` union. | `packages/pulse-core` (planned) | 🛠️ Phase 1 |
 | **Cursor persistence** | Pluggable durable store for the Horizon cursor so a process restart resumes from where it left off. | `packages/pulse-core` (planned) | 🛠️ Phase 1 |
 | **Replay adapters** | Pluggable durable queues (Redis / Postgres / S3) for in-flight webhook retries. | `packages/pulse-webhooks` (planned) | 🛠️ Phase 1 |
+
+---
+
+## 2.1 ABI Registry (`@orbital-stellar/abi-registry`)
+
+`@orbital-stellar/abi-registry` is the shared contract-interface package for Orbital.
+
+- It holds the canonical ABI client surface for Soroban event decoding and publishing.
+- It keeps ABI-related helpers in one place instead of duplicating schema logic in `pulse-core` or application code.
+- It exposes the registry-facing building blocks the rest of the repo consumes: `AbiRegistryClient`, `RegistryPublisher`, `LocalFilePublisher`, `scvalToJs`, and `jsToScval`.
+- It is the MIT package surface. The hosted registry service described in `docs/open-source-policy.md` is a separate product boundary.
+
+The package-level reference lives in [`packages/abi-registry/README.md`](../packages/abi-registry/README.md).
 
 ---
 
@@ -229,6 +243,11 @@ Every watcher receives lifecycle notifications alongside operation events:
 | `engine.reconnected` | Reconnect succeeded on attempt `N` |
 | `engine.rate_limited` | 429 received; reconnect deferred by `delayMs` |
 | `engine.stopped` | `engine.stop()` was called explicitly |
+| `engine.cursor_expired` | Stream cursor expired (Horizon or Soroban) |
+
+For `engine.cursor_expired` notifications, the payload includes:
+- `lostCursor?: string` — The value of the expired or lost cursor.
+- `source?: "horizon" | "soroban"` — The subscription engine source where the expiry occurred.
 
 Consumers can subscribe to these via `watcher.on("engine.reconnecting", …)`
 to surface UI banners or write structured logs.
@@ -371,8 +390,8 @@ API:
   (`contract.invoked`, `contract.emitted`) join the `NormalizedEvent` union;
   existing consumers ignore them unless they subscribe.
 - **ABI Registry client.** Decodes Soroban event topics + data into typed,
-  human-readable JSON. Lives as a separate package (`@orbital/abi-registry`
-  TBD) so the registry data layer is independently versioned.
+  human-readable JSON. Lives in the separate `@orbital-stellar/abi-registry`
+  package so the registry data layer is independently versioned.
 - **Cursor persistence.** A pluggable `CursorStore` interface stored on
   `EventEngine` config. Implementations: in-memory (default, current
   behavior), local file, Redis, Postgres, S3. On reconnect, the engine
