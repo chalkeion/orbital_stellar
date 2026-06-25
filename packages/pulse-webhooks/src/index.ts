@@ -8,6 +8,7 @@ import type { Tracer, VerifyWebhookOptions, WebhookConfig } from "./types.js";
 import { DEFAULT_MAX_AGE_MS, DEFAULT_CLOCK_SKEW_MS } from "./types.js";
 export { DeadLetterStore } from "./MemoryDeadLetterStore.js";
 export { NOOP_WEBHOOK_METRICS, CountingWebhookMetrics } from "./metrics.js";
+export { PrometheusWebhookMetrics } from "./PrometheusWebhookMetrics.js";
 export type { WebhookAttemptStatus, WebhookMetrics, WebhookTerminalOutcome } from "./types.js";
 export { exponentialJittered, linear, cappedExponential, constant } from "./backoff.js";
 export type { BackoffStrategy } from "./backoff.js";
