@@ -11,6 +11,7 @@ export { NOOP_WEBHOOK_METRICS, CountingWebhookMetrics } from "./metrics.js";
 export type { WebhookAttemptStatus, WebhookMetrics, WebhookTerminalOutcome } from "./types.js";
 export { exponentialJittered, linear, cappedExponential, constant } from "./backoff.js";
 export type { BackoffStrategy } from "./backoff.js";
+import { NOOP_WEBHOOK_METRICS } from "./metrics.js";
 export { PostgresDeadLetterStore } from "./PostgresDeadLetterStore.js";
 export { RedisRetryQueue } from "./RedisRetryQueue.js";
 export { verifyWebhookEdge, verifyWebhookEdgeRaw } from "./edge.js";
@@ -98,6 +99,7 @@ export class WebhookDelivery {
       urls: Array.isArray(config.url) ? [...config.url] : [config.url],
     };
     this.config.maxConcurrentRetries = Math.max(1, this.config.maxConcurrentRetries);
+    this.config.metrics = this.config.metrics ?? NOOP_WEBHOOK_METRICS;
 
     this.watcher.addStopHandler(() => {
       this.clearRetryTimers();
