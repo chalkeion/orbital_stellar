@@ -172,8 +172,8 @@ export class EventEngine {
   private filters: Map<string, (event: NormalizedEvent) => boolean> = new Map();
   private log: Logger;
   private cursorStore?: CursorStore;
-  private readonly network: Network;
-  private streamKey: string;
+  private readonly initialLookback: number;
+  private static readonly MAX_LOOKBACK_LEDGERS = 17280; // Approx 24h at ~5s per ledger
   private cursorFailureThreshold: number;
   private consecutiveCursorFailures = 0;
   private isCursorStoreUnhealthy = false;
@@ -198,9 +198,18 @@ export class EventEngine {
         rpcHeaders?: Record<string, string>;
         pollIntervalMs?: number;
         startLedgerLookback?: number;
+        initialLookback?: number;
       };
     },
   ) {
+    // Determine lookback from config (prefer new property)
+    const rawLookback = config.soroban?.initialLookback ?? config.soroban?.startLedgerLookback ?? 0;
+    const clamped = Math.max(0, Math.min(rawLookback, EventEngine.MAX_LOOKBACK_LEDGERS));
+    if (rawLookback !== clamped) {
+      this.log.warn(`[pulse-core] Soroban initialLookback (${rawLookback}) exceeds 24h retention; clamped to ${clamped}`);
+    }
+    this.initialLookback = clamped;
+
     let horizonUrl: string;
     if (config.horizonUrl !== undefined) {
       try {
@@ -230,6 +239,7 @@ export class EventEngine {
     this.abiRegistry = config.abiRegistry;
     this.cursorStore = config.cursorStore;
     this.network = config.network;
+    // Note: initialLookback is stored but currently not used directly; future implementation may utilize it.
   }
 
   /**

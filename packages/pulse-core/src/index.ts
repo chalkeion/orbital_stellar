@@ -448,6 +448,8 @@ export type CoreConfig = {
   soroban?: {
     /** Pagination limit for RPC `getEvents` calls. Must be 1–10,000. Defaults to 100. */
     pageLimit?: number;
+    /** Initial lookback for ledger start, default 0, clamped to 24h retention. */
+    initialLookback?: number;
   };
 };
 
