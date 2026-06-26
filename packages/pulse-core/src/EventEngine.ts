@@ -1868,7 +1868,7 @@ export function normalizeContractEvent(
   rawRpcEvent: any,
   xdrFormatOrLogger?: "base64" | "json" | Logger,
   loggerOption?: Logger,
-): RpcContractInvokedEvent | RpcContractEmittedEvent | null {
+): ContractInvokedEvent | ContractEmittedEvent | null {
   let xdrFormat: "base64" | "json" = "base64";
   let logger = loggerOption;
 
@@ -1879,16 +1879,16 @@ export function normalizeContractEvent(
       logger = xdrFormatOrLogger as Logger;
     }
   }
-  // 1. Structural check patterns
+
+  // Basic structural validation
   if (!rawRpcEvent || typeof rawRpcEvent !== "object") {
-    logger?.warn("[pulse-core] Dropping malformed Soroban event: payload is not a valid object.", {
+    logger?.warn(`[pulse-core] Dropping malformed Soroban event: payload is not a valid object.`, {
       event: rawRpcEvent,
     });
     return null;
   }
 
   const e = rawRpcEvent as Record<string, unknown>;
-
   const requiredFields = [
     "id",
     "pagingToken",
@@ -1917,29 +1917,35 @@ export function normalizeContractEvent(
     inSuccessfulContractCall,
     topic,
     value,
+    function: fn,
+    args,
   } = e;
 
+  // Contract invocation events (system or diagnostic categories)
   if (type === "system" || type === "diagnostic") {
-    if (typeof rawRpcEvent.function !== "string") {
+    if (typeof fn !== "string") {
       logger?.warn(
         "[pulse-core] Dropping malformed contract invoked event: missing function field.",
         { event: rawRpcEvent },
       );
       return null;
     }
-    return {
-      type: "contract_invoked",
-      id: String(e.id),
-      pagingToken: String(e.pagingToken),
+    const invoked: ContractInvokedEvent = {
+      type: "contract.invoked",
       contractId: String(contractId),
-      txHash: String(txHash),
+      function: String(fn),
+      args: Array.isArray(args) ? (args as unknown[]) : [],
       ledger: Number(ledger),
-      ledgerClosedAt: String(ledgerClosedAt),
-      inSuccessfulContractCall: Boolean(inSuccessfulContractCall),
+      txHash: String(txHash),
+      timestamp: String(ledgerClosedAt),
       raw: rawRpcEvent,
-    };
+      decodedData: rawRpcEvent.decodedData,
+      inSuccessfulContractCall: Boolean(inSuccessfulContractCall),
+    } as ContractInvokedEvent;
+    return invoked;
   }
 
+  // Contract emitted events (the usual "contract" category)
   if (type === "contract") {
     if (!Array.isArray(topic) || value === undefined || value === null) {
       logger?.warn(
@@ -1952,25 +1958,18 @@ export function normalizeContractEvent(
     const isJson =
       xdrFormat === "json" || typeof value === "object" || rawRpcEvent.decodedData !== undefined;
 
-    const norm: any = {
-      type: "contract_emitted",
-      id: String(e.id),
-      pagingToken: String(e.pagingToken),
+    const emitted: ContractEmittedEvent = {
+      type: "contract.emitted",
       contractId: String(contractId),
-      txHash: String(txHash),
-      ledger: Number(ledger),
-      ledgerClosedAt: String(ledgerClosedAt),
       topics: (topic as unknown[]).map((t) => String(t)),
+      // Preserve original field name for backward compatibility
       value: isJson ? "" : String(value),
-      inSuccessfulContractCall: Boolean(inSuccessfulContractCall),
+      data: isJson ? (rawRpcEvent.decodedData !== undefined ? rawRpcEvent.decodedData : value) : String(value),
       raw: rawRpcEvent,
-    };
-
-    if (isJson) {
-      norm.decodedData = rawRpcEvent.decodedData !== undefined ? rawRpcEvent.decodedData : value;
-    }
-
-    return norm;
+      decodedData: rawRpcEvent.decodedData,
+      inSuccessfulContractCall: Boolean(inSuccessfulContractCall),
+    } as ContractEmittedEvent;
+    return emitted;
   }
 
   logger?.warn(
@@ -1979,3 +1978,8 @@ export function normalizeContractEvent(
   );
   return null;
 }
+
+
+
+
+
