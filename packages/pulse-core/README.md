@@ -80,6 +80,36 @@ type NormalizedEvent = {
 };
 ```
 
+### `isEventType(event, ...types)` → type predicate
+
+Narrows a `NormalizedEvent` to the subset matching the given type strings. Useful when building typed buses or fan-out routers without repeating boilerplate narrowing code:
+
+```ts
+import { isEventType } from "@orbital/pulse-core";
+
+watcher.on("*", (event) => {
+  if (isEventType(event, "payment.received")) {
+    // event is narrowed to Extract<NormalizedEvent, { type: "payment.received" }>
+    console.log(event.amount);
+  }
+});
+```
+
+### `events` namespace
+
+Pre-narrowed type aliases for each event type, for use in typed handler maps and bus implementations:
+
+```ts
+import type { events } from "@orbital/pulse-core";
+
+type Handler<T extends NormalizedEvent> = (event: T) => void;
+
+const handlers: {
+  "payment.received": Handler<events.PaymentReceived>;
+  "payment.sent":     Handler<events.PaymentSent>;
+} = { ... };
+```
+
 ## Design principles
 
 - **Amounts are strings.** Stellar uses 7-decimal fixed-point. JavaScript numbers lose precision. Treat all amounts as strings and delegate arithmetic to `bignumber.js` or similar.
