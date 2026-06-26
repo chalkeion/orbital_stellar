@@ -15,9 +15,7 @@ import type {
   BumpSequenceEvent,
   ClaimableClaimedEvent,
   ClaimableCreatedEvent,
-  ContractEmittedEvent,
   ContractFilter,
-  ContractInvokedEvent,
   ContractSubscribeOptions,
   ContractSubscriptionConfig,
   ContractSubscriptionFilter,
@@ -62,7 +60,7 @@ import type {
   RawHorizonSetTrustLineFlags,
   RawSorobanEvent,
 } from "./index.js";
-import { UnknownNetworkError, NETWORK_PASSPHRASES } from "./index.js";
+import { UnknownNetworkError, NETWORK_PASSPHRASES, ContractEmittedEvent, ContractInvokedEvent } from "./index.js";
 
 type PendingPaymentEvent = Omit<PaymentEvent, "type"> & { type: "unknown" };
 type NormalizedEventOrPending =
@@ -1930,7 +1928,7 @@ export function normalizeContractEvent(
       );
       return null;
     }
-    const invoked: ContractInvokedEvent = {
+    const invoked = {
       type: "contract.invoked",
       contractId: String(contractId),
       function: String(fn),
@@ -1941,7 +1939,9 @@ export function normalizeContractEvent(
       raw: rawRpcEvent,
       decodedData: rawRpcEvent.decodedData,
       inSuccessfulContractCall: Boolean(inSuccessfulContractCall),
-    } as ContractInvokedEvent;
+      id: String(e.id),
+      pagingToken: String(e.pagingToken),
+    } as unknown as ContractInvokedEvent;
     return invoked;
   }
 
@@ -1958,7 +1958,7 @@ export function normalizeContractEvent(
     const isJson =
       xdrFormat === "json" || typeof value === "object" || rawRpcEvent.decodedData !== undefined;
 
-    const emitted: ContractEmittedEvent = {
+    const emitted = {
       type: "contract.emitted",
       contractId: String(contractId),
       topics: (topic as unknown[]).map((t) => String(t)),
@@ -1968,7 +1968,13 @@ export function normalizeContractEvent(
       raw: rawRpcEvent,
       decodedData: rawRpcEvent.decodedData,
       inSuccessfulContractCall: Boolean(inSuccessfulContractCall),
-    } as ContractEmittedEvent;
+      eventId: String(e.id),
+      ledger: Number(ledger),
+      txHash: String(txHash),
+      timestamp: String(ledgerClosedAt),
+      id: String(e.id),
+      pagingToken: String(e.pagingToken),
+    } as unknown as ContractEmittedEvent;
     return emitted;
   }
 
