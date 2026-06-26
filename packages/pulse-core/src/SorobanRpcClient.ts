@@ -31,6 +31,28 @@ export interface SorobanRpcClientOptions {
   fetchImpl?: typeof fetch;
   /** Optional logger. Per-request diagnostics go to `logger.debug` (header values redacted). */
   logger?: Logger;
+  /**
+   * Default XDR format for `getEvents` requests.
+   * - `"json"` (default): the RPC decodes XDR values into JSON objects, and
+   *   `decodedData` is populated on normalized events.
+   * - `"base64"`: raw base64 strings are preserved in the event `value` field,
+   *   and `decodedData` is left undefined.
+   *
+   * Can be overridden per call via {@link GetEventsOptions.xdrFormat}.
+   * @default "json"
+   */
+  xdrFormat?: "base64" | "json";
+}
+
+/** Per-call options for {@link SorobanRpcClient.getEvents}. */
+export interface GetEventsOptions {
+  /**
+   * XDR format for this request. Overrides the client-level default.
+   * @default "json"
+   */
+  xdrFormat?: "base64" | "json";
+  /** Optional AbortSignal for request cancellation. */
+  signal?: AbortSignal;
 }
 
 /** Result of a `getEvents` call: the JSON-RPC `result` payload with `events` guaranteed. */
@@ -121,6 +143,7 @@ export class SorobanRpcClient {
   private readonly headers: Record<string, string>;
   private readonly fetchImpl?: typeof fetch;
   private readonly logger?: Logger;
+  private readonly xdrFormat: "base64" | "json";
 
   /**
    * @param options - Configuration for the RPC client.
@@ -130,6 +153,7 @@ export class SorobanRpcClient {
     this.headers = { ...(options.headers ?? {}) };
     this.fetchImpl = options.fetchImpl;
     this.logger = options.logger;
+    this.xdrFormat = options.xdrFormat ?? "json";
   }
 
   /**
@@ -230,59 +254,33 @@ export class SorobanRpcClient {
    *
    * @param startCursor - Optional cursor to start fetching from.
    * @param limit - Optional maximum number of events to return.
-   * @param signalOrOptions - Optional AbortSignal or option bag (e.g. xdrFormat: 'base64' | 'json', signal: AbortSignal).
+   * @param signalOrOptions - Optional AbortSignal or {@link GetEventsOptions}.
    * @param filters - Optional array of filters (up to 5 filters).
-   * @param options - Optional configuration options (e.g. xdrFormat: 'base64' | 'json', signal: AbortSignal).
+   * @param options - Deprecated; use {@link signalOrOptions} instead.
    * @returns The JSON-RPC `result` payload, with `events` defaulting to `[]`.
    */
   async getEvents(
     startCursor?: string,
     limit?: number,
-    signalOrOptions?: AbortSignal | { xdrFormat?: "base64" | "json"; signal?: AbortSignal },
+    signalOrOptions?: AbortSignal | GetEventsOptions,
     filters?: ContractSubscriptionFilter[],
-    options?: { xdrFormat?: "base64" | "json"; signal?: AbortSignal } | AbortSignal,
+    options?: GetEventsOptions | AbortSignal,
   ): Promise<SorobanGetEventsResult> {
     const params: Record<string, unknown> = {};
     if (startCursor !== undefined) params.startCursor = startCursor;
     if (limit !== undefined) params.limit = limit;
     if (filters !== undefined && filters.length > 0) params.filters = filters;
 
-    let xdrFormat: "base64" | "json" = "json";
-    let signal: AbortSignal | undefined = undefined;
+    let xdrFormat: "base64" | "json" = this.xdrFormat;
+    let signal: AbortSignal | undefined;
 
-    // Resolve signal or options from the third parameter
-    if (signalOrOptions !== undefined) {
-      if (
-        signalOrOptions instanceof AbortSignal ||
-        (typeof signalOrOptions === "object" &&
-          signalOrOptions !== null &&
-          "addEventListener" in signalOrOptions)
-      ) {
-        signal = signalOrOptions as AbortSignal;
-      } else if (typeof signalOrOptions === "object" && signalOrOptions !== null) {
-        if ("xdrFormat" in signalOrOptions) {
-          xdrFormat = (signalOrOptions as any).xdrFormat ?? "json";
-        }
-        if ("signal" in signalOrOptions) {
-          signal = (signalOrOptions as any).signal;
-        }
-      }
-    }
-
-    // Resolve signal or options from the fifth parameter (options)
-    if (options !== undefined) {
-      if (
-        options instanceof AbortSignal ||
-        (typeof options === "object" && options !== null && "addEventListener" in options)
-      ) {
-        signal = options as AbortSignal;
-      } else if (typeof options === "object" && options !== null) {
-        if ("xdrFormat" in options) {
-          xdrFormat = (options as any).xdrFormat ?? "json";
-        }
-        if ("signal" in options) {
-          signal = (options as any).signal;
-        }
+    for (const candidate of [signalOrOptions, options]) {
+      if (candidate === undefined) continue;
+      if (candidate instanceof AbortSignal) {
+        signal = candidate;
+      } else {
+        if (candidate.xdrFormat !== undefined) xdrFormat = candidate.xdrFormat;
+        if (candidate.signal !== undefined) signal = candidate.signal;
       }
     }
 
