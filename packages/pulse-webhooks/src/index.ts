@@ -15,6 +15,7 @@ export type { BackoffStrategy } from "./backoff.js";
 export { PostgresDeadLetterStore } from "./PostgresDeadLetterStore.js";
 export { RedisRetryQueue } from "./RedisRetryQueue.js";
 export { MemoryRetryQueue } from "./MemoryRetryQueue.js";
+export { SqsRetryQueue } from "./SqsRetryQueue.js";
 export { verifyWebhookEdge, verifyWebhookEdgeRaw } from "./edge.js";
 export type {
   DeadLetterEntry,
@@ -29,6 +30,17 @@ export type {
 } from "./PostgresDeadLetterStore.js";
 export type { RedisLike, RedisRetryQueueOptions } from "./RedisRetryQueue.js";
 export type { MemoryRetryQueueOptions } from "./MemoryRetryQueue.js";
+export type {
+  SqsLike,
+  SqsRetryQueueOptions,
+  SendMessageInput,
+  SendMessageOutput,
+  ReceiveMessageInput,
+  ReceiveMessageOutput,
+  DeleteMessageInput,
+  DeleteMessageOutput,
+  SqsMessage,
+} from "./SqsRetryQueue.js";
 export type { RetryQueue, RetryRecord } from "./RetryQueue.js";
 export type {
   Span,
