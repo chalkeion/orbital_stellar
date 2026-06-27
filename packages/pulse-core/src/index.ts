@@ -45,6 +45,7 @@ export { EngineAlreadyStartedError, HorizonStreamError } from "./errors.js";
 export { StrKey } from "@stellar/stellar-sdk";
 export { CursorStore } from "./CursorStore.js";
 export type { CursorStoreLike } from "./CursorStore.js";
+import type { CursorStoreLike } from "./CursorStore.js";
 export { MemoryCursorStore } from "./MemoryCursorStore.js";
 export { FileCursorStore } from "./FileCursorStore.js";
 export { PostgresCursorStore } from "./PostgresCursorStore.js";
