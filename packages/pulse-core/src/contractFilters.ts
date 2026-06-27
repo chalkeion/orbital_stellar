@@ -1,17 +1,29 @@
-import type { ContractSubscriptionFilter } from "./index.js";
+/**
+ * Accepted filter `type` values: the legacy ContractEventType union plus the
+ * RPC-shaped event classes used by ContractFilter (subscribeContract(config)).
+ */
+const VALID_FILTER_TYPES = [
+  "contract.invoked",
+  "contract.emitted",
+  "system",
+  "contract",
+  "diagnostic",
+];
 
 /**
- * Validates a list of contract subscription filters according to Stellar RPC constraints:
+ * Validates a list of contract subscription filters against Stellar RPC constraints:
  * - filters.length ≤ 5
  * - filter.contractIds.length ≤ 5
- * - Topic patterns must be string arrays where each segment is either '*', '**', or a base64-encoded XDR scval
+ * - filter.topics (RPC segment arrays): an array of topic patterns, where each
+ *   pattern is a segment array and every segment is '*', '**', or a
+ *   base64-encoded XDR scval
+ * - filter.topicFilters (legacy positional form): an array whose entries are
+ *   null, '*', '**', or a base64-encoded XDR scval
  *
  * @param filters - The filters to validate
  * @returns null if valid, or an array of validation error messages if invalid
  */
-export function validateContractFilters(
-  filters: unknown
-): string[] | null {
+export function validateContractFilters(filters: unknown): string[] | null {
   const errors: string[] = [];
 
   // Check if filters is defined and is an array
@@ -21,9 +33,7 @@ export function validateContractFilters(
 
   // Check filters.length ≤ 5
   if (filters.length > 5) {
-    errors.push(
-      `Filters array length must be ≤ 5, but got ${filters.length}`
-    );
+    errors.push(`Filters array length must be ≤ 5, but got ${filters.length}`);
   }
 
   // Validate each filter object
@@ -38,15 +48,10 @@ export function validateContractFilters(
 
     const filterObj = filter as Record<string, unknown>;
 
-    // Validate type field (optional, must be string if present)
+    // Validate type field (optional, must be a known type if present)
     if ("type" in filterObj && filterObj.type !== undefined) {
-      if (
-        typeof filterObj.type !== "string" ||
-        !["contract.invoked", "contract.emitted"].includes(filterObj.type)
-      ) {
-        errors.push(
-          `Filter[${i}].type must be "contract.invoked" or "contract.emitted"`
-        );
+      if (typeof filterObj.type !== "string" || !VALID_FILTER_TYPES.includes(filterObj.type)) {
+        errors.push(`Filter[${i}].type must be one of: ${VALID_FILTER_TYPES.join(", ")}`);
       }
     }
 
@@ -57,16 +62,14 @@ export function validateContractFilters(
       } else {
         if (filterObj.contractIds.length > 5) {
           errors.push(
-            `Filter[${i}].contractIds length must be ≤ 5, but got ${filterObj.contractIds.length}`
+            `Filter[${i}].contractIds length must be ≤ 5, but got ${filterObj.contractIds.length}`,
           );
         }
 
         for (let j = 0; j < filterObj.contractIds.length; j++) {
           const contractId = filterObj.contractIds[j];
           if (typeof contractId !== "string") {
-            errors.push(
-              `Filter[${i}].contractIds[${j}] must be a string`
-            );
+            errors.push(`Filter[${i}].contractIds[${j}] must be a string`);
           }
         }
       }
@@ -83,9 +86,7 @@ export function validateContractFilters(
 
           // Topic can be null (wildcard) or string
           if (topic !== null && typeof topic !== "string") {
-            errors.push(
-              `Filter[${i}].topicFilters[${j}] must be null or a string`
-            );
+            errors.push(`Filter[${i}].topicFilters[${j}] must be null or a string`);
             continue;
           }
 
@@ -95,9 +96,38 @@ export function validateContractFilters(
               // Check if it looks like base64-encoded XDR scval
               if (!isValidBase64XdrScval(topic)) {
                 errors.push(
-                  `Filter[${i}].topicFilters[${j}] must be '*', '**', or a base64-encoded XDR scval, but got '${topic}'`
+                  `Filter[${i}].topicFilters[${j}] must be '*', '**', or a base64-encoded XDR scval, but got '${topic}'`,
                 );
               }
+            }
+          }
+        }
+      }
+    }
+
+    // Validate topics (RPC segment arrays): an array of topic patterns, where
+    // each pattern is a segment array and every segment must be '*', '**', or a
+    // base64-encoded XDR scval.
+    if ("topics" in filterObj && filterObj.topics !== undefined) {
+      if (!Array.isArray(filterObj.topics)) {
+        errors.push(`Filter[${i}].topics must be an array of segment arrays`);
+      } else {
+        for (let j = 0; j < filterObj.topics.length; j++) {
+          const pattern = filterObj.topics[j];
+          if (!Array.isArray(pattern)) {
+            errors.push(`Filter[${i}].topics[${j}] must be a segment array`);
+            continue;
+          }
+          for (let k = 0; k < pattern.length; k++) {
+            const segment = pattern[k];
+            if (typeof segment !== "string") {
+              errors.push(`Filter[${i}].topics[${j}][${k}] must be a string segment`);
+              continue;
+            }
+            if (segment !== "*" && segment !== "**" && !isValidBase64XdrScval(segment)) {
+              errors.push(
+                `Filter[${i}].topics[${j}][${k}] must be '*', '**', or a base64-encoded XDR scval, but got '${segment}'`,
+              );
             }
           }
         }

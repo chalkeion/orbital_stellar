@@ -1,9 +1,9 @@
-# @orbital/pulse-webhooks
+# @orbital-stellar/pulse-webhooks
 
 **HMAC-signed webhook delivery for Stellar events.** Attach to a `pulse-core` watcher and every event becomes one or more outbound HTTPS POSTs with a verifiable signature, retry on failure, and configurable timeout.
 
 ```bash
-pnpm add @orbital/pulse-webhooks @orbital/pulse-core
+pnpm add @orbital-stellar/pulse-webhooks @orbital-stellar/pulse-core
 ```
 
 ## What it does
@@ -15,8 +15,8 @@ Consumers verify the signature using the shared secret you provisioned — `veri
 ## Quickstart — sender side
 
 ```ts
-import { EventEngine } from "@orbital/pulse-core";
-import { WebhookDelivery } from "@orbital/pulse-webhooks";
+import { EventEngine } from "@orbital-stellar/pulse-core";
+import { WebhookDelivery } from "@orbital-stellar/pulse-webhooks";
 
 const engine = new EventEngine({ network: "testnet" });
 engine.start();
@@ -37,7 +37,7 @@ new WebhookDelivery(watcher, {
 ## Quickstart — receiver side
 
 ```ts
-import { verifyWebhook } from "@orbital/pulse-webhooks";
+import { verifyWebhook } from "@orbital-stellar/pulse-webhooks";
 import express from "express";
 
 const app = express();
@@ -55,6 +55,7 @@ app.post(
       signature,
       process.env.WEBHOOK_SECRET!,
       timestamp,
+      { maxAgeMs: 5 * 60 * 1000 }, // reject signatures older than 5 minutes
     );
     if (!event) return res.sendStatus(401);
 
@@ -70,7 +71,7 @@ app.post(
 Cloudflare Workers don't have Node.js crypto — they use Web Crypto API. Use `verifyWebhookEdge` for edge runtime compatibility:
 
 ```js
-import { verifyWebhookEdge } from "@orbital/pulse-webhooks";
+import { verifyWebhookEdge } from "@orbital-stellar/pulse-webhooks";
 
 export default {
   async fetch(request, env, ctx) {
@@ -91,6 +92,7 @@ export default {
       signature,
       env.WEBHOOK_SECRET,
       timestamp,
+      { maxAgeMs: 5 * 60 * 1000 }, // reject signatures older than 5 minutes
     );
 
     if (!event) {
@@ -128,17 +130,23 @@ Attaches a delivery driver to a `Watcher`. Every event the watcher emits is deli
 | `config.allowPrivateNetworks` | `boolean`            | `false`  | If true, bypass SSRF checks for local/private IP ranges                               |
 | `config.random`               | `() => number`       | `random` | Optional RNG for testing jitter. Defaults to `Math.random`.                           |
 
-### `verifyWebhook(payload, signature, secret, timestamp)` → `NormalizedEvent | null`
+### `verifyWebhook(payload, signature, secret, timestamp, options?)` → `NormalizedEvent | null`
 
-Verifies that `payload` was signed with `secret` using `timestamp + "." + payload`. Returns the parsed event on success, `null` on any failure (bad signature, malformed JSON, invalid timestamp, length mismatch).
+Verifies that `payload` was signed with `secret` using `timestamp + "." + payload`. Returns the parsed event on success, `null` on any failure (bad signature, malformed JSON, invalid timestamp, length mismatch, or signature outside the replay window).
 
 Uses `crypto.timingSafeEqual` under the hood — do not roll your own comparison.
 
-### `verifyWebhookEdge(payload, signature, secret, timestamp)` → `Promise<NormalizedEvent | null>`
+| Option        | Type     | Default   | Description                                                    |
+| ------------- | -------- | --------- | -------------------------------------------------------------- |
+| `maxAgeMs`    | `number` | `300_000` | Reject signatures older than this many milliseconds            |
+| `clockSkewMs` | `number` | `30_000`  | Clock-skew allowance for sender/receiver time differences      |
+| `nowMs`       | `number` | `Date.now()` | Override current time (useful in tests)                     |
 
-Edge-compatible version of `verifyWebhook` using Web Crypto API. Works in Cloudflare Workers, Deno, and browsers. Returns a Promise that resolves to the parsed event on success, `null` on any failure.
+### `verifyWebhookEdge(payload, signature, secret, timestamp, options?)` → `Promise<NormalizedEvent | null>`
 
-Uses constant-time comparison and Web Crypto for HMAC-SHA256 verification.
+Edge-compatible version of `verifyWebhook` using Web Crypto API. Works in Cloudflare Workers, Deno, and browsers. Returns a Promise that resolves to the parsed event on success, `null` on any failure (including signatures outside the replay window).
+
+Uses constant-time comparison and Web Crypto for HMAC-SHA256 verification. Accepts the same `options` as `verifyWebhook` (`maxAgeMs`, `clockSkewMs`, `nowMs`).
 
 ### Failure events
 
@@ -149,7 +157,7 @@ When a delivery cannot be completed, the `Watcher` emits special events for rout
 Emitted after all retry attempts are exhausted for a given URL. The event payload is a `NormalizedEvent` where the `raw` field is a `WebhookFailureRaw` object:
 
 ```ts
-import type { WebhookFailureRaw } from "@orbital/pulse-webhooks";
+import type { WebhookFailureRaw } from "@orbital-stellar/pulse-webhooks";
 
 watcher.on("webhook.failed", (event) => {
   const meta = event.raw as WebhookFailureRaw;
@@ -163,7 +171,7 @@ watcher.on("webhook.failed", (event) => {
 Emitted when a pending retry is dropped because the `maxConcurrentRetries` cap has been reached. This happens before the retry is even attempted. The `raw` field is a `WebhookDroppedRaw` object:
 
 ```ts
-import type { WebhookDroppedRaw } from "@orbital/pulse-webhooks";
+import type { WebhookDroppedRaw } from "@orbital-stellar/pulse-webhooks";
 
 watcher.on("webhook.dropped", (event) => {
   const meta = event.raw as WebhookDroppedRaw;
@@ -189,7 +197,7 @@ watcher.on("webhook.dropped", (event) => {
 Failed webhooks are automatically tracked in a `DeadLetterStore`. Query failures by URL, time window, or limit.
 
 ```ts
-import { DeadLetterStore, WebhookDelivery } from "@orbital/pulse-webhooks";
+import { DeadLetterStore, WebhookDelivery } from "@orbital-stellar/pulse-webhooks";
 
 const dlq = new DeadLetterStore();
 
@@ -306,14 +314,15 @@ Orbital provides a hardened delivery pipeline for high-stakes financial events. 
 For a full breakdown of adversaries, assets, and mitigations (including secret rotation runbooks and detection signals), see the [core repository SECURITY.md](../../SECURITY.md).
 
 #### Replay window
-While `pulse-webhooks` includes a timestamp in every signature, consumers **must** verify that the `x-orbital-timestamp` is within a reasonable window (e.g., 5 minutes) to prevent replay of old valid payloads.
+`pulse-webhooks` includes a timestamp in every signature and enforces a configurable replay window in both `verifyWebhook` and `verifyWebhookEdge`. Pass `maxAgeMs` in the options argument to bound how old a signature can be before it is rejected. The default is `300_000` (5 minutes), matching the recommendation in `SECURITY.md`.
 
 ```ts
-if (Date.now() - Number(timestamp) > 5 * 60 * 1000) {
-  return res.sendStatus(401);
-}
+const event = verifyWebhook(payload, signature, secret, timestamp, {
+  maxAgeMs: 5 * 60 * 1000, // 5 minutes — reject replayed signatures
+});
 ```
 
+Always pass `maxAgeMs` explicitly. A consumer that omits the option still receives the safe 5-minute default, but being explicit makes the intent clear and guards against future default changes.
 
 ## Current limitations
 

@@ -1,23 +1,12 @@
 import { createElement, useEffect, useMemo, useState } from "react";
-import type {
-  ComponentPropsWithoutRef,
-  CSSProperties,
-  ReactElement,
-} from "react";
+import { StellarEventBoundary } from "./StellarEventBoundary.js";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactElement } from "react";
 
-export type StellarConnectionStatusState =
-  | "connecting"
-  | "connected"
-  | "error";
+export type StellarConnectionStatusState = "connecting" | "connected" | "error";
 
-export type StellarConnectionStatusLabels = Partial<
-  Record<StellarConnectionStatusState, string>
->;
+export type StellarConnectionStatusLabels = Partial<Record<StellarConnectionStatusState, string>>;
 
-export type StellarConnectionStatusProps = Omit<
-  ComponentPropsWithoutRef<"span">,
-  "children"
-> & {
+export type StellarConnectionStatusProps = Omit<ComponentPropsWithoutRef<"span">, "children"> & {
   serverUrl: string;
   address: string;
   token?: string;
@@ -51,8 +40,7 @@ export function StellarConnectionStatus({
   "aria-label": ariaLabel,
   ...spanProps
 }: StellarConnectionStatusProps): ReactElement {
-  const [status, setStatus] =
-    useState<StellarConnectionStatusState>("connecting");
+  const [status, setStatus] = useState<StellarConnectionStatusState>("connecting");
 
   useEffect(() => {
     if (!serverUrl || !address) {
@@ -101,7 +89,7 @@ export function StellarConnectionStatus({
       padding: "var(--stellar-connection-status-padding, 0.25rem 0.5rem)",
       ...style,
     }),
-    [status, style]
+    [status, style],
   );
 
   const dotStyle = useMemo<CSSProperties>(
@@ -112,29 +100,29 @@ export function StellarConnectionStatus({
       height: "var(--stellar-connection-status-dot-size, 0.5rem)",
       width: "var(--stellar-connection-status-dot-size, 0.5rem)",
     }),
-    [status]
+    [status],
   );
 
   return createElement(
-    "span",
-    {
-      ...spanProps,
-      "aria-label": ariaLabel ?? `Stellar connection ${label}`,
-      "aria-live": spanProps["aria-live"] ?? "polite",
-      className: statusClassName,
-      "data-status": status,
-      role: spanProps.role ?? "status",
-      style: rootStyle,
-    },
-    createElement("span", {
-      "aria-hidden": true,
-      className: "stellar-connection-status__dot",
-      style: dotStyle,
-    }),
+    StellarEventBoundary,
+    { fallback: null },
     createElement(
       "span",
-      { className: "stellar-connection-status__label" },
-      label
-    )
+      {
+        ...spanProps,
+        "aria-label": ariaLabel ?? `Stellar connection ${label}`,
+        "aria-live": spanProps["aria-live"] ?? "polite",
+        className: statusClassName,
+        "data-status": status,
+        role: spanProps.role ?? "status",
+        style: rootStyle,
+      },
+      createElement("span", {
+        "aria-hidden": true,
+        className: "stellar-connection-status__dot",
+        style: dotStyle,
+      }),
+      createElement("span", { className: "stellar-connection-status__label" }, label),
+    ),
   );
 }

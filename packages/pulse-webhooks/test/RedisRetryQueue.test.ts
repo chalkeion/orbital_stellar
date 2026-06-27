@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { NormalizedEvent } from "@orbital/pulse-core";
-import {
-  RedisRetryQueue,
-  type RedisLike,
-  type RetryRecord,
-} from "../src/index.js";
+import type { NormalizedEvent } from "@orbital-stellar/pulse-core";
+import { RedisRetryQueue, type RedisLike, type RetryRecord } from "../src/index.js";
 
 type SortedSetMember = {
   score: number;
@@ -39,12 +35,9 @@ class MockRedis implements RedisLike {
   ): string[] {
     const minScore = this.parseScore(min);
     const maxScore = this.parseScore(max);
-    const limitIndex = args.findIndex(
-      (arg) => String(arg).toUpperCase() === "LIMIT",
-    );
+    const limitIndex = args.findIndex((arg) => String(arg).toUpperCase() === "LIMIT");
     const offset = limitIndex >= 0 ? Number(args[limitIndex + 1] ?? 0) : 0;
-    const count =
-      limitIndex >= 0 ? Number(args[limitIndex + 2] ?? Infinity) : Infinity;
+    const count = limitIndex >= 0 ? Number(args[limitIndex + 2] ?? Infinity) : Infinity;
 
     return [...(this.sets.get(key) ?? [])]
       .filter((entry) => entry.score >= minScore && entry.score <= maxScore)
@@ -185,8 +178,56 @@ describe("RedisRetryQueue", () => {
     await payments.enqueue(retryRecord({ id: "payments-retry" }));
 
     expect(await audits.dequeue(1_000)).toBeNull();
-    expect(await payments.dequeue(1_000)).toEqual(
-      retryRecord({ id: "payments-retry" }),
-    );
+    expect(await payments.dequeue(1_000)).toEqual(retryRecord({ id: "payments-retry" }));
+  });
+
+  it("re-emerges dequeued records after visibility timeout when not acked", async () => {
+    const queue = new RedisRetryQueue(new MockRedis(), {
+      visibilityTimeoutMs: 1_000,
+    });
+    const record = retryRecord({ id: "visibility", nextRetryAt: 1_000 });
+
+    expect(await queue.enqueue(record)).toBeUndefined();
+    expect(await queue.dequeue(1_000)).toEqual(record);
+    expect(await queue.dequeue(1_999)).toBeNull();
+    expect(await queue.dequeue(2_000)).toEqual({
+      ...record,
+      nextRetryAt: 2_000,
+    });
+  });
+
+  it("removes in-flight records on ack", async () => {
+    const queue = new RedisRetryQueue(new MockRedis(), {
+      visibilityTimeoutMs: 500,
+    });
+    const record = retryRecord({ id: "ack-me", nextRetryAt: 100 });
+
+    expect(await queue.enqueue(record)).toBeUndefined();
+    expect(await queue.dequeue(100)).toEqual(record);
+
+    await queue.ack("ack-me");
+
+    expect(await queue.dequeue(1_000)).toBeNull();
+  });
+
+  it("nack requeues in-flight records using the provided delay", async () => {
+    let now = 1_000;
+    const queue = new RedisRetryQueue(new MockRedis(), {
+      now: () => now,
+      visibilityTimeoutMs: 5_000,
+    });
+    const record = retryRecord({ id: "nack-me", nextRetryAt: 1_000 });
+
+    expect(await queue.enqueue(record)).toBeUndefined();
+    expect(await queue.dequeue(1_000)).toEqual(record);
+
+    now = 1_100;
+    await queue.nack("nack-me", 500);
+
+    expect(await queue.dequeue(1_599)).toBeNull();
+    expect(await queue.dequeue(1_600)).toEqual({
+      ...record,
+      nextRetryAt: 1_600,
+    });
   });
 });
