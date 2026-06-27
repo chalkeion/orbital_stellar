@@ -1,5 +1,5 @@
-'use client';
-import { useEffect, useState, ReactElement, ReactNode } from 'react';
+"use client";
+import { useEffect, useState, ReactElement, ReactNode } from "react";
 
 export type StellarEventBoundaryProps = {
   /**
@@ -10,7 +10,7 @@ export type StellarEventBoundaryProps = {
   /**
    * Client‑only children to render after component mounts.
    */
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 /**
