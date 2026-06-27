@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pagefind": "pagefind --source content --output public/search"
+    "pagefind": "pagefind --source content --output-path public/search"
   },
   "dependencies": {
 

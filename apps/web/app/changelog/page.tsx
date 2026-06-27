@@ -23,7 +23,7 @@ export default async function ChangelogPage() {
     <section className="prose prose-sm max-w-3xl mx-auto py-8">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }]]}
+        rehypePlugins={[]}
       >
         {markdown}
       </ReactMarkdown>
