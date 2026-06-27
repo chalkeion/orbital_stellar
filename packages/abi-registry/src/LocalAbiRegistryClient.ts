@@ -66,7 +66,7 @@ export class LocalAbiRegistryClient {
 
     const loaded = await Promise.all(uncached.map((id) => this.loadFromDisk(id)));
     for (const [i, id] of uncached.entries()) {
-      const spec = loaded[i];
+      const spec = loaded[i] as ContractSpec | null;
       this.setCache(id, spec);
       result[id] = spec;
     }
