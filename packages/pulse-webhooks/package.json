@@ -26,9 +26,6 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
-  "bin": {
-    "orbital": "./bin/orbital"
-  },
   "dependencies": {
     "@orbital-stellar/pulse-core": "workspace:*"
   },
