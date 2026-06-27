@@ -943,45 +943,59 @@ describe("pulse-webhooks verifyWebhookEdge", () => {
 
 // Parameterized test suite for both verifyWebhook and verifyWebhookEdge
 describe.each([
-  ['verifyWebhook', (payload, signature, secret, timestamp, opts) => {
-    return verifyWebhook(payload, signature, secret, timestamp, opts);
-  }],
-  ['verifyWebhookEdge', async (payload, signature, secret, timestamp, opts) => {
-    return await verifyWebhookEdge(payload, signature, secret, timestamp, opts);
-  }],
-])('%s verification', (verifierName, verifyFn) => {
-  it('returns parsed event when signature matches timestamped payload', async () => {
+  [
+    "verifyWebhook",
+    (payload, signature, secret, timestamp, opts) => {
+      return verifyWebhook(payload, signature, secret, timestamp, opts);
+    },
+  ],
+  [
+    "verifyWebhookEdge",
+    async (payload, signature, secret, timestamp, opts) => {
+      return await verifyWebhookEdge(payload, signature, secret, timestamp, opts);
+    },
+  ],
+])("%s verification", (verifierName, verifyFn) => {
+  it("returns parsed event when signature matches timestamped payload", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-    const event = await verifyFn(payload, signature, "top-secret", timestamp, { nowMs: Number(timestamp) });
+    const event = await verifyFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+    });
     expect(event).toEqual(deliveryEvent);
   });
 
-  it('accepts explicit v1 version option', async () => {
+  it("accepts explicit v1 version option", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-    const event = await verifyFn(payload, signature, "top-secret", timestamp, { nowMs: Number(timestamp), version: "v1" });
+    const event = await verifyFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+      version: "v1",
+    });
     expect(event).toEqual(deliveryEvent);
   });
 
-  it('accepts v2 placeholder without changing v1 verification behavior', async () => {
+  it("accepts v2 placeholder without changing v1 verification behavior", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-    const event = await verifyFn(payload, signature, "top-secret", timestamp, { nowMs: Number(timestamp), version: "v2" });
+    const event = await verifyFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+      version: "v2",
+    });
     expect(event).toEqual(deliveryEvent);
   });
 
-  it('returns null when timestamp is missing or invalid', async () => {
+  it("returns null when timestamp is missing or invalid", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const signature = signWebhookPayload("top-secret", payload, "1714176000000");
     expect(await verifyFn(payload, signature, "top-secret", "")).toBeNull();
     expect(await verifyFn(payload, signature, "top-secret", "not-a-number")).toBeNull();
   });
 
-  it('returns null when signature does not match timestamped payload', async () => {
+  it("returns null when signature does not match timestamped payload", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
@@ -990,54 +1004,81 @@ describe.each([
     expect(await verifyFn(payload, signature, "top-secret", "1714176000001")).toBeNull();
   });
 
-  it('accepts timestamp within configured clock skew window', async () => {
+  it("accepts timestamp within configured clock skew window", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const nowMs = 1_714_176_000_000;
     const timestamp = String(nowMs + 20_000);
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-    const event = await verifyFn(payload, signature, "top-secret", timestamp, { nowMs, maxAgeMs: 60_000, clockSkewMs: 30_000 });
+    const event = await verifyFn(payload, signature, "top-secret", timestamp, {
+      nowMs,
+      maxAgeMs: 60_000,
+      clockSkewMs: 30_000,
+    });
     expect(event).toEqual(deliveryEvent);
   });
 
-  it('rejects timestamp outside configured skew and maxAge window', async () => {
+  it("rejects timestamp outside configured skew and maxAge window", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const nowMs = 1_714_176_000_000;
     const tooFarFutureTs = String(nowMs + 30_001);
     const tooOldTs = String(nowMs - 60_000 - 30_001);
     const futureSig = signWebhookPayload("top-secret", payload, tooFarFutureTs);
     const oldSig = signWebhookPayload("top-secret", payload, tooOldTs);
-    expect(await verifyFn(payload, futureSig, "top-secret", tooFarFutureTs, { nowMs, maxAgeMs: 60_000, clockSkewMs: 30_000 })).toBeNull();
-    expect(await verifyFn(payload, oldSig, "top-secret", tooOldTs, { nowMs, maxAgeMs: 60_000, clockSkewMs: 30_000 })).toBeNull();
+    expect(
+      await verifyFn(payload, futureSig, "top-secret", tooFarFutureTs, {
+        nowMs,
+        maxAgeMs: 60_000,
+        clockSkewMs: 30_000,
+      }),
+    ).toBeNull();
+    expect(
+      await verifyFn(payload, oldSig, "top-secret", tooOldTs, {
+        nowMs,
+        maxAgeMs: 60_000,
+        clockSkewMs: 30_000,
+      }),
+    ).toBeNull();
   });
 
-  it('returns null for malformed JSON payload', async () => {
+  it("returns null for malformed JSON payload", async () => {
     const payload = "{ invalid json }";
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
     expect(await verifyFn(payload, signature, "top-secret", timestamp)).toBeNull();
   });
 
-  it('returns null when schema validation fails', async () => {
+  it("returns null when schema validation fails", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-    const event = await verifyFn(payload, signature, "top-secret", timestamp, { nowMs: Number(timestamp), schema: (evt) => evt.type === "payment.sent" });
+    const event = await verifyFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+      schema: (evt) => evt.type === "payment.sent",
+    });
     expect(event).toBeNull();
   });
 
-  it('returns event when schema validation succeeds', async () => {
+  it("returns event when schema validation succeeds", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-    const event = await verifyFn(payload, signature, "top-secret", timestamp, { nowMs: Number(timestamp), schema: (evt) => evt.type === "payment.received" });
+    const event = await verifyFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+      schema: (evt) => evt.type === "payment.received",
+    });
     expect(event).toEqual(deliveryEvent);
   });
 
-  it('returns null when schema validator throws', async () => {
+  it("returns null when schema validator throws", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-    const event = await verifyFn(payload, signature, "top-secret", timestamp, { nowMs: Number(timestamp), schema: () => { throw new Error("validator error"); } });
+    const event = await verifyFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+      schema: () => {
+        throw new Error("validator error");
+      },
+    });
     expect(event).toBeNull();
   });
 });
