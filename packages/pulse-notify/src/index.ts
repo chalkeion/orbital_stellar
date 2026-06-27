@@ -206,10 +206,12 @@ export {
 export { pulseNotifyVitePlugin } from "./vitePlugin.js";
 export type { PulseNotifyVitePlugin } from "./vitePlugin.js";
 
-export type UseHistoryOptions = {
+export type UseHistoryOptions<T extends NormalizedEvent = NormalizedEvent> = {
   token?: string;
   /** Maximum number of events to retain in FIFO order. Defaults to 100. */
   capacity?: number;
+  /** SSR initial event to seed history */
+  initialEvent?: T | null;
 };
 
 export type HistoryState<T extends NormalizedEvent = NormalizedEvent> = EventState<T> & {
@@ -219,11 +221,11 @@ export type HistoryState<T extends NormalizedEvent = NormalizedEvent> = EventSta
 export function useStellarHistory<T extends NormalizedEvent = NormalizedEvent>(
   serverUrl: string,
   address: string,
-  options?: UseHistoryOptions,
+  options?: UseHistoryOptions<T>,
 ): HistoryState<T> {
-  const [history, setHistory] = useState<T[]>([]);
   const capacity = options?.capacity ?? 100;
-  const base = useStellarActivity<T>(serverUrl, address, { initialEvent: null });
+  const base = useStellarActivity<T>(serverUrl, address, { initialEvent: options?.initialEvent ?? null });
+  const [history, setHistory] = useState<T[]>(options?.initialEvent ? [options.initialEvent] : []);
 
   useEffect(() => {
     if (base.event) {
