@@ -203,6 +203,7 @@ export {
   type StellarConnectionStatusProps,
   type StellarConnectionStatusState,
 } from "./StellarConnectionStatus.js";
+export { StellarEventBoundary } from "./StellarEventBoundary.js";
 
 
 export type UseContractEventConfig<T extends NormalizedEvent = NormalizedEvent> = {
@@ -294,6 +295,12 @@ export function useContractEvent<
 }
 
 export type { PulseNotifyVitePlugin } from "./vitePlugin.js";
+
+export {
+  useContractState,
+  type ContractStateOptions,
+  type ContractStateResult,
+} from "./useContractState.js";
 
 export type UseHistoryOptions = {
   token?: string;
