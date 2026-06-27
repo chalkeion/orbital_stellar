@@ -655,7 +655,7 @@ describe("pulse-webhooks WebhookDelivery tracer", () => {
   });
 });
 
-xdescribe("pulse-webhooks verifyWebhook", () => {
+describe.skip("pulse-webhooks verifyWebhook", () => {
   it("returns parsed event when signature matches timestamped payload", () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
