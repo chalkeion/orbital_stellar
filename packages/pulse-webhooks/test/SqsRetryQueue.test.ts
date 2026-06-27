@@ -136,7 +136,7 @@ function makeQueue(sqs: MockSqs, overrides: Partial<SqsRetryQueueOptions> = {}):
 describe("SqsRetryQueue", () => {
   describe("enqueue", () => {
     it("sends the serialised record as the message body", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       const record = makeRecord("r1", 0);
@@ -148,7 +148,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("sets DelaySeconds from nextRetryAt on a standard queue", async () => {
-      let clock = 1_000;
+      const clock = 1_000;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       // nextRetryAt is 5 s in the future
@@ -160,7 +160,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("clamps DelaySeconds to 900 s when nextRetryAt is far in the future", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       const record = makeRecord("r3", clock + 9_999_999);
@@ -171,7 +171,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("uses DelaySeconds of 0 when nextRetryAt is in the past", async () => {
-      let clock = 10_000;
+      const clock = 10_000;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       const record = makeRecord("r4", clock - 5_000);
@@ -225,7 +225,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("returns null when no message is visible yet", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       // Message not yet visible (DelaySeconds = 5)
@@ -236,7 +236,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("returns a record once its delay elapses", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       const record = makeRecord("r1", clock + 2_000);
@@ -249,7 +249,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("passes VisibilityTimeout to SQS receive", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs, { visibilityTimeoutMs: 60_000 });
       await queue.enqueue(makeRecord("r1", 0));
@@ -262,7 +262,7 @@ describe("SqsRetryQueue", () => {
 
   describe("ack", () => {
     it("deletes the SQS message so it is never redelivered", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       const record = makeRecord("r1", 0);
@@ -289,7 +289,7 @@ describe("SqsRetryQueue", () => {
 
   describe("nack", () => {
     it("re-enqueues the record with the given delay and deletes the original", async () => {
-      let clock = 1_000;
+      const clock = 1_000;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs, { visibilityTimeoutMs: 30_000 });
       const record = makeRecord("r1", clock, { attempt: 1 });
@@ -321,7 +321,7 @@ describe("SqsRetryQueue", () => {
 
   describe("evictNewest", () => {
     it("removes and returns a record from the queue", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       const record = makeRecord("evict-me", 0);
@@ -343,7 +343,7 @@ describe("SqsRetryQueue", () => {
 
   describe("round-trip", () => {
     it("enqueue → dequeue → ack removes the message cleanly", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
       const record = makeRecord("rt-1", 0, { attempt: 2, lastError: "HTTP 503" });
@@ -362,7 +362,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("message reappears after visibility timeout when not acked", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs, { visibilityTimeoutMs: 5_000 });
       const record = makeRecord("vis-1", 0);
@@ -381,7 +381,7 @@ describe("SqsRetryQueue", () => {
     });
 
     it("enqueue → dequeue → nack → dequeue returns re-enqueued record after delay", async () => {
-      let clock = 1_000;
+      const clock = 1_000;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs, { visibilityTimeoutMs: 60_000 });
       const record = makeRecord("nack-rt", 1_000);
@@ -406,7 +406,7 @@ describe("SqsRetryQueue", () => {
 
   describe("size", () => {
     it("returns the count of locally-tracked in-flight records", async () => {
-      let clock = 0;
+      const clock = 0;
       const sqs = new MockSqs(() => clock);
       const queue = makeQueue(sqs);
 
