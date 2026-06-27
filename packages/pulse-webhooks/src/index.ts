@@ -1,5 +1,5 @@
 import type { NormalizedEvent, Watcher, WatcherNotification } from "@orbital-stellar/pulse-core";
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHmac, timingSafeEqual, randomUUID } from "crypto";
 
 import { DeadLetterStore } from "./MemoryDeadLetterStore.js";
 import { exponentialJittered } from "./backoff.js";
