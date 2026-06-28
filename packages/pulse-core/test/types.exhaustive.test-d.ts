@@ -1,4 +1,9 @@
 import type { NormalizedEvent } from "../src/index.js";
+import { Watcher } from "../src/Watcher.js";
+import type { PaymentEvent, WatcherNotification, DecodeFailedNotification } from "../src/index.js";
+
+type Assert<T extends true> = T;
+type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
 /**
  * Type-only exhaustiveness test for the `NormalizedEvent` discriminated union
@@ -66,3 +71,34 @@ export function assertIncompleteIsRejected(event: NormalizedEvent): string {
     }
   }
 }
+
+export function testWatcherOnInference() {
+  const watcher = new Watcher("G...");
+
+  watcher.on("payment.received", (e) => {
+    type _IsPaymentEvent = Assert<Equal<typeof e, PaymentEvent & { readonly timestampDate: Date }>>;
+    const to = e.to;
+    const from = e.from;
+    const amount = e.amount;
+    const date = e.timestampDate;
+  });
+
+  watcher.on("engine.reconnecting", (e) => {
+    type _IsWatcherNotification = Assert<Equal<typeof e, WatcherNotification>>;
+    const attempt = e.attempt;
+  });
+
+  watcher.on("event.decode_failed", (e) => {
+    type _IsDecodeFailedNotification = Assert<Equal<typeof e, DecodeFailedNotification>>;
+    const error = e.error;
+  });
+
+  watcher.on("*", (e) => {
+    type _IsFullUnion = Assert<Equal<typeof e, NormalizedEvent | WatcherNotification | DecodeFailedNotification>>;
+  });
+
+  watcher.on("unknown.event", (e) => {
+    type _IsFullUnion = Assert<Equal<typeof e, NormalizedEvent | WatcherNotification | DecodeFailedNotification>>;
+  });
+}
+
