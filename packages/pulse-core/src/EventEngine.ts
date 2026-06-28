@@ -227,11 +227,107 @@ export class EventEngine {
       ...config.reconnect,
     };
     this.log = config.logger ?? noop;
-    this.streamKey = config.streamKey ?? "pulse-core-cursor";
+    // Use a source-scoped default key so Horizon and Soroban cursors are
+    // persisted independently. Allow `streamKey` to override the Horizon key
+    // for backward compatibility / testing.
+    this.streamKey = config.streamKey ?? `horizon:${config.network}`;
     this.cursorFailureThreshold = config.cursorFailureThreshold ?? 5;
     this.abiRegistry = config.abiRegistry;
     this.cursorStore = config.cursorStore;
     this.network = config.network;
+
+    // If Soroban RPC config is provided create a live SorobanSubscriber and
+    // wire it to the engine. The subscriber expects a small cursorStore
+    // with `getCursor`/`saveCursor` methods; adapt the engine-level
+    // `CursorStore` (single-key API) to that shape using a soroban-specific
+    // stream key `soroban:${network}`. Failures are tolerated and routed
+    // through the engine's cursor failure handler.
+    if (config.soroban && config.soroban.rpcUrl) {
+      try {
+        const rpc = new SorobanRpcClient({ rpcUrl: config.soroban.rpcUrl, headers: config.soroban.rpcHeaders, logger: this.log });
+        const sorobanKey = `soroban:${config.network}`;
+
+        const cursorAdapter = {
+          getCursor: async (): Promise<string | undefined> => {
+            if (!this.cursorStore) return undefined;
+            try {
+              const v = await this.cursorStore.get(sorobanKey);
+              return v ?? undefined;
+            } catch (err) {
+              this.log.warn("[pulse-core] cursorStore.get() failed during soroban startup.", {
+                key: sorobanKey,
+                error: err instanceof Error ? err.message : String(err),
+              });
+              this.handleCursorFailure(err, sorobanKey);
+              return undefined;
+            }
+          },
+          saveCursor: async (cursor: string): Promise<void> => {
+            if (!this.cursorStore) return;
+            try {
+              await this.cursorStore.set(sorobanKey, cursor);
+              // Reset the failure counter on success
+              this.consecutiveCursorFailures = 0;
+            } catch (err) {
+              this.handleCursorFailure(err, sorobanKey);
+            }
+          },
+        };
+
+        // Event handler: map Soroban events into the engine's contract event
+        // shape and route them through the normal routing machinery so
+        // contract watchers receive them.
+        const onEvent = async (e: SorobanEvent) => {
+          try {
+            const rpc = normalizeContractEvent(e, this.log);
+            if (!rpc) return;
+
+            const baseTimestamp = (rpc as any).ledgerClosedAt ?? new Date().toISOString();
+
+            if (rpc.type === "contract_emitted") {
+              const mapped: ContractEmittedEvent = {
+                type: "contract.emitted",
+                contractId: rpc.contractId as any,
+                topics: rpc.topics,
+                data: (rpc as any).decodedData !== undefined ? (rpc as any).decodedData : (rpc as any).value,
+                decodedData: (rpc as any).decodedData,
+                ledger: (rpc as any).ledger,
+                eventId: (rpc as any).id,
+                txHash: (rpc as any).txHash,
+                inSuccessfulContractCall: (rpc as any).inSuccessfulContractCall,
+                timestamp: String((rpc as any).ledgerClosedAt ?? baseTimestamp),
+                raw: (rpc as any).raw as RawSorobanEvent,
+              };
+              this.route(withTimestampDate(mapped));
+            } else if (rpc.type === "contract_invoked") {
+              const mapped: ContractInvokedEvent = {
+                type: "contract.invoked",
+                contractId: rpc.contractId as any,
+                txHash: (rpc as any).txHash,
+                ledger: (rpc as any).ledger,
+                eventId: (rpc as any).id,
+                inSuccessfulContractCall: (rpc as any).inSuccessfulContractCall,
+                timestamp: String((rpc as any).ledgerClosedAt ?? baseTimestamp),
+                raw: (rpc as any).raw as RawSorobanEvent,
+              };
+              this.route(withTimestampDate(mapped));
+            }
+          } catch (err) {
+            this.log.warn("[pulse-core] failed to process soroban event", { error: err instanceof Error ? err.message : String(err) });
+          }
+        };
+
+        this.sorobanSubscriber = new SorobanSubscriber({
+          rpc,
+          cursorStore: cursorAdapter as any,
+          onEvent,
+          pageLimit: config.soroban.pageLimit,
+          pollIntervalMs: config.soroban.pollIntervalMs,
+        });
+      } catch (err) {
+        this.log.warn("[pulse-core] failed to initialize Soroban subscriber", { error: err instanceof Error ? err.message : String(err) });
+      }
+    }
   }
 
   /**
@@ -982,10 +1078,11 @@ export class EventEngine {
     }
   }
 
-  private handleCursorFailure(err: unknown): void {
+  private handleCursorFailure(err: unknown, key?: string): void {
     this.consecutiveCursorFailures++;
+    const usedKey = key ?? this.streamKey;
     this.log.warn("[pulse-core] cursorStore.set() failed.", {
-      key: this.streamKey,
+      key: usedKey,
       consecutiveFailures: this.consecutiveCursorFailures,
       error: err instanceof Error ? err.message : String(err),
     });
