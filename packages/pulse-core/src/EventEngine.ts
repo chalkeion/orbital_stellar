@@ -114,6 +114,26 @@ const STELLAR_MAX_TRUSTLINE_LIMIT = "922337203685.4775807";
 
 const noop: Logger = { info: () => {}, warn: () => {}, error: () => {} };
 
+const KNOWN_OPERATION_TYPES = new Set([
+  "payment",
+  "set_options",
+  "create_account",
+  "manage_sell_offer",
+  "manage_buy_offer",
+  "bump_sequence",
+  "manage_data",
+  "change_trust",
+  "account_merge",
+  "create_claimable_balance",
+  "claim_claimable_balance",
+  "liquidity_pool_deposit",
+  "liquidity_pool_withdraw",
+  "allow_trust",
+  "set_trust_line_flags",
+  "contract_invocation",
+  "contract_event",
+]);
+
 /**
  * Produces a stable, order-independent string key for a ContractFilter array.
  * Used to deduplicate subscribeContract(config) calls.
@@ -795,6 +815,10 @@ export class EventEngine {
 
         const event = this.normalize(record);
         if (!event) {
+          const r = record as Record<string, unknown>;
+          if (typeof r.type === "string" && !KNOWN_OPERATION_TYPES.has(r.type)) {
+            this.emitDecodeFailed(r, record);
+          }
           return;
         }
 
@@ -1053,6 +1077,20 @@ export class EventEngine {
       const name = this.subscriptionNames.get(id);
       watcher.emit(eventType, name !== undefined ? { ...event, name } : event);
     }
+  }
+
+  private emitDecodeFailed(r: Record<string, unknown>, raw: unknown): void {
+    this.log.warn("[pulse-core] normalize() encountered unrecognized operation type.", {
+      type: r.type,
+      record: raw,
+    });
+    this.notifyWatchers("event.decode_failed", {
+      type: "event.decode_failed",
+      attempt: 0,
+      operationType: r.type as string,
+      record: raw,
+      emittedAt: new Date().toISOString(),
+    });
   }
 
   private handleCursorFailure(err: unknown): void {

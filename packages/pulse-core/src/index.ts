@@ -124,14 +124,15 @@ export type ClaimableClaimedEventType = "claimable.claimed";
 export type TrustlineEventType = "trustline.added" | "trustline.removed" | "trustline.updated";
 /** Event type for account merges (one account merged into another). */
 export type AccountMergeEventType = "account.merged";
-/** Notification types emitted by the EventEngine during reconnection. */
+/** Notification types emitted by the EventEngine during reconnection or event decoding. */
 export type WatcherNotificationType =
   | "engine.reconnecting"
   | "engine.reconnected"
   | "engine.rate_limited"
   | "engine.stopped"
   | "engine.cursor_store_unhealthy"
-  | "engine.cursor_expired";
+  | "engine.cursor_expired"
+  | "event.decode_failed";
 
 export type OfferEventType = "offer.created" | "offer.updated" | "offer.deleted";
 export type BumpSequenceEventType = "account.bump_sequence";
@@ -415,6 +416,10 @@ export type WatcherNotification = {
   emittedAt: string;
   /** The cursor value that was expired or lost, if applicable. */
   lostCursor?: string;
+  /** The raw operation type string that could not be decoded (for "event.decode_failed" events). */
+  operationType?: string;
+  /** The raw record that failed to decode (for "event.decode_failed" events). */
+  record?: unknown;
 };
 
 /**
