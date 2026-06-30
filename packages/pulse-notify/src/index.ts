@@ -4,6 +4,7 @@ import { acquireEventConnection, acquireContractEventConnection } from "./connec
 import type {
   NormalizedEvent,
   PaymentEvent,
+  ContractInvokedEvent,
   ContractEmittedEvent,
 } from "@orbital-stellar/pulse-core";
 import { acquireWsConnection } from "./wsTransport.js";
@@ -188,10 +189,10 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
   return state;
 }
 
-// Re-export pulse-core's PaymentEvent. (It cannot be derived via
+// Re-export pulse-core event types. (They cannot be derived via
 // `Extract<NormalizedEvent, ...>` because NormalizedEvent is an intersection
 // with `{ timestampDate }`, over which Extract does not distribute.)
-export type { PaymentEvent };
+export type { PaymentEvent, ContractInvokedEvent, ContractEmittedEvent };
 
 /**
  * Converts a Stellar decimal amount string (e.g. "12.3456789") to stroops
@@ -271,7 +272,11 @@ export {
 } from "./StellarConnectionStatus.js";
 export { StellarEventBoundary } from "./StellarEventBoundary.js";
 
-export type UseContractEventConfig<T extends NormalizedEvent = NormalizedEvent> = {
+export type UseContractEventConfig<
+  T extends ContractInvokedEvent | ContractEmittedEvent =
+    | ContractInvokedEvent
+    | ContractEmittedEvent,
+> = {
   serverUrl: string;
   contractId: string;
   topics?: string[];
@@ -290,10 +295,9 @@ export type UseContractEventConfig<T extends NormalizedEvent = NormalizedEvent> 
 
 /** Hook for subscribing to Soroban contract events */
 export function useContractEvent<
-  T extends Extract<NormalizedEvent, { type: "contract.invoked" | "contract.emitted" }> = Extract<
-    NormalizedEvent,
-    { type: "contract.invoked" | "contract.emitted" }
-  >,
+  T extends ContractInvokedEvent | ContractEmittedEvent =
+    | ContractInvokedEvent
+    | ContractEmittedEvent,
 >(config: UseContractEventConfig<T>): EventState<T> {
   const {
     serverUrl,
