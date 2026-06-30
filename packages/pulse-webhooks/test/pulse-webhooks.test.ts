@@ -1325,9 +1325,7 @@ describe("pulse-webhooks WebhookDelivery with retryQueue", () => {
     });
 
     watcher.emit("*", deliveryEvent);
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(0);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(queue.enqueue).toHaveBeenCalledTimes(1);
@@ -1495,8 +1493,7 @@ describe("pulse-webhooks WebhookDelivery with retryQueue", () => {
     });
 
     watcher.emit("*", deliveryEvent);
-    await Promise.resolve();
-    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(0);
 
     const retryTimeoutCalls = setTimeoutSpy.mock.calls.filter((args) => {
       const delay = args[1] as number;
