@@ -360,8 +360,7 @@ export { StellarEventBoundary } from "./StellarEventBoundary.js";
 
 export type UseContractEventConfig<
   T extends ContractInvokedEvent | ContractEmittedEvent =
-    | ContractInvokedEvent
-    | ContractEmittedEvent,
+    ContractInvokedEvent | ContractEmittedEvent,
 > = {
   serverUrl: string;
   contractId: string;
@@ -388,8 +387,7 @@ export type UseContractEventConfig<
 /** Hook for subscribing to Soroban contract events */
 export function useContractEvent<
   T extends ContractInvokedEvent | ContractEmittedEvent =
-    | ContractInvokedEvent
-    | ContractEmittedEvent,
+    ContractInvokedEvent | ContractEmittedEvent,
 >(config: UseContractEventConfig<T>): EventState<T> {
   const {
     serverUrl,
