@@ -3,6 +3,8 @@ import { Instrument_Serif } from 'next/font/google'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
+import { useEffect } from 'react'
+import SearchModal from '../components/SearchModal'
 
 const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
@@ -23,12 +25,26 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  useEffect(() => {
+    const openSearch = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        const event = new CustomEvent('open-search')
+        window.dispatchEvent(event)
+      }
+    }
+    window.addEventListener('keydown', openSearch)
+    return () => window.removeEventListener('keydown', openSearch)
+  }, [])
   return (
     <html
       lang="en"
       className={`${instrumentSerif.variable} ${GeistSans.variable} ${GeistMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <SearchModal />
+      </body>
     </html>
   )
 }
