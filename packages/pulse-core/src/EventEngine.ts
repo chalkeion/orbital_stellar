@@ -1302,7 +1302,10 @@ export class EventEngine {
     };
   }
 
-  private normalizeChangeTrust(r: Record<string, unknown>, raw: unknown): Raw<TrustlineEvent> | null {
+  private normalizeChangeTrust(
+    r: Record<string, unknown>,
+    raw: unknown,
+  ): Raw<TrustlineEvent> | null {
     if (typeof r.source_account !== "string") {
       return null;
     }
@@ -1542,7 +1545,10 @@ export class EventEngine {
     };
   }
 
-  private normalizeAllowTrust(r: Record<string, unknown>, raw: unknown): Raw<TrustAuthEvent> | null {
+  private normalizeAllowTrust(
+    r: Record<string, unknown>,
+    raw: unknown,
+  ): Raw<TrustAuthEvent> | null {
     const trustor = r.trustor;
     const issuer = r.trustee ?? r.source_account;
     const authorize = r.authorize;
