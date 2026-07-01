@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "pnpm -w run docs:reference",
     "dev": "next dev",
+    "prebuild": "pnpm -w run docs:reference",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
