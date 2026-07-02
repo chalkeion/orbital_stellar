@@ -1510,7 +1510,7 @@ describe("pulse-webhooks WebhookDelivery with retryQueue", () => {
 
     // setTimeout should only be called for the abort timer (deliveryTimeoutMs), not retries
     const retryTimeoutCalls = setTimeoutSpy.mock.calls.filter((args) => {
-      const callback = args[0] as Function;
+      const callback = args[0] as (...args: unknown[]) => unknown;
       const delay = args[1] as number;
       return delay !== 10000 && !callback.toString().includes("drainDueRetries");
     });
