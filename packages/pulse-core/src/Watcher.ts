@@ -98,11 +98,11 @@ export class Watcher extends EventEmitter {
    */
   on<K extends keyof WatcherEventMap>(
     eventType: K,
-    handler: (event: WatcherEventMap[K]) => void
+    handler: (event: WatcherEventMap[K]) => void,
   ): this;
   on(
     eventType: string,
-    handler: (event: WatcherEvent) => void
+    handler: (event: WatcherEvent) => void,
   ): this;
   on(eventType: string, handler: (event: any) => void): this {
     if (this._stopped) {
@@ -118,8 +118,6 @@ export class Watcher extends EventEmitter {
 
     return super.on(eventType, handler);
   }
-
-
   /**
    * Emits an event to all registered handlers.
    * If the watcher is stopped, this returns false without emitting.
