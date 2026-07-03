@@ -974,94 +974,54 @@ describe.each([
   });
 });
 
-describe("pulse-webhooks verifyWebhookRaw", () => {
-  it("returns true when signature matches timestamped payload", () => {
-    const payload = JSON.stringify(deliveryEvent);
-    const timestamp = "1714176000000";
-    const signature = signWebhookPayload("top-secret", payload, timestamp);
-
-    const result = verifyWebhookRaw(payload, signature, "top-secret", timestamp, {
-      nowMs: Number(timestamp),
-    });
-
-    expect(result).toBe(true);
-  });
-
-  it("returns false when timestamp is missing or invalid", () => {
-    const payload = JSON.stringify(deliveryEvent);
-    const signature = signWebhookPayload("top-secret", payload, "1714176000000");
-
-    expect(verifyWebhookRaw(payload, signature, "top-secret", "")).toBe(false);
-    expect(verifyWebhookRaw(payload, signature, "top-secret", "not-a-number")).toBe(false);
-  });
-
-  it("returns false when signature does not match timestamped payload", () => {
-    const payload = JSON.stringify(deliveryEvent);
-    const timestamp = "1714176000000";
-    const signature = signWebhookPayload("top-secret", payload, timestamp);
-
-    expect(verifyWebhookRaw(payload, signature, "wrong-secret", timestamp)).toBe(false);
-    expect(verifyWebhookRaw(`${payload}x`, signature, "top-secret", timestamp)).toBe(false);
-    expect(verifyWebhookRaw(payload, signature, "top-secret", "1714176000001")).toBe(false);
-  });
-
-  it("returns true for malformed JSON payload (raw variant skips JSON parse)", () => {
-    const payload = "{ invalid json }";
-    const timestamp = "1714176000000";
-    const signature = signWebhookPayload("top-secret", payload, timestamp);
-
-    // Raw variant should return true (signature is valid), ignoring JSON validity
-    const result = verifyWebhookRaw(payload, signature, "top-secret", timestamp, {
-      nowMs: Number(timestamp),
-    });
-
-    expect(result).toBe(true);
-  });
-});
-
-describe("pulse-webhooks verifyWebhookEdgeRaw", () => {
+// Parameterized test suite for both Raw verifiers
+describe.each([
+  [
+    "verifyWebhookRaw",
+    (payload, signature, secret, timestamp, opts) => {
+      return verifyWebhookRaw(payload, signature, secret, timestamp, opts);
+    },
+  ],
+  [
+    "verifyWebhookEdgeRaw",
+    async (payload, signature, secret, timestamp, opts) => {
+      return await verifyWebhookEdgeRaw(payload, signature, secret, timestamp, opts);
+    },
+  ],
+])("%s raw verification", (_verifierName, verifyRawFn) => {
   it("returns true when signature matches timestamped payload", async () => {
     const payload = JSON.stringify(deliveryEvent);
-    const timestamp = String(Date.now());
+    const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-
-    const result = await verifyWebhookEdgeRaw(payload, signature, "top-secret", timestamp);
-
+    const result = await verifyRawFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+    });
     expect(result).toBe(true);
   });
 
   it("returns false when timestamp is missing or invalid", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const signature = signWebhookPayload("top-secret", payload, "1714176000000");
-
-    expect(await verifyWebhookEdgeRaw(payload, signature, "top-secret", "")).toBe(false);
-    expect(await verifyWebhookEdgeRaw(payload, signature, "top-secret", "not-a-number")).toBe(
-      false,
-    );
+    expect(await verifyRawFn(payload, signature, "top-secret", "")).toBe(false);
+    expect(await verifyRawFn(payload, signature, "top-secret", "not-a-number")).toBe(false);
   });
 
   it("returns false when signature does not match timestamped payload", async () => {
     const payload = JSON.stringify(deliveryEvent);
     const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-
-    expect(await verifyWebhookEdgeRaw(payload, signature, "wrong-secret", timestamp)).toBe(false);
-    expect(await verifyWebhookEdgeRaw(`${payload}x`, signature, "top-secret", timestamp)).toBe(
-      false,
-    );
-    expect(await verifyWebhookEdgeRaw(payload, signature, "top-secret", "1714176000001")).toBe(
-      false,
-    );
+    expect(await verifyRawFn(payload, signature, "wrong-secret", timestamp)).toBe(false);
+    expect(await verifyRawFn(`${payload}x`, signature, "top-secret", timestamp)).toBe(false);
+    expect(await verifyRawFn(payload, signature, "top-secret", "1714176000001")).toBe(false);
   });
 
   it("returns true for malformed JSON payload (raw variant skips JSON parse)", async () => {
     const payload = "{ invalid json }";
-    const timestamp = String(Date.now());
+    const timestamp = "1714176000000";
     const signature = signWebhookPayload("top-secret", payload, timestamp);
-
-    // Raw variant should return true (signature is valid), ignoring JSON validity
-    const result = await verifyWebhookEdgeRaw(payload, signature, "top-secret", timestamp);
-
+    const result = await verifyRawFn(payload, signature, "top-secret", timestamp, {
+      nowMs: Number(timestamp),
+    });
     expect(result).toBe(true);
   });
 });
