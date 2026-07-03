@@ -1322,18 +1322,18 @@ describe("pulse-webhooks DeadLetterStore", () => {
     expect(entry?.timestamp).toBeGreaterThan(0);
   });
 
-  it("lists all entries without filters", () => {
+  it("lists all entries without filters", async () => {
     const dlq = new DeadLetterStore();
     const id1 = dlq.add("https://example.com/webhooks", deliveryEvent, "Error 1", 1);
     const id2 = dlq.add("https://staging.com/webhooks", deliveryEvent, "Error 2", 2);
 
-    const entries = dlq.list();
+    const entries = await dlq.list();
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.id)).toContain(id1);
     expect(entries.map((e) => e.id)).toContain(id2);
   });
 
-  it("filters entries by URL", () => {
+  it("filters entries by URL", async () => {
     const dlq = new DeadLetterStore();
     const prodUrl = "https://prod.com/webhooks";
     const stagingUrl = "https://staging.com/webhooks";
@@ -1342,16 +1342,16 @@ describe("pulse-webhooks DeadLetterStore", () => {
     dlq.add(stagingUrl, deliveryEvent, "Error 2", 2);
     dlq.add(prodUrl, deliveryEvent, "Error 3", 3);
 
-    const prodEntries = dlq.list({ url: prodUrl });
+    const prodEntries = await dlq.list({ url: prodUrl });
     expect(prodEntries).toHaveLength(2);
     expect(prodEntries.every((e) => e.url === prodUrl)).toBe(true);
 
-    const stagingEntries = dlq.list({ url: stagingUrl });
+    const stagingEntries = await dlq.list({ url: stagingUrl });
     expect(stagingEntries).toHaveLength(1);
     expect(stagingEntries[0]?.url).toBe(stagingUrl);
   });
 
-  it("filters entries by time range (since)", () => {
+  it("filters entries by time range (since)", async () => {
     vi.useFakeTimers();
     const dlq = new DeadLetterStore();
 
@@ -1365,7 +1365,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     const id3 = dlq.add("https://example.com/webhooks", deliveryEvent, "Error 3", 3);
 
     const since = new Date("2026-04-26T10:30:00Z").getTime();
-    const entries = dlq.list({ since });
+    const entries = await dlq.list({ since });
 
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.id)).toContain(id2);
@@ -1375,7 +1375,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     vi.useRealTimers();
   });
 
-  it("filters entries by time range (until)", () => {
+  it("filters entries by time range (until)", async () => {
     vi.useFakeTimers();
     const dlq = new DeadLetterStore();
 
@@ -1389,7 +1389,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     const id3 = dlq.add("https://example.com/webhooks", deliveryEvent, "Error 3", 3);
 
     const until = new Date("2026-04-26T11:30:00Z").getTime();
-    const entries = dlq.list({ until });
+    const entries = await dlq.list({ until });
 
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.id)).toContain(id1);
@@ -1399,7 +1399,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     vi.useRealTimers();
   });
 
-  it("filters entries by time range (since and until)", () => {
+  it("filters entries by time range (since and until)", async () => {
     vi.useFakeTimers();
     const dlq = new DeadLetterStore();
 
@@ -1414,7 +1414,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
 
     const since = new Date("2026-04-26T10:30:00Z").getTime();
     const until = new Date("2026-04-26T11:30:00Z").getTime();
-    const entries = dlq.list({ since, until });
+    const entries = await dlq.list({ since, until });
 
     expect(entries).toHaveLength(1);
     expect(entries[0]?.id).toBe(id2);
@@ -1422,18 +1422,18 @@ describe("pulse-webhooks DeadLetterStore", () => {
     vi.useRealTimers();
   });
 
-  it("limits the number of results", () => {
+  it("limits the number of results", async () => {
     const dlq = new DeadLetterStore();
 
     for (let i = 0; i < 10; i++) {
       dlq.add("https://example.com/webhooks", deliveryEvent, `Error ${i}`, i);
     }
 
-    const entries = dlq.list({ limit: 5 });
+    const entries = await dlq.list({ limit: 5 });
     expect(entries).toHaveLength(5);
   });
 
-  it("combines multiple filters (URL, time range, and limit)", () => {
+  it("combines multiple filters (URL, time range, and limit)", async () => {
     vi.useFakeTimers();
     const dlq = new DeadLetterStore();
     const prodUrl = "https://prod.com/webhooks";
@@ -1454,7 +1454,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     const since = new Date("2026-04-26T10:30:00Z").getTime();
     const until = new Date("2026-04-26T12:30:00Z").getTime();
 
-    const entries = dlq.list({
+    const entries = await dlq.list({
       url: prodUrl,
       since,
       until,
@@ -1482,7 +1482,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     expect(dlq.get(id2)).toBeDefined();
   });
 
-  it("clears all entries", () => {
+  it("clears all entries", async () => {
     const dlq = new DeadLetterStore();
     dlq.add("https://example.com/webhooks", deliveryEvent, "Error 1", 1);
     dlq.add("https://example.com/webhooks", deliveryEvent, "Error 2", 2);
@@ -1490,10 +1490,10 @@ describe("pulse-webhooks DeadLetterStore", () => {
     expect(dlq.size()).toBe(2);
     dlq.clear();
     expect(dlq.size()).toBe(0);
-    expect(dlq.list()).toHaveLength(0);
+    expect(await dlq.list()).toHaveLength(0);
   });
 
-  it("returns entries sorted by timestamp (oldest first)", () => {
+  it("returns entries sorted by timestamp (oldest first)", async () => {
     vi.useFakeTimers();
     const dlq = new DeadLetterStore();
 
@@ -1506,7 +1506,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     vi.setSystemTime(new Date("2026-04-26T11:00:00Z"));
     const id2 = dlq.add("https://example.com/webhooks", deliveryEvent, "Error 2", 2);
 
-    const entries = dlq.list();
+    const entries = await dlq.list();
     expect(entries.map((e) => e.id)).toEqual([id1, id2, id3]);
 
     vi.useRealTimers();
@@ -1551,7 +1551,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     await vi.runAllTimersAsync();
 
     expect(dlq.size()).toBeGreaterThan(0);
-    const entries = dlq.list();
+    const entries = await dlq.list();
     expect(entries[0]?.url).toBe("https://example.com/webhooks");
     expect(entries[0]?.error).toMatch(/network error|timed out/);
     expect(entries[0]?.event).toEqual(deliveryEvent);
@@ -1564,7 +1564,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     vi.useRealTimers();
   });
 
-  it("failureRate returns the correct rate over the given window", () => {
+  it("failureRate returns the correct rate over the given window", async () => {
     vi.useFakeTimers();
     const dlq = new DeadLetterStore();
     const url = "https://example.com/webhooks";
@@ -1573,7 +1573,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     const now = new Date("2026-06-29T08:00:00Z").getTime();
     vi.setSystemTime(now);
 
-    // 3 failures + 1 success inside the window → rate = 3/4 = 0.75
+    // 3 failures + 1 success inside the window → rate = 3/4 = 75%
     dlq.recordFailure(url, now - 10_000);
     dlq.recordFailure(url, now - 20_000);
     dlq.recordFailure(url, now - 30_000);
@@ -1582,18 +1582,18 @@ describe("pulse-webhooks DeadLetterStore", () => {
     // 1 failure outside the window — must be ignored
     dlq.recordFailure(url, now - 90_000);
 
-    const rate = dlq.failureRate(url, windowMs);
-    expect(rate).toBe(3 / 4);
+    const rate = await dlq.failureRate(url, windowMs);
+    expect(rate).toBe(75);
 
     vi.useRealTimers();
   });
 
-  it("failureRate returns 0 for unknown URL", () => {
+  it("failureRate returns 0 for unknown URL", async () => {
     const dlq = new DeadLetterStore();
-    expect(dlq.failureRate("https://unknown.example.com", 60_000)).toBe(0);
+    expect(await dlq.failureRate("https://unknown.example.com", 60_000)).toBe(0);
   });
 
-  it("failureRate returns 0 when no events fall within the window", () => {
+  it("failureRate returns 0 when no events fall within the window", async () => {
     vi.useFakeTimers();
     const dlq = new DeadLetterStore();
     const url = "https://example.com/webhooks";
@@ -1602,7 +1602,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
 
     dlq.recordFailure(url, now - 120_000); // 2 minutes ago, outside 1-minute window
 
-    expect(dlq.failureRate(url, 60_000)).toBe(0);
+    expect(await dlq.failureRate(url, 60_000)).toBe(0);
 
     vi.useRealTimers();
   });
