@@ -374,12 +374,7 @@ if (!result.ok) {
 }
 ```
 
-**Stores with `ping` support:**
-
-- `PostgresCursorStore` — runs `SELECT 1`
-- `RedisCursorStore` — runs `PING`
-
-File and Memory stores don't expose `ping` because they have no network dependency to check.
+None of the built-in stores implement `ping` today — `healthCheck()` only reports on cursor store liveness if your store (built-in or custom) defines it. Add a `ping` method to a custom store to opt in, e.g. running `SELECT 1` against Postgres or `PING` against Redis.
 
 ## Custom Stores
 
