@@ -48,11 +48,11 @@ reported privately to the project maintainers. To keep reports confidential,
 2. Click **Report a vulnerability** and describe the incident (this channel is
    monitored by the maintainers and keeps the report private).
 
-Alternatively, contact a maintainer directly through their GitHub profile
+Alternatively, contact a maintainer directly through their GitHub profile.
 
 All reports will be reviewed and investigated promptly and fairly. Maintainers
 are obligated to respect the privacy and security of the reporter of any
-incident
+incident.
 
 ## Attribution
 
