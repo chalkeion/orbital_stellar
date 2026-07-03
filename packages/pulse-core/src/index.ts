@@ -1,6 +1,7 @@
 import { CursorStore } from "./CursorStore.js";
 import type { StellarAmount } from "./amount.js";
 import type { AccountAddress, MuxedAddress, ContractAddress } from "./address.js";
+import type { ClaimPredicate } from "./claimPredicate.js";
 
 export { SorobanRpcClient } from "./SorobanRpcClient.js";
 export type {
@@ -57,8 +58,12 @@ export { coalesceCursorStore, CoalescingStore } from "./coalesceCursorStore.js";
 export type { CoalescingStoreOptions } from "./coalesceCursorStore.js";
 export { migrateCursors } from "./migrateCursors.js";
 export type { MigrateCursorsResult } from "./migrateCursors.js";
+export type { IRegistryStore } from "./IRegistryStore.js";
+export { InMemoryRegistryStore } from "./IRegistryStore.js";
+export { FileRegistryStore } from "./FileRegistryStore.js";
 
 export { isEventType } from "./eventTypeGuard.js";
+export * from "./claimPredicate.js";
 export * from "./raw-horizon.js";
 export * from "./raw-soroban.js";
 import type { RawSorobanEvent } from "./raw-soroban.js";
@@ -236,7 +241,7 @@ export type BumpSequenceEvent = {
 
 export type ClaimableBalanceClaimant = {
   destination: AccountAddress;
-  predicate: unknown;
+  predicate: ClaimPredicate;
 };
 
 export type ClaimableCreatedEvent = {
