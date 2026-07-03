@@ -42,7 +42,7 @@ export { PostgresDeadLetterStore } from "./PostgresDeadLetterStore.js";
 export { RedisRetryQueue } from "./RedisRetryQueue.js";
 export { MemoryRetryQueue } from "./MemoryRetryQueue.js";
 export { SqsRetryQueue } from "./SqsRetryQueue.js";
-export { verifyWebhookEdge, verifyWebhookEdgeRaw } from "./edge.js";
+export { verifyWebhookEdge, verifyWebhookEdgeRaw, verifyWebhookEdgeStream } from "./edge.js";
 export { dedupReceiver, MemoryDedupStore } from "./dedup.js";
 export type { DedupStore, DedupReceiverOptions } from "./dedup.js";
 export type {
@@ -234,7 +234,6 @@ export class WebhookDelivery {
 
     const builtInValidationError = this.validateUrl(url);
     if (builtInValidationError) {
-      this.emitFailure(event, url, builtInValidationError, attempt);
       return { ok: false, error: builtInValidationError, terminal: true };
     }
 
@@ -256,8 +255,8 @@ export class WebhookDelivery {
     if (this.watcher.stopped) return { ok: false, error: "stopped", terminal: true };
 
     if (resolvedHostnameError) {
-      this.emitFailure(event, url, resolvedHostnameError, attempt);
-      return { ok: false, error: resolvedHostnameError, terminal: true };
+      const isTerminal = resolvedHostnameError === BLOCKED_ADDRESS_ERROR;
+      return { ok: false, error: resolvedHostnameError, terminal: isTerminal };
     }
 
     const payload = JSON.stringify(event);
