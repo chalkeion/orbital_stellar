@@ -184,8 +184,11 @@ describe("DeadLetterStore", () => {
     watcher.emit("*", deliveryEvent);
     await vi.runAllTimersAsync();
 
-    const entries = await store.list();
-    expect(entries).toHaveLength(1);
+    const entries = await vi.waitFor(async () => {
+      const result = await store.list();
+      expect(result).toHaveLength(1);
+      return result;
+    });
     expect(entries[0]?.url).toBe(hookUrl);
     expect(entries[0]?.error).toMatch(/network error|timed out/);
 
@@ -220,7 +223,11 @@ describe("DeadLetterStore", () => {
     watcher.emit("*", deliveryEvent);
     await vi.runAllTimersAsync();
 
-    const [failure] = await store.list();
+    const [failure] = await vi.waitFor(async () => {
+      const result = await store.list();
+      expect(result.length).toBeGreaterThan(0);
+      return result;
+    });
     expect(failure).toBeDefined();
 
     await delivery.replayFailure(failure!.id);
