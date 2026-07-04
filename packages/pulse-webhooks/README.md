@@ -8,7 +8,7 @@ pnpm add @orbital-stellar/pulse-webhooks @orbital-stellar/pulse-core
 
 ## What it does
 
-`pulse-webhooks` is the "push" side of Orbital. It listens to a `Watcher`, serializes events to JSON, signs the payload with HMAC-SHA256, and POSTs to one or more endpoints. On transient failure it retries each URL independently with exponential backoff; on permanent failure it emits a `webhook.failed` event you can catch and route to a dead-letter queue.
+`pulse-webhooks` is the "push" side of Orbital. It listens to a `Watcher`, serializes events to JSON, signs the payload with HMAC-SHA256, and POSTs to one or more endpoints. On transient failure it retries each URL independently with configurable backoff; on permanent failure it emits a `webhook.failed` event you can catch and route to a dead-letter queue.
 
 Consumers verify the signature using the shared secret you provisioned — `verifyWebhook` is exported for that purpose.
 
@@ -16,7 +16,7 @@ Consumers verify the signature using the shared secret you provisioned — `veri
 
 ```ts
 import { EventEngine } from "@orbital-stellar/pulse-core";
-import { WebhookDelivery } from "@orbital-stellar/pulse-webhooks";
+import { linear, WebhookDelivery } from "@orbital-stellar/pulse-webhooks";
 
 const engine = new EventEngine({ network: "testnet" });
 engine.start();
@@ -31,6 +31,7 @@ new WebhookDelivery(watcher, {
   secret: process.env.WEBHOOK_SECRET!,
   retries: 3,
   deliveryTimeoutMs: 10_000,
+  backoff: linear,
 });
 ```
 
@@ -279,6 +280,7 @@ Attaches a delivery driver to a `Watcher`. Every event the watcher emits is deli
 | `config.deliveryTimeoutMs`    | `number`             | `10_000` | Abort threshold for each HTTP attempt                                                 |
 | `config.allowPrivateNetworks` | `boolean`            | `false`  | If true, bypass SSRF checks for local/private IP ranges                               |
 | `config.random`               | `() => number`       | `random` | Optional RNG for testing jitter. Defaults to `Math.random`.                           |
+| `config.backoff`              | `BackoffStrategy`    | `exponentialJittered` | Retry delay strategy. Built-ins: `exponentialJittered`, `linear`, `cappedExponential`, `constant`. |
 
 ### `verifyWebhook(payload, signature, secret, timestamp, options?)` → `NormalizedEvent | null`
 
@@ -340,7 +342,7 @@ watcher.on("webhook.dropped", (event) => {
   - `x-orbital-attempt`: `1`, `2`, … up to `retries`
   - `x-orbital-delivery-id`: UUID v4, unique per event-URL pair and stable across retries. Use this for receiver-side idempotency (deduplication). See [Idempotency / deduplication](#idempotency--deduplication).
 - **Success:** Any 2xx response
-- **Retry:** Any non-2xx, network error, or timeout. Backoff is exponential: `2^(attempt-1) × 1000 ms`.
+- **Retry:** Any non-2xx, network error, or timeout. Backoff defaults to full-jitter exponential delay and can be replaced with `config.backoff`.
 - **Failure:** After `retries` unsuccessful attempts for a given URL, the watcher emits `webhook.failed` with the original event in `raw.originalEvent` and the failed target in `raw.url`.
 
 ## Idempotency / deduplication
@@ -522,7 +524,7 @@ Always pass `maxAgeMs` explicitly. A consumer that omits the option still receiv
 ## Current limitations
 
 - **Retries live in-process.** Restarting the process loses pending retries. Persistent retry queues with pluggable adapters (Redis, Postgres, S3) ship in Phase 1 — see [`ROADMAP.md`](../../ROADMAP.md#wave-13--cursor-persistence-and-replay-primitives).
-- **Exponential backoff is hard-coded.** Configurable strategies (linear, jittered, capped-at-N-hours) are tracked under [`webhooks`](https://github.com/determined-001/orbital_stellar/labels/webhooks).
+- **Retries use a small built-in strategy set.** For specialized schedules, pass a custom `BackoffStrategy` through `config.backoff`.
 - **No signature versioning.** The header format is fixed at `x-orbital-signature` (HMAC-SHA256 hex) — there is no `v1=…` prefix. If the algorithm needs to change, a future `x-orbital-signature-v2` header will be introduced alongside `v1` for a deprecation window.
 
 ## Related documents

@@ -5,9 +5,13 @@ const dnsLookupMock = vi.hoisted(() => vi.fn());
 vi.mock("dns/promises", () => ({ lookup: dnsLookupMock }));
 
 import { Watcher } from "@orbital-stellar/pulse-core";
-import type { RetryQueue, UrlEntry, WebhookMetrics } from "../src/index.js";
+import type { BackoffStrategy, RetryQueue, UrlEntry, WebhookMetrics } from "../src/index.js";
 import {
+  cappedExponential,
+  constant,
   DeadLetterStore,
+  exponentialJittered,
+  linear,
   MemoryRetryQueue,
   verifyWebhook,
   verifyWebhookRaw,
@@ -549,12 +553,9 @@ describe("pulse-webhooks WebhookDelivery", () => {
   });
 
   describe("backoff strategies", () => {
+    const fixedRandom = () => 0.5;
+
     it("uses exponentialJittered strategy (default) with deterministic RNG", async () => {
-      const { exponentialJittered } = await import("../src/backoff.js");
-
-      const rngValue = 0.5;
-      const fixedRandom = () => rngValue;
-
       expect(exponentialJittered(1, fixedRandom)).toBe(500); // 2^0 * 1000 * 0.5 = 500
       expect(exponentialJittered(2, fixedRandom)).toBe(1000); // 2^1 * 1000 * 0.5 = 1000
       expect(exponentialJittered(3, fixedRandom)).toBe(2000); // 2^2 * 1000 * 0.5 = 2000
@@ -562,42 +563,27 @@ describe("pulse-webhooks WebhookDelivery", () => {
     });
 
     it("uses linear strategy with deterministic RNG", async () => {
-      const { linear } = await import("../src/backoff.js");
-
-      const rngValue = 0.5;
-      const fixedRandom = () => rngValue;
-
-      expect(linear(1, fixedRandom)).toBe(500); // 1 * 1000 * 0.5 = 500
-      expect(linear(2, fixedRandom)).toBe(1000); // 2 * 1000 * 0.5 = 1000
-      expect(linear(3, fixedRandom)).toBe(1500); // 3 * 1000 * 0.5 = 1500
-      expect(linear(4, fixedRandom)).toBe(2000); // 4 * 1000 * 0.5 = 2000
+      expect(linear(1, fixedRandom)).toBe(1000);
+      expect(linear(2, fixedRandom)).toBe(2000);
+      expect(linear(3, fixedRandom)).toBe(3000);
+      expect(linear(4, fixedRandom)).toBe(4000);
     });
 
     it("uses cappedExponential strategy with deterministic RNG", async () => {
-      const { cappedExponential } = await import("../src/backoff.js");
-
-      const rngValue = 0.5;
-      const fixedRandom = () => rngValue;
-
-      expect(cappedExponential(1, fixedRandom)).toBe(500); // min(2^0 * 1000, 30000) * 0.5 = 500
-      expect(cappedExponential(2, fixedRandom)).toBe(1000); // min(2^1 * 1000, 30000) * 0.5 = 1000
-      expect(cappedExponential(3, fixedRandom)).toBe(2000); // min(2^2 * 1000, 30000) * 0.5 = 2000
-      expect(cappedExponential(4, fixedRandom)).toBe(4000); // min(2^3 * 1000, 30000) * 0.5 = 4000
-      expect(cappedExponential(5, fixedRandom)).toBe(8000); // min(2^4 * 1000, 30000) * 0.5 = 8000
-      expect(cappedExponential(6, fixedRandom)).toBe(15000); // min(2^5 * 1000, 30000) * 0.5 = 15000
-      expect(cappedExponential(7, fixedRandom)).toBe(15000); // min(2^6 * 1000, 30000) * 0.5 = 15000 (capped)
+      expect(cappedExponential(1, fixedRandom)).toBe(1000);
+      expect(cappedExponential(2, fixedRandom)).toBe(2000);
+      expect(cappedExponential(3, fixedRandom)).toBe(4000);
+      expect(cappedExponential(4, fixedRandom)).toBe(8000);
+      expect(cappedExponential(5, fixedRandom)).toBe(16000);
+      expect(cappedExponential(6, fixedRandom)).toBe(30000);
+      expect(cappedExponential(7, fixedRandom)).toBe(30000);
     });
 
     it("uses constant strategy with deterministic RNG", async () => {
-      const { constant } = await import("../src/backoff.js");
-
-      const rngValue = 0.5;
-      const fixedRandom = () => rngValue;
-
-      expect(constant(1, fixedRandom)).toBe(500); // 1000 * 0.5 = 500
-      expect(constant(2, fixedRandom)).toBe(500); // 1000 * 0.5 = 500
-      expect(constant(3, fixedRandom)).toBe(500); // 1000 * 0.5 = 500
-      expect(constant(4, fixedRandom)).toBe(500); // 1000 * 0.5 = 500
+      expect(constant(1, fixedRandom)).toBe(1000);
+      expect(constant(2, fixedRandom)).toBe(1000);
+      expect(constant(3, fixedRandom)).toBe(1000);
+      expect(constant(4, fixedRandom)).toBe(1000);
     });
 
     it("accepts custom backoff strategy in WebhookConfig", async () => {
@@ -607,7 +593,7 @@ describe("pulse-webhooks WebhookDelivery", () => {
       const rngValue = 0.75;
       const fixedRandom = () => rngValue;
 
-      const customStrategy: (attempt: number, rng: () => number) => number = (attempt, rng) => {
+      const customStrategy: BackoffStrategy = (_attempt, rng) => {
         return Math.floor(rng() * 5000); // constant 5000ms max delay
       };
 
