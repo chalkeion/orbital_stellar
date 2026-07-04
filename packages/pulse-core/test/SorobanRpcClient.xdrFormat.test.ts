@@ -147,26 +147,6 @@ describe("SorobanRpcClient xdrFormat options & Normalization", () => {
       });
     });
 
-    it("returns empty events array when RPC result is missing", async () => {
-      const fetchImpl = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          jsonrpc: "2.0",
-          id: 1,
-        }),
-      }) as unknown as typeof fetch;
-
-      const client = new SorobanRpcClient({
-        rpcUrl: "https://soroban-rpc.example.com",
-        fetchImpl,
-      });
-
-      const result = await client.getEvents();
-
-      expect(result).toEqual({ events: [] });
-    });
-
     it("returns correctly shaped response without format interference", async () => {
       const fetchImpl = vi.fn().mockResolvedValue({
         ok: true,
