@@ -8,9 +8,7 @@
     "prebuild": "pnpm -w run docs:reference",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "pagefind": "pagefind --source .next --output public/pagefind",
-    "postbuild": "npm run pagefind"
+    "lint": "next lint"
   },
   "dependencies": {
     "@orbital-stellar/pulse-core": "workspace:*",

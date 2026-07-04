@@ -1,40 +1,105 @@
-import { NextResponse } from 'next/server';
-import { StellarSdk } from 'stellar-sdk';
+import { isContractAddress } from "@orbital-stellar/pulse-core";
+import { getEngine } from "@/lib/engine";
+import {
+  DEMO_LIMITS,
+  acquireStream,
+  clientIp,
+} from "@/lib/demo-limits";
 
-// RPC endpoint (public testnet)
-const RPC_URL = 'https://soroban-testnet.stellar.org';
-const server = new StellarSdk.Server(RPC_URL);
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-export async function GET(request: Request, { params }: { params: { contractId: string } }) {
-  const url = new URL(request.url);
-  const topic = url.searchParams.get('topic') || undefined;
-  const cursor = url.searchParams.get('cursor') || '0';
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ contractId: string }> }
+) {
+  const { contractId } = await params;
 
-  const rpcPayload = {
-    jsonrpc: '2.0',
-    id: Date.now(),
-    method: 'getEvents',
-    params: {
-      startLedger: cursor,
-      filters: [{ contractIds: [params.contractId], topics: topic ? [topic] : [] }],
-    },
-  };
+  if (!isContractAddress(contractId)) {
+    return Response.json(
+      { error: "invalid_contract_id", message: "Not a valid Soroban contract address" },
+      { status: 400 }
+    );
+  }
 
-  const resp = await fetch(RPC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(rpcPayload),
+  const ip = clientIp(req);
+  const slot = acquireStream(ip);
+  if (!slot.ok) {
+    return Response.json(slot.body, { status: 429 });
+  }
+
+  const engine = getEngine();
+  const subscriptionId = `contract:${contractId}`;
+  const watcher = engine.subscribeContract(subscriptionId, {
+    filters: [{ contractIds: [contractId] }],
   });
-  const json = await resp.json();
+  const encoder = new TextEncoder();
 
-  const events = json.result?.events?.map((e: any) => ({
-    contractId: e.contractId,
-    ledger: e.ledger,
-    topic: e.topic,
-    rawPayload: e.value,
-  })) || [];
+  const stream = new ReadableStream({
+    start(controller) {
+      let closed = false;
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        clearInterval(heartbeat);
+        clearTimeout(sessionTimer);
+        watcher.removeListener("*", onEvent);
+        engine.unsubscribeContract(subscriptionId);
+        slot.release();
+        try {
+          controller.close();
+        } catch {
+          /* already closed */
+        }
+      };
 
-  const lastLedger = events.length ? events[events.length - 1].ledger : cursor;
+      const onEvent = (event: unknown) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        } catch {
+          close();
+        }
+      };
 
-  return NextResponse.json({ events, lastLedger });
+      const heartbeat = setInterval(() => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(`: heartbeat\n\n`));
+        } catch {
+          close();
+        }
+      }, 10_000);
+
+      const sessionTimer = setTimeout(() => {
+        if (closed) return;
+        const payload = JSON.stringify({
+          error: "demo_limit_reached",
+          reason: "session_expired",
+          message: `Demo sessions are capped at ${DEMO_LIMITS.streamDurationMs / 1000}s. Sign up for Orbital Cloud for persistent streams.`,
+          upgradeUrl: DEMO_LIMITS.upgradeUrl,
+        });
+        try {
+          controller.enqueue(
+            encoder.encode(`event: session_expired\ndata: ${payload}\n\n`)
+          );
+        } catch {
+          /* ignore */
+        }
+        close();
+      }, DEMO_LIMITS.streamDurationMs);
+
+      watcher.on("*", onEvent);
+      req.signal.addEventListener("abort", close);
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }
