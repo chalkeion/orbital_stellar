@@ -16,6 +16,11 @@ export type UseEventConfig<T extends NormalizedEvent = NormalizedEvent> = {
   event?: string | string[];
   /** API key forwarded as ?token= query param — required when the server has authentication enabled */
   token?: string;
+  /**
+   * Async callback that returns a fresh token when the current one expires.
+   * When set, `auth_expired` events trigger a transparent reconnect with the new token
+   * instead of surfacing an error.
+   */
   tokenProvider?: () => Promise<string>;
   /** SSR initial state; replaced on first live event */
   initialEvent?: T | null;
@@ -27,6 +32,8 @@ export type UseEventConfig<T extends NormalizedEvent = NormalizedEvent> = {
   onEvent?: (event: NormalizedEvent) => void;
   /** Transport to use. Defaults to 'sse'. */
   transport?: "sse" | "websocket";
+  /** Wait time before pausing active connection when document becomes hidden (ms). Defaults to 30000. */
+  hideAfterMs?: number;
 };
 
 export type EventState<T extends NormalizedEvent = NormalizedEvent> = {
@@ -34,7 +41,51 @@ export type EventState<T extends NormalizedEvent = NormalizedEvent> = {
   connected: boolean;
   error: string | null;
   lastEventAt: string | null;
+  /** False only during the brief window after a reconnect where the stream is
+   *  replaying events the browser requested via Last-Event-ID. Becomes true
+   *  again as soon as the first event is delivered, or immediately on a fresh
+   *  connection where no prior event ID was recorded. */
+  caughtUp: boolean;
 };
+
+function useVisibilityState(hideAfterMs = 30000): boolean {
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    let timer: any = null;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        timer = setTimeout(() => {
+          setIsActive(false);
+        }, hideAfterMs);
+      } else {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        setIsActive(true);
+      }
+    };
+
+    if (document.visibilityState === "hidden") {
+      timer = setTimeout(() => {
+        setIsActive(false);
+      }, hideAfterMs);
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [hideAfterMs]);
+
+  return isActive;
+}
 
 export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
   config: UseEventConfig<T>,
@@ -44,7 +95,14 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
   address: string,
   options?: Pick<
     UseEventConfig<T>,
-    "event" | "token" | "tokenProvider" | "initialEvent" | "filter" | "withCredentials" | "onEvent"
+    | "event"
+    | "token"
+    | "tokenProvider"
+    | "initialEvent"
+    | "filter"
+    | "withCredentials"
+    | "onEvent"
+    | "hideAfterMs"
   >,
 ): EventState<T>;
 export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
@@ -52,7 +110,14 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
   address?: string,
   options?: Pick<
     UseEventConfig<T>,
-    "event" | "token" | "tokenProvider" | "initialEvent" | "filter" | "withCredentials" | "onEvent"
+    | "event"
+    | "token"
+    | "tokenProvider"
+    | "initialEvent"
+    | "filter"
+    | "withCredentials"
+    | "onEvent"
+    | "hideAfterMs"
   >,
 ): EventState<T> {
   const serverUrl = typeof configOrUrl === "string" ? configOrUrl : configOrUrl.serverUrl;
@@ -69,6 +134,8 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
     typeof configOrUrl === "string" ? options?.withCredentials : configOrUrl.withCredentials;
   const onEvent = typeof configOrUrl === "string" ? options?.onEvent : configOrUrl.onEvent;
   const transport = typeof configOrUrl === "string" ? "sse" : (configOrUrl.transport ?? "sse");
+  const hideAfterMs =
+    typeof configOrUrl === "string" ? options?.hideAfterMs : configOrUrl.hideAfterMs;
 
   const eventKey = Array.isArray(eventType) ? [...eventType].sort().join(",") : eventType;
 
@@ -87,42 +154,30 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
     tokenProviderRef.current = tokenProvider;
   });
 
-  const [activeToken, setActiveToken] = useState<string | undefined>(token);
-
+  const [currentToken, setCurrentToken] = useState<string | undefined>(token);
   useEffect(() => {
-    setActiveToken(token);
+    setCurrentToken(token);
   }, [token]);
+
+  const [tokenRefreshKey, setTokenRefreshKey] = useState(0);
 
   const [state, setState] = useState<EventState<T>>({
     event: initialEvent,
     connected: false,
     error: null,
     lastEventAt: null,
+    caughtUp: true,
   });
 
-  useEffect(() => {
-    if (activeToken === undefined && tokenProviderRef.current) {
-      let active = true;
-      tokenProviderRef
-        .current()
-        .then((newToken) => {
-          if (active) {
-            setActiveToken(newToken);
-          }
-        })
-        .catch(() => {
-          if (active) {
-            setState((prev) => ({ ...prev, connected: false, error: "token expired" }));
-          }
-        });
-      return () => {
-        active = false;
-      };
-    }
-  }, [activeToken]);
+  const lastEventIdRef = useRef("");
+
+  const isActive = useVisibilityState(hideAfterMs ?? 30000);
 
   useEffect(() => {
-    if (activeToken === undefined && tokenProviderRef.current) {
+    lastEventIdRef.current = "";
+
+    if (!isActive) {
+      setState((prev) => ({ ...prev, connected: false }));
       return;
     }
 
@@ -131,30 +186,22 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
       {
         serverUrl,
         address: addr,
-        token: activeToken,
+        token: currentToken,
         ...(transport === "sse" ? { withCredentials } : {}),
       },
       {
         onOpen: () => {
-          setState((prev) => ({ ...prev, connected: true, error: null }));
+          setState((prev) => ({
+            ...prev,
+            connected: true,
+            error: null,
+            caughtUp: !lastEventIdRef.current,
+          }));
+        },
+        onEventId: (id) => {
+          lastEventIdRef.current = id;
         },
         onEvent: (incoming) => {
-          if ((incoming.type as string) === "auth_expired") {
-            if (tokenProviderRef.current) {
-              tokenProviderRef
-                .current()
-                .then((newToken) => {
-                  setActiveToken(newToken);
-                })
-                .catch(() => {
-                  setState((prev) => ({ ...prev, connected: false, error: "token expired" }));
-                });
-            } else {
-              setState((prev) => ({ ...prev, connected: false, error: "token expired" }));
-            }
-            return;
-          }
-
           onEventRef.current?.(incoming);
 
           const allowed =
@@ -170,6 +217,7 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
             ...prev,
             event: incoming as T,
             lastEventAt: incoming.timestamp ?? null,
+            caughtUp: true,
           }));
         },
         onParseError: () => {
@@ -181,6 +229,25 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
             connected: false,
             error: "Connection lost — retrying...",
           }));
+        },
+        onAuthExpired: () => {
+          const provider = tokenProviderRef.current;
+          if (provider) {
+            provider()
+              .then((newToken) => {
+                setCurrentToken(newToken);
+                setTokenRefreshKey((k) => k + 1);
+              })
+              .catch(() => {
+                setState((prev) => ({ ...prev, error: "Token refresh failed" }));
+              });
+          } else {
+            setState((prev) => ({
+              ...prev,
+              connected: false,
+              error: "Token expired",
+            }));
+          }
         },
       },
     );
@@ -194,15 +261,24 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
     };
     // ✅ eventKey is a serialised string — stable even when the caller passes
     // an array literal, which would otherwise be a new reference every render.
-  }, [serverUrl, addr, eventKey, activeToken, withCredentials, transport]);
+  }, [
+    serverUrl,
+    addr,
+    eventKey,
+    currentToken,
+    tokenRefreshKey,
+    withCredentials,
+    transport,
+    isActive,
+  ]);
 
   return state;
 }
 
-// Re-export pulse-core's PaymentEvent. (It cannot be derived via
+// Re-export pulse-core event types. (They cannot be derived via
 // `Extract<NormalizedEvent, ...>` because NormalizedEvent is an intersection
 // with `{ timestampDate }`, over which Extract does not distribute.)
-export type { PaymentEvent };
+export type { PaymentEvent, ContractInvokedEvent, ContractEmittedEvent };
 
 /**
  * Converts a Stellar decimal amount string (e.g. "12.3456789") to stroops
@@ -222,6 +298,14 @@ function amountToStroop(amount: string): bigint | null {
   }
 }
 
+export type PaymentState = {
+  event: PaymentEvent | null;
+  connected: boolean;
+  error: string | null;
+  lastEventAt: string | null;
+  amountStroop: bigint | null;
+};
+
 export function useStellarPayment(
   serverUrl: string,
   address: string,
@@ -229,13 +313,15 @@ export function useStellarPayment(
     initialEvent?: PaymentEvent | null;
     filter?: (event: NormalizedEvent) => boolean;
     withCredentials?: boolean;
+    hideAfterMs?: number;
   },
-) {
+): PaymentState {
   const base = useStellarEvent(serverUrl, address, {
     event: "payment.received",
     initialEvent: (options?.initialEvent ?? undefined) as NormalizedEvent | undefined,
     filter: options?.filter,
     withCredentials: options?.withCredentials,
+    hideAfterMs: options?.hideAfterMs,
   });
   // The "payment.received" stream only ever delivers PaymentEvents; narrow the
   // generic NormalizedEvent so we can read `amount`.
@@ -252,6 +338,7 @@ export function useStellarActivity<T extends NormalizedEvent = NormalizedEvent>(
     initialEvent?: T | null;
     filter?: (event: NormalizedEvent) => boolean;
     withCredentials?: boolean;
+    hideAfterMs?: number;
   },
 ): EventState<T> {
   return useStellarEvent<T>(serverUrl, address, {
@@ -259,6 +346,7 @@ export function useStellarActivity<T extends NormalizedEvent = NormalizedEvent>(
     initialEvent: options?.initialEvent,
     filter: options?.filter,
     withCredentials: options?.withCredentials,
+    hideAfterMs: options?.hideAfterMs,
   });
 }
 
@@ -270,11 +358,19 @@ export {
 } from "./StellarConnectionStatus.js";
 export { StellarEventBoundary } from "./StellarEventBoundary.js";
 
-export type UseContractEventConfig<T extends NormalizedEvent = NormalizedEvent> = {
+export type UseContractEventConfig<
+  T extends ContractInvokedEvent | ContractEmittedEvent =
+    ContractInvokedEvent | ContractEmittedEvent,
+> = {
   serverUrl: string;
   contractId: string;
   topics?: string[];
   token?: string;
+  /**
+   * Async callback that returns a fresh token when the current one expires.
+   * When set, `auth_expired` events trigger a transparent reconnect with the new token
+   * instead of surfacing an error.
+   */
   tokenProvider?: () => Promise<string>;
   /** SSR initial state; replaced on first live event */
   initialEvent?: T | null;
@@ -284,14 +380,14 @@ export type UseContractEventConfig<T extends NormalizedEvent = NormalizedEvent> 
   withCredentials?: boolean;
   /** Side-effect callback fired for every incoming event, before filter is applied */
   onEvent?: (event: NormalizedEvent) => void;
+  /** Wait time before pausing active connection when document becomes hidden (ms). Defaults to 30000. */
+  hideAfterMs?: number;
 };
 
 /** Hook for subscribing to Soroban contract events */
 export function useContractEvent<
-  T extends Extract<NormalizedEvent, { type: "contract.invoked" | "contract.emitted" }> = Extract<
-    NormalizedEvent,
-    { type: "contract.invoked" | "contract.emitted" }
-  >,
+  T extends ContractInvokedEvent | ContractEmittedEvent =
+    ContractInvokedEvent | ContractEmittedEvent,
 >(config: UseContractEventConfig<T>): EventState<T> {
   const {
     serverUrl,
@@ -303,6 +399,7 @@ export function useContractEvent<
     filter,
     withCredentials,
     onEvent,
+    hideAfterMs,
   } = config;
 
   const filterRef = useRef(filter);
@@ -320,68 +417,48 @@ export function useContractEvent<
     tokenProviderRef.current = tokenProvider;
   });
 
-  const [activeToken, setActiveToken] = useState<string | undefined>(token);
-
+  const [currentToken, setCurrentToken] = useState<string | undefined>(token);
   useEffect(() => {
-    setActiveToken(token);
+    setCurrentToken(token);
   }, [token]);
+
+  const [tokenRefreshKey, setTokenRefreshKey] = useState(0);
 
   const [state, setState] = useState<EventState<T>>({
     event: initialEvent ?? null,
     connected: false,
     error: null,
     lastEventAt: null,
+    caughtUp: true,
   });
 
-  useEffect(() => {
-    if (activeToken === undefined && tokenProviderRef.current) {
-      let active = true;
-      tokenProviderRef
-        .current()
-        .then((newToken) => {
-          if (active) {
-            setActiveToken(newToken);
-          }
-        })
-        .catch(() => {
-          if (active) {
-            setState((prev) => ({ ...prev, connected: false, error: "token expired" }));
-          }
-        });
-      return () => {
-        active = false;
-      };
-    }
-  }, [activeToken]);
+  const lastEventIdRef = useRef("");
+
+  const isActive = useVisibilityState(hideAfterMs ?? 30000);
 
   useEffect(() => {
-    if (activeToken === undefined && tokenProviderRef.current) {
+    lastEventIdRef.current = "";
+
+    if (!isActive) {
+      setState((prev) => ({ ...prev, connected: false }));
       return;
     }
 
     const connection = acquireContractEventConnection(
-      { serverUrl, contractId, topics, token: activeToken, withCredentials },
+      { serverUrl, contractId, topics, token: currentToken, withCredentials },
       {
         onOpen: () => {
-          setState((prev) => ({ ...prev, connected: true, error: null }));
+          setState((prev) => ({
+            ...prev,
+            connected: true,
+            error: null,
+            caughtUp: !lastEventIdRef.current,
+          }));
+        },
+        onEventId: (id) => {
+          lastEventIdRef.current = id;
         },
         onEvent: (incoming) => {
-          if ((incoming.type as string) === "auth_expired") {
-            if (tokenProviderRef.current) {
-              tokenProviderRef
-                .current()
-                .then((newToken) => {
-                  setActiveToken(newToken);
-                })
-                .catch(() => {
-                  setState((prev) => ({ ...prev, connected: false, error: "token expired" }));
-                });
-            } else {
-              setState((prev) => ({ ...prev, connected: false, error: "token expired" }));
-            }
-            return;
-          }
-
           onEventRef.current?.(incoming);
           // Basic topic filtering for emitted events
           if (incoming.type === "contract.emitted" && topics && topics.length > 0) {
@@ -396,6 +473,7 @@ export function useContractEvent<
             ...prev,
             event: incoming as unknown as T,
             lastEventAt: incoming.timestamp ?? null,
+            caughtUp: true,
           }));
         },
         onParseError: () => {
@@ -408,6 +486,25 @@ export function useContractEvent<
             error: "Connection lost — retrying...",
           }));
         },
+        onAuthExpired: () => {
+          const provider = tokenProviderRef.current;
+          if (provider) {
+            provider()
+              .then((newToken) => {
+                setCurrentToken(newToken);
+                setTokenRefreshKey((k) => k + 1);
+              })
+              .catch(() => {
+                setState((prev) => ({ ...prev, error: "Token refresh failed" }));
+              });
+          } else {
+            setState((prev) => ({
+              ...prev,
+              connected: false,
+              error: "Token expired",
+            }));
+          }
+        },
       },
     );
 
@@ -418,7 +515,15 @@ export function useContractEvent<
     return () => {
       connection.unsubscribe();
     };
-  }, [serverUrl, contractId, JSON.stringify(topics ?? []), activeToken, withCredentials]);
+  }, [
+    serverUrl,
+    contractId,
+    JSON.stringify(topics ?? []),
+    currentToken,
+    tokenRefreshKey,
+    withCredentials,
+    isActive,
+  ]);
 
   return state;
 }
@@ -431,24 +536,240 @@ export {
   type ContractStateResult,
 } from "./useContractState.js";
 
-export type UseHistoryOptions = {
+export type UseHistoryOptions<T extends NormalizedEvent = NormalizedEvent> = {
   token?: string;
   /** Maximum number of events to retain in FIFO order. Defaults to 100. */
   capacity?: number;
+  /** SSR initial event to seed history */
+  initialEvent?: T | null;
+  hideAfterMs?: number;
 };
 
 export type HistoryState<T extends NormalizedEvent = NormalizedEvent> = EventState<T> & {
   history: T[];
 };
 
+// ─── useStellarAddresses ─────────────────────────────────────────────────────
+
+export type UseAddressesOptions = {
+  event?: string | string[];
+  token?: string;
+  /**
+   * Async callback that returns a fresh token when the current one expires.
+   * When set, `auth_expired` events trigger a transparent reconnect with the new token
+   * instead of surfacing an error.
+   */
+  tokenProvider?: () => Promise<string>;
+  /** Client-side predicate; events that return false are suppressed before state update */
+  filter?: (event: NormalizedEvent) => boolean;
+  /** Enable cookie-based auth for same-origin or CORS-credentialed SSE */
+  withCredentials?: boolean;
+  /** Side-effect callback fired for every incoming event (per address), before filter is applied */
+  onEvent?: (address: string, event: NormalizedEvent) => void;
+};
+
+/**
+ * Watches multiple Stellar addresses with a single hook call.
+ *
+ * Connections are acquired from the shared pool (see connectionPool.ts), so
+ * duplicate addresses across the same `serverUrl`/`token` combination always
+ * reuse one underlying EventSource rather than opening a new one.
+ *
+ * @param serverUrl - Base URL of the pulse-notify server.
+ * @param addresses - Array of Stellar account addresses to watch.
+ * @param options   - Optional shared configuration (token, filter, …).
+ * @returns A `Record<address, EventState<T>>` that is updated independently
+ *          for each address as events arrive.
+ *
+ * @example
+ * const states = useStellarAddresses(serverUrl, [addrA, addrB, addrC]);
+ * // states[addrA].event, states[addrB].connected, …
+ */
+export function useStellarAddresses<T extends NormalizedEvent = NormalizedEvent>(
+  serverUrl: string,
+  addresses: string[],
+  options?: UseAddressesOptions,
+): Record<string, EventState<T>> {
+  const {
+    event: eventType,
+    token,
+    tokenProvider,
+    filter,
+    withCredentials,
+    onEvent,
+  } = options ?? {};
+
+  // Serialise the addresses array once per render so we can use it as a stable
+  // effect dependency even when the caller passes an inline literal.
+  const addressKey = [...addresses].sort().join(",");
+  const eventKey = Array.isArray(eventType) ? [...eventType].sort().join(",") : (eventType ?? "*");
+
+  // Initialise state lazily — one EventState entry per address.
+  const [states, setStates] = useState<Record<string, EventState<T>>>(() => {
+    const initial: Record<string, EventState<T>> = {};
+    for (const addr of addresses) {
+      initial[addr] = {
+        event: null,
+        connected: false,
+        error: null,
+        lastEventAt: null,
+        caughtUp: true,
+      };
+    }
+    return initial;
+  });
+
+  // Keep callbacks in refs so that effect deps stay stable across renders.
+  const filterRef = useRef(filter);
+  useEffect(() => {
+    filterRef.current = filter;
+  });
+
+  const onEventRef = useRef(onEvent);
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  });
+
+  const tokenProviderRef = useRef(tokenProvider);
+  useEffect(() => {
+    tokenProviderRef.current = tokenProvider;
+  });
+
+  const [currentToken, setCurrentToken] = useState<string | undefined>(token);
+  useEffect(() => {
+    setCurrentToken(token);
+  }, [token]);
+
+  const [tokenRefreshKey, setTokenRefreshKey] = useState(0);
+
+  const lastEventIdMapRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    lastEventIdMapRef.current.clear();
+
+    if (addresses.length === 0) return;
+
+    // Normalise the event-type list once for all subscriptions.
+    const resolvedEventType: string | string[] = eventKey === "*" ? "*" : (eventType ?? "*");
+
+    const connections = addresses.map((addr) => {
+      const connection = acquireEventConnection(
+        { serverUrl, address: addr, token: currentToken, withCredentials },
+        {
+          onOpen: () => {
+            setStates((prev) => ({
+              ...prev,
+              [addr]: {
+                ...prev[addr]!,
+                connected: true,
+                error: null,
+                caughtUp: !lastEventIdMapRef.current.get(addr),
+              },
+            }));
+          },
+          onEventId: (id) => {
+            lastEventIdMapRef.current.set(addr, id);
+          },
+          onEvent: (incoming) => {
+            onEventRef.current?.(addr, incoming);
+
+            // Apply event-type filter.
+            const allowed =
+              resolvedEventType === "*" ||
+              (Array.isArray(resolvedEventType)
+                ? resolvedEventType.includes(incoming.type)
+                : incoming.type === resolvedEventType);
+            if (!allowed) return;
+
+            // Apply user predicate.
+            if (filterRef.current && !filterRef.current(incoming)) return;
+
+            setStates((prev) => ({
+              ...prev,
+              [addr]: {
+                ...prev[addr]!,
+                event: incoming as T,
+                lastEventAt: incoming.timestamp ?? null,
+                caughtUp: true,
+              },
+            }));
+          },
+          onParseError: () => {
+            setStates((prev) => ({
+              ...prev,
+              [addr]: { ...prev[addr]!, error: "Failed to parse event" },
+            }));
+          },
+          onError: () => {
+            setStates((prev) => ({
+              ...prev,
+              [addr]: {
+                ...prev[addr]!,
+                connected: false,
+                error: "Connection lost — retrying...",
+              },
+            }));
+          },
+          onAuthExpired: () => {
+            const provider = tokenProviderRef.current;
+            if (provider) {
+              provider()
+                .then((newToken) => {
+                  setCurrentToken(newToken);
+                  setTokenRefreshKey((k) => k + 1);
+                })
+                .catch(() => {
+                  setStates((prev) => ({
+                    ...prev,
+                    [addr]: { ...prev[addr]!, error: "Token refresh failed" },
+                  }));
+                });
+            } else {
+              setStates((prev) => ({
+                ...prev,
+                [addr]: { ...prev[addr]!, connected: false, error: "Token expired" },
+              }));
+            }
+          },
+        },
+      );
+
+      // If the pool already had an open connection, reflect that immediately.
+      if (connection.connected) {
+        setStates((prev) => ({
+          ...prev,
+          [addr]: { ...prev[addr]!, connected: true, error: null },
+        }));
+      }
+
+      return connection;
+    });
+
+    return () => {
+      for (const connection of connections) {
+        connection.unsubscribe();
+      }
+    };
+    // ✅ addressKey and eventKey are stable serialised strings — safe as deps
+    // even when the caller passes inline array literals.
+  }, [serverUrl, addressKey, eventKey, currentToken, tokenRefreshKey, withCredentials]);
+
+  return states;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function useStellarHistory<T extends NormalizedEvent = NormalizedEvent>(
   serverUrl: string,
   address: string,
-  options?: UseHistoryOptions,
+  options?: UseHistoryOptions<T>,
 ): HistoryState<T> {
-  const [history, setHistory] = useState<T[]>([]);
   const capacity = options?.capacity ?? 100;
-  const base = useStellarActivity<T>(serverUrl, address, { initialEvent: null });
+  const base = useStellarActivity<T>(serverUrl, address, {
+    initialEvent: options?.initialEvent ?? null,
+    hideAfterMs: options?.hideAfterMs,
+  });
+  const [history, setHistory] = useState<T[]>(options?.initialEvent ? [options.initialEvent] : []);
 
   useEffect(() => {
     if (base.event) {
