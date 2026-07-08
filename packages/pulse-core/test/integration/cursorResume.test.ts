@@ -17,9 +17,10 @@ if (isIntegration) {
   try {
     // lazy-load pg and PostgresCursorStore if integration tests are enabled
 
-    const pg = require("pg");
-    pgPool = pg.Pool;
-    PostgresCursorStore = require("../../src/PostgresCursorStore.js").PostgresCursorStore;
+    const pg = await import("pg");
+    pgPool = pg.Pool ?? pg.default?.Pool;
+    const mod = await import("../../src/PostgresCursorStore.js");
+    PostgresCursorStore = mod.PostgresCursorStore;
   } catch (e) {
     // leave as null; tests will skip Postgres
     pgPool = null;

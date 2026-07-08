@@ -1,14 +1,62 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  Asset,
+  BASE_FEE,
+  Horizon,
+  Keypair,
+  Networks,
+  Operation,
+  TransactionBuilder,
+} from "@stellar/stellar-sdk";
 import { EventEngine } from "../../src/EventEngine.js";
 
 // Skip integration tests unless INTEGRATION_TESTS env var is set
 const integrationTest = process.env.INTEGRATION_TESTS ? it : it.skip;
 
+const HORIZON_TESTNET_URL = "https://horizon-testnet.stellar.org";
+const FRIENDBOT_URL = "https://friendbot.stellar.org";
+
+async function fundAccount(publicKey: string): Promise<void> {
+  const resp = await fetch(`${FRIENDBOT_URL}?addr=${encodeURIComponent(publicKey)}`);
+  if (!resp.ok) {
+    throw new Error(
+      `Friendbot funding failed for ${publicKey}: ${resp.status} ${await resp.text()}`,
+    );
+  }
+}
+
+// The old hardcoded fixture account stopped receiving faucet traffic (0 payments
+// on record), so "streams payments" tests can never observe an event passively.
+// Instead we submit a real payment to a freshly funded account ourselves.
+async function sendTestPayment(destination: string): Promise<void> {
+  const server = new Horizon.Server(HORIZON_TESTNET_URL);
+  const source = Keypair.random();
+  await fundAccount(source.publicKey());
+
+  const account = await server.loadAccount(source.publicKey());
+  const tx = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase: Networks.TESTNET,
+  })
+    .addOperation(Operation.payment({ destination, asset: Asset.native(), amount: "1" }))
+    .setTimeout(30)
+    .build();
+  tx.sign(source);
+  await server.submitTransaction(tx);
+}
+
 describe("Horizon Integration Tests", () => {
   let engine: EventEngine;
 
-  // A public testnet account that regularly receives payments from the Stellar testnet faucet
-  const TESTNET_ACCOUNT = "GBBDQF3HQ4I7KZ7A5LJ4SXGWH4U7KRN2WA4YOJXKXEBVNBKWO6BMGQRF";
+  // Freshly funded per-run testnet account (see sendTestPayment for why).
+  let TESTNET_ACCOUNT: string;
+
+  beforeAll(async () => {
+    if (!process.env.INTEGRATION_TESTS) return;
+    const kp = Keypair.random();
+    await fundAccount(kp.publicKey());
+    TESTNET_ACCOUNT = kp.publicKey();
+  }, 30000);
 
   beforeEach(() => {
     engine = new EventEngine({
@@ -74,6 +122,11 @@ describe("Horizon Integration Tests", () => {
         });
 
         engine.start();
+
+        // Give the payment stream a moment to open before triggering the event.
+        setTimeout(() => {
+          sendTestPayment(TESTNET_ACCOUNT).catch(reject);
+        }, 2000);
 
         timeout = setTimeout(() => {
           watcher.stop();
@@ -147,6 +200,11 @@ describe("Horizon Integration Tests", () => {
         });
 
         engine.start();
+
+        // Give the payment stream a moment to open before triggering the event.
+        setTimeout(() => {
+          sendTestPayment(TESTNET_ACCOUNT).catch(reject);
+        }, 2000);
 
         timeout = setTimeout(() => {
           watcher.stop();
