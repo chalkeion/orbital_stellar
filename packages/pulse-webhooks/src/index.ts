@@ -52,6 +52,7 @@ export { MemoryDeadLetterStore };
 export const DeadLetterStore = MemoryDeadLetterStore;
 export { NOOP_WEBHOOK_METRICS, CountingWebhookMetrics } from "./metrics.js";
 export { PrometheusWebhookMetrics } from "./PrometheusWebhookMetrics.js";
+export { OtelWebhookMetrics } from "./OtelWebhookMetrics.js";
 export type { WebhookAttemptStatus, WebhookMetrics, WebhookTerminalOutcome } from "./types.js";
 export { exponentialJittered, linear, cappedExponential, constant } from "./backoff.js";
 export type { BackoffStrategy } from "./backoff.js";
@@ -85,6 +86,10 @@ export type {
 } from "./SqsRetryQueue.js";
 export type { RetryQueue, RetryRecord } from "./RetryQueue.js";
 export type {
+  Meter,
+  MetricAttributes,
+  OtelCounter,
+  OtelHistogram,
   Span,
   Tracer,
   UrlEntry,

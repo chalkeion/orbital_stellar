@@ -23,6 +23,28 @@ export type WebhookMetrics = {
   recordTerminal(url: string, outcome: WebhookTerminalOutcome): void;
 };
 
+/** Attribute bag attached to an OpenTelemetry counter/histogram data point. */
+export type MetricAttributes = Record<string, string | number | boolean>;
+
+export type OtelCounter = {
+  add(value: number, attributes?: MetricAttributes): void;
+};
+
+export type OtelHistogram = {
+  record(value: number, attributes?: MetricAttributes): void;
+};
+
+/**
+ * Minimal structural subset of `@opentelemetry/api`'s `Meter` interface,
+ * mirroring this file's `Tracer`/`Span` pattern: a real OTel `Meter` (or any
+ * compatible object) satisfies this type, so pulse-webhooks does not need a
+ * hard dependency on `@opentelemetry/api`.
+ */
+export type Meter = {
+  createCounter(name: string, options?: { description?: string }): OtelCounter;
+  createHistogram(name: string, options?: { description?: string }): OtelHistogram;
+};
+
 export type UrlEntry = { url: string; timeoutMs?: number };
 
 export type WebhookConfig = {
