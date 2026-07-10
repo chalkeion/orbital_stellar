@@ -53,6 +53,12 @@ jobs:
       - name: Run integration tests
         env:
           INTEGRATION_TESTS: true
+          # Deployed testnet contract + funded invoker account — see
+          # contracts/deploy/deploy_testnet.sh. Unset until those repo
+          # secrets are added, in which case the live Soroban case in
+          # test/integration/soroban.test.ts self-skips with a clear message.
+          SOROBAN_CONTRACT_ID: ${{ secrets.SOROBAN_CONTRACT_ID }}
+          SOROBAN_INVOKER_SECRET: ${{ secrets.SOROBAN_INVOKER_SECRET }}
         run: pnpm test:integration
         timeout-minutes: 10
 

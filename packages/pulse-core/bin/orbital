@@ -67,7 +67,94 @@ async function main() {
           .demandCommand(1, "Please provide a command (dump or restore)");
       }
     )
-    .demandCommand(1, "Please provide a command (cursor)")
+    .command(
+      "typegen <contractId>",
+      "Generates TypeScript types + Zod schemas for a deployed Soroban contract's spec",
+      (yargs) =>
+        yargs
+          .positional("contractId", {
+            type: "string",
+            demandOption: true,
+            describe: "Soroban contract ID (C...)",
+          })
+          .option("rpc-url", {
+            type: "string",
+            default: "https://soroban-testnet.stellar.org",
+            describe: "Soroban RPC endpoint",
+          })
+          .option("network", {
+            type: "string",
+            choices: ["mainnet", "testnet", "futurenet"],
+            default: "testnet",
+            describe: "Network contractId is deployed on",
+          })
+          .option("registry-contract-id", {
+            type: "string",
+            describe:
+              "On-chain ABI registry contract to resolve against first (defaults to Orbital's canonical testnet registry, once deployed)",
+          })
+          .option("registry-publisher", {
+            type: "string",
+            describe: "Publisher address to resolve on-chain specs under",
+          })
+          .option("out", {
+            type: "string",
+            describe: "Output file (defaults to stdout)",
+          }),
+      async (argv) => {
+        const {
+          OnChainAbiRegistryClient,
+          discoverContractSpec,
+          generateContractTypes,
+          ORBITAL_REGISTRY_TESTNET_CONTRACT_ID,
+          ORBITAL_REGISTRY_PUBLISHER_ADDRESS,
+        } = await import("@orbital-stellar/abi-registry");
+        const { Networks } = await import("@stellar/stellar-sdk");
+
+        const networkPassphrase = {
+          mainnet: Networks.PUBLIC,
+          testnet: Networks.TESTNET,
+          futurenet: Networks.FUTURENET,
+        }[argv.network];
+
+        const registryContractId = argv.registryContractId || ORBITAL_REGISTRY_TESTNET_CONTRACT_ID;
+
+        let spec = null;
+        if (registryContractId) {
+          const registryClient = new OnChainAbiRegistryClient({
+            contractId: registryContractId,
+            rpcUrl: argv.rpcUrl,
+            networkPassphrase,
+            publisher: argv.registryPublisher || ORBITAL_REGISTRY_PUBLISHER_ADDRESS,
+          });
+          spec = await registryClient.getSpec(argv.contractId);
+        }
+
+        if (!spec) {
+          console.error(
+            registryContractId
+              ? "[orbital typegen] Not found in the on-chain registry — falling back to live WASM discovery."
+              : "[orbital typegen] No registry contract configured — discovering directly from the deployed WASM.",
+          );
+          spec = await discoverContractSpec({
+            rpcUrl: argv.rpcUrl,
+            contractId: argv.contractId,
+            network: argv.network,
+          });
+        }
+
+        const generated = generateContractTypes(spec);
+
+        if (argv.out) {
+          const { writeFileSync } = await import("node:fs");
+          writeFileSync(argv.out, generated, "utf-8");
+          console.error(`[orbital typegen] Wrote ${argv.out}`);
+        } else {
+          console.log(generated);
+        }
+      },
+    )
+    .demandCommand(1, "Please provide a command (cursor, typegen)")
     .help().argv;
 }
 

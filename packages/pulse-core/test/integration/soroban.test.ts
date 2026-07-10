@@ -20,8 +20,11 @@ const shouldRun = process.env.INTEGRATION_TESTS === "true";
 const RPC_URL = process.env.SOROBAN_RPC_URL ?? "https://soroban-testnet.stellar.org";
 const CONTRACT_ID = process.env.SOROBAN_CONTRACT_ID ?? "";
 const INVOKER_SECRET = process.env.SOROBAN_INVOKER_SECRET ?? "";
-// Contract function to invoke; it must emit at least one contract event.
-const CONTRACT_FN = process.env.SOROBAN_CONTRACT_FN ?? "increment";
+// Contract function to invoke; it must emit at least one contract event and
+// take no arguments. Defaults to the `orbital-demo-emitter` contract's
+// `ping()` (see contracts/demo-emitter) — a zero-arg, no-auth, always-emits
+// function that exists specifically to be a trivial standing on-chain proof.
+const CONTRACT_FN = process.env.SOROBAN_CONTRACT_FN ?? "ping";
 
 const hasConfig = Boolean(CONTRACT_ID && INVOKER_SECRET);
 
