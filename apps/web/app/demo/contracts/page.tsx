@@ -2,11 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-const NETWORK = process.env.NEXT_PUBLIC_NETWORK ?? 'testnet'
+const WELL_KNOWN_CONTRACTS = [
+  { label: 'USDC', contractId: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75' },
+  { label: 'EURC', contractId: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV' },
+  { label: 'AQUA', contractId: 'CAUIKL3IYGMERDRUN5QQVPKPLZTRNVXV27LFCWQIRNOHSNGB3ZXAEFBX' },
+] as const
 
 type ContractEvent = {
   type: 'contract.emitted' | 'contract.invoked'
   contractId: string
+  network?: 'mainnet' | 'testnet'
   topics?: string[]
   data?: unknown
   decodedData?: unknown
@@ -16,6 +21,9 @@ type ContractEvent = {
   txHash?: string
   timestamp: string
 }
+
+type FireEventResult = { txHash: string; ledger: number; contractId: string }
+type FireEventStatus = 'idle' | 'firing' | 'fired' | 'error'
 
 interface LimitEnvelope {
   error: 'demo_limit_reached'
@@ -92,10 +100,12 @@ export default function ContractEventsPlayground() {
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [limit, setLimit] = useState<LimitEnvelope | null>(null)
+  const [fireStatus, setFireStatus] = useState<FireEventStatus>('idle')
+  const [fireError, setFireError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
 
-  function handleWatch() {
-    if (!contractId.trim()) return
+  function watchContract(id: string) {
+    if (!id.trim()) return
     abortRef.current?.abort()
     setEvents([])
     setErrorMsg('')
@@ -106,7 +116,7 @@ export default function ContractEventsPlayground() {
     abortRef.current = ac
 
     streamEvents(
-      contractId.trim(),
+      id.trim(),
       ac.signal,
       (ev) => {
         setStatus('live')
@@ -125,6 +135,44 @@ export default function ContractEventsPlayground() {
           : 'Connection failed. Check the contract ID and try again.'
       )
     })
+  }
+
+  function handleWatch() {
+    watchContract(contractId)
+  }
+
+  function handleWatchWellKnown(id: string) {
+    setContractId(id)
+    watchContract(id)
+  }
+
+  async function handleFireEvent() {
+    setFireStatus('firing')
+    setFireError('')
+    try {
+      const res = await fetch('/api/demo/fire-event', { method: 'POST' })
+      const body = await res.json().catch(() => null)
+
+      if (res.status === 429) {
+        setFireStatus('error')
+        setFireError((body as LimitEnvelope | null)?.message ?? 'Rate limited. Try again shortly.')
+        return
+      }
+      if (!res.ok) {
+        setFireStatus('error')
+        setFireError((body as { message?: string } | null)?.message ?? `HTTP ${res.status}`)
+        return
+      }
+
+      const result = body as FireEventResult
+      setFireStatus('fired')
+      if (contractId.trim() !== result.contractId) {
+        handleWatchWellKnown(result.contractId)
+      }
+    } catch (err) {
+      setFireStatus('error')
+      setFireError(err instanceof Error ? err.message : 'Failed to fire test event.')
+    }
   }
 
   useEffect(() => {
@@ -150,7 +198,7 @@ export default function ContractEventsPlayground() {
           fontFamily: 'var(--font-sans)',
         }}
       >
-        ⚠️ This demo streams <strong>Soroban {NETWORK}</strong> contract events only.
+        ⚠️ This demo streams <strong>Soroban testnet and mainnet</strong> contract events.
       </div>
 
       <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto' }}>
@@ -177,8 +225,91 @@ export default function ContractEventsPlayground() {
           }}
         >
           Paste a deployed Soroban contract ID and watch its <code>contract.emitted</code> and{' '}
-          <code>contract.invoked</code> events stream in live from {NETWORK}.
+          <code>contract.invoked</code> events stream in live — one shared stream watches both
+          testnet and mainnet at once.
         </p>
+
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '16px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '12px',
+              color: 'var(--muted)',
+              marginRight: '4px',
+            }}
+          >
+            One-click watch:
+          </span>
+          {WELL_KNOWN_CONTRACTS.map((token) => (
+            <button
+              key={token.contractId}
+              onClick={() => handleWatchWellKnown(token.contractId)}
+              style={{
+                background: 'var(--surface2)',
+                border: '1px solid var(--border)',
+                color: '#fff',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '12px',
+                fontWeight: 700,
+                padding: '6px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              {token.label}
+            </button>
+          ))}
+          <button
+            onClick={handleFireEvent}
+            disabled={fireStatus === 'firing'}
+            style={{
+              marginLeft: 'auto',
+              background: fireStatus === 'firing' ? 'var(--surface2)' : 'var(--accent)',
+              border: 'none',
+              color: fireStatus === 'firing' ? 'var(--muted)' : '#000',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '13px',
+              fontWeight: 700,
+              padding: '8px 16px',
+              cursor: fireStatus === 'firing' ? 'default' : 'pointer',
+            }}
+          >
+            {fireStatus === 'firing' ? 'Firing…' : '🔥 Fire test event'}
+          </button>
+        </div>
+        {fireStatus === 'fired' && (
+          <p
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '13px',
+              color: 'var(--accent)',
+              marginTop: '-8px',
+              marginBottom: '16px',
+            }}
+          >
+            Test event fired — watch it arrive below.
+          </p>
+        )}
+        {fireStatus === 'error' && (
+          <p
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '13px',
+              color: '#FF5370',
+              marginTop: '-8px',
+              marginBottom: '16px',
+            }}
+          >
+            {fireError}
+          </p>
+        )}
 
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div
@@ -273,7 +404,7 @@ export default function ContractEventsPlayground() {
             )}
             {status === 'connecting' && <p style={emptyStateStyle}>Connecting...</p>}
             {status === 'live' && visibleEvents.length === 0 && (
-              <p style={emptyStateStyle}>Waiting for events on {NETWORK}...</p>
+              <p style={emptyStateStyle}>Waiting for events...</p>
             )}
             {status === 'error' && <p style={{ ...emptyStateStyle, color: '#FF5370' }}>{errorMsg}</p>}
             {status === 'limit' && limit && (
@@ -322,6 +453,7 @@ export default function ContractEventsPlayground() {
                   {JSON.stringify(
                     {
                       contractId: ev.contractId,
+                      network: ev.network,
                       topics: ev.topics,
                       function: ev.function,
                       args: ev.args,
