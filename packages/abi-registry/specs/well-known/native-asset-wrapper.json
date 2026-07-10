@@ -94,5 +94,28 @@
       "params": [],
       "outputs": [{ "type": "Address", "doc": "Current admin address." }]
     }
+  ],
+  "events": [
+    {
+      "name": "transfer",
+      "doc": "Emitted on every successful transfer, per the SEP-41 token interface event convention. The native asset has no mint/burn/clawback/set_authorized functions, so it has no corresponding events either.",
+      "topics": [
+        { "name": "from", "type": "Address" },
+        { "name": "to", "type": "Address" }
+      ],
+      "data": [{ "name": "amount", "type": "i128", "doc": "Amount in stroops." }]
+    },
+    {
+      "name": "approve",
+      "doc": "Emitted when an allowance is granted.",
+      "topics": [
+        { "name": "from", "type": "Address" },
+        { "name": "spender", "type": "Address" }
+      ],
+      "data": [
+        { "name": "amount", "type": "i128", "doc": "Approved amount, in stroops." },
+        { "name": "expiration_ledger", "type": "u32" }
+      ]
+    }
   ]
 }
