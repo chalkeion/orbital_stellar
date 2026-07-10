@@ -91,6 +91,54 @@
           }
         }
       }
+    },
+    "events": {
+      "type": "array",
+      "description": "List of events the contract emits. Optional — omit for contracts with no known event schema.",
+      "items": {
+        "type": "object",
+        "required": ["name", "topics", "data"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Symbolic event name, matched against the first topic at decode time.",
+            "minLength": 1
+          },
+          "doc": {
+            "type": "string",
+            "description": "Optional human-readable description of when this event is emitted."
+          },
+          "topics": {
+            "type": "array",
+            "description": "Ordered topic fields carried after the event-name symbol topic.",
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "type": { "type": "string", "minLength": 1 },
+                "doc": { "type": "string" }
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "description": "Ordered payload data fields emitted alongside the topics.",
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "type": { "type": "string", "minLength": 1 },
+                "doc": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
