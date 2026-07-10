@@ -1,0 +1,122 @@
+/**
+ * Parses the `contractspecv0` custom WASM section soroban-sdk embeds via
+ * `#[contractimpl]`/`#[contractevent]`/`#[contracttype]` into the canonical
+ * spec building blocks — no human, no JSON file.
+ *
+ * The WASM section-walking logic and the streaming multi-entry XDR read loop
+ * below were both verified against real WASM binaries built from
+ * `contracts/registry` and `contracts/demo-emitter` (soroban-sdk 27), not
+ * guessed.
+ */
+
+import { xdr } from "@stellar/stellar-sdk";
+import jsXdrPkg from "@stellar/js-xdr";
+import { mapSpecEntries } from "./xdrToSpec.js";
+import type { EventSpec, FunctionSpec, UserDefinedType } from "../spec.js";
+
+const { XdrReader } = jsXdrPkg;
+
+export class NoEmbeddedSpecError extends Error {
+  constructor() {
+    super(
+      "No embedded contractspecv0 section found in this contract's WASM — likely a non-Rust or stripped contract. Fall back to a manually published registry override.",
+    );
+    this.name = "NoEmbeddedSpecError";
+  }
+}
+
+const WASM_MAGIC = 0x6d736100; // "\0asm" read as a little-endian u32
+
+/** Locates a named custom section's payload in a WASM binary, or null if absent. */
+function findCustomSection(wasm: Uint8Array, sectionName: string): Buffer | null {
+  const buf = Buffer.isBuffer(wasm) ? wasm : Buffer.from(wasm);
+  if (buf.length < 8 || buf.readUInt32LE(0) !== WASM_MAGIC) {
+    throw new Error("parseWasmSpec: not a valid WASM binary (bad magic number)");
+  }
+
+  let offset = 8; // skip magic (4 bytes) + version (4 bytes)
+
+  function readVarUint32(): number {
+    let result = 0;
+    let shift = 0;
+    for (;;) {
+      if (offset >= buf.length) {
+        throw new Error("parseWasmSpec: truncated WASM binary while reading a LEB128 length");
+      }
+      const byte = buf[offset++]!;
+      result |= (byte & 0x7f) << shift;
+      if ((byte & 0x80) === 0) break;
+      shift += 7;
+    }
+    return result >>> 0;
+  }
+
+  while (offset < buf.length) {
+    const id = buf[offset]!;
+    offset += 1;
+    const size = readVarUint32();
+    const sectionEnd = offset + size;
+
+    if (id === 0) {
+      // Custom section: payload starts with a length-prefixed name.
+      const nameLen = readVarUint32();
+      const name = buf.subarray(offset, offset + nameLen).toString("utf-8");
+      const payloadStart = offset + nameLen;
+      if (name === sectionName) {
+        return buf.subarray(payloadStart, sectionEnd);
+      }
+    }
+    offset = sectionEnd;
+  }
+
+  return null;
+}
+
+export type ParsedWasmSpec = {
+  functions: FunctionSpec[];
+  events: EventSpec[];
+  types: Record<string, UserDefinedType>;
+  /** Raw base64 XDR entries, preserved for decode.ts's ScSpecEntry-based decode path. */
+  xdrEntries: string[];
+};
+
+/**
+ * Parses a contract's WASM bytecode into the canonical spec building blocks.
+ * Protocol-23+ contracts built with `#[contractevent]` yield full event
+ * schemas; older contracts yield functions/UDTs only with `events: []` —
+ * `contractspecv0` predates `#[contractevent]`, so older builds simply never
+ * emitted `ScSpecEntryEventV0` entries in the first place (this function
+ * doesn't need special-case logic for that; it falls out naturally from
+ * there being no such entries to map).
+ *
+ * Throws {@link NoEmbeddedSpecError} when the section is absent — stripped
+ * or non-Rust contracts have no embedded spec to discover.
+ */
+export function parseWasmSpec(wasmBytes: Uint8Array): ParsedWasmSpec {
+  const payload = findCustomSection(wasmBytes, "contractspecv0");
+  if (!payload) {
+    throw new NoEmbeddedSpecError();
+  }
+
+  // xdr.ScSpecEntry.fromXDR() only handles a buffer containing exactly one
+  // value; the section is a back-to-back concatenation of entries with no
+  // outer framing, so we stream them with a shared cursor instead. Verified
+  // against real WASM binaries — reader.eof correctly lands exactly on the
+  // section boundary after reading all entries.
+  const reader = new XdrReader(payload);
+  const entries: xdr.ScSpecEntry[] = [];
+  while (!reader.eof) {
+    // ScSpecEntry.read()'s public .d.ts types `io` as `Buffer`, but the
+    // generated implementation accepts any reader exposing the cursor
+    // protocol XdrReader implements — verified at runtime.
+    entries.push(xdr.ScSpecEntry.read(reader as unknown as Buffer));
+  }
+
+  const { functions, events, types } = mapSpecEntries(entries);
+  return {
+    functions,
+    events,
+    types,
+    xdrEntries: entries.map((entry) => entry.toXDR("base64")),
+  };
+}
