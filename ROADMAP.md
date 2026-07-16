@@ -101,7 +101,7 @@ gone — they are preserved verbatim in the
 
 **Goal:** a stability-pledged `v1.0` that teams can build production systems on.
 
-**Release gate:** `pnpm publish -r --filter "./packages/*"` succeeds against npm with `version: "1.0.0"`; `STABILITY.md` merged with documented semver contract; Soroban subscription e2e test passing against testnet RPC; M1–M6 in [`docs/proposal.md`](./docs/proposal.md) all check out. Waves 1.1–1.3 below have shipped; Wave 1.5 is now down to boilerplates and the tag.
+**Release gate:** `pnpm publish -r --filter "./packages/*"` succeeds against npm with `version: "1.0.0"`; `STABILITY.md` merged with documented semver contract; Soroban subscription e2e test passing against testnet RPC; M1–M6 in [`docs/proposal.md`](./docs/proposal.md) all check out. Waves 1.1–1.3 below have shipped; Wave 1.4 is down to the OpenAPI-generated schemas; Wave 1.5 is down to boilerplates and the tag.
 
 ### Wave 1.1 — Soroban event subscription
 
@@ -126,12 +126,13 @@ the SEP draft.
 
 - [x] `CursorStore` interface on `EventEngine` config
 - [x] Reference adapters — memory, file, Postgres, Redis, S3
+- [x] Cache and write-coalescing `CursorStore` decorators (`cacheCursorStore`, `coalesceCursorStore`) — not separate backends, wrappers over any adapter above
 - [x] `RetryQueue` interface on `WebhookDelivery`
-- [x] Reference adapters — memory, Redis, SQS
+- [x] Reference adapters — memory, Postgres, Redis, SQS
 
 ### Wave 1.4 — Discriminated union refinement
 
-- [ ] Narrow `NormalizedEvent` types so `switch (event.type)` produces exhaustive type narrowing with no `default` clause
+- [x] Narrow `NormalizedEvent` types so `switch (event.type)` produces exhaustive type narrowing with no `default` clause — enforced by `packages/pulse-core/test/types.exhaustive.test-d.ts`, run via `pnpm test:types`
 - [ ] Generated schemas from Horizon's OpenAPI
 
 ### Wave 1.5 — Distribution
