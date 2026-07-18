@@ -4,7 +4,7 @@ import { wellKnownToContractSpec } from "./wellKnown.js";
 import type { WellKnownSpecRaw } from "./wellKnown.js";
 import type { ContractSpec } from "./spec.js";
 
-// sac-interface.json is deliberately excluded — its contract_id is a
+// sac-interface.json is deliberately excluded - its contract_id is a
 // placeholder reference address, not a real deployed contract.
 const WELL_KNOWN_FILES = ["usdc.json", "eurc.json", "aqua.json", "native-asset-wrapper.json"];
 
@@ -31,7 +31,7 @@ function loadBundle(): Map<string, ContractSpec> {
 
 /**
  * Resolves the specs bundled with this package (USDC, EURC, AQUA, the
- * native XLM wrapper) entirely offline — no network, no on-chain registry
+ * native XLM wrapper) entirely offline - no network, no on-chain registry
  * required. The first link in {@link createDefaultAbiRegistryClient}'s
  * default resolution chain.
  */

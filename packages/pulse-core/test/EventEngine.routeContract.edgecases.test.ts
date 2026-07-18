@@ -18,7 +18,7 @@ function buildEngine(): {
   engine: EventEngine;
   simulateRecord: (record: unknown) => void;
 } {
-  // abiRegistry: false — this suite tests routing/filtering, not registry
+  // abiRegistry: false - this suite tests routing/filtering, not registry
   // resolution; opting out keeps contract.emitted delivery synchronous like
   // the rest of the assertions here assume.
   const engine = new EventEngine({ network: "testnet", abiRegistry: false });
@@ -68,7 +68,7 @@ function makeInvokedRecord(overrides: Record<string, unknown> = {}): Record<stri
   };
 }
 
-describe("EventEngine — contract event routing (edge cases)", () => {
+describe("EventEngine - contract event routing (edge cases)", () => {
   // ── contractId membership ──────────────────────────────────────────────────
 
   it("delivers when the event's contractId is any member of a multi-id filter", () => {

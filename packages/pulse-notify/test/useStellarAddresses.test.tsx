@@ -89,7 +89,7 @@ describe("useStellarAddresses", () => {
   });
 
   test("duplicate addresses share one underlying EventSource", async () => {
-    // Pass the same address three times — pool must coalesce to 1 connection.
+    // Pass the same address three times - pool must coalesce to 1 connection.
     const addr = "GSHARED";
     const addresses = [addr, addr, addr];
     const { unmount } = render(<WatcherComponent addresses={addresses} />);
@@ -159,7 +159,7 @@ describe("useStellarAddresses", () => {
 
     unmount();
 
-    // Pool must be empty — every EventSource closed.
+    // Pool must be empty - every EventSource closed.
     expect(__getConnectionPoolSizeForTests()).toBe(0);
     expect(MockEventSource.instances.every((es) => es.closeCount === 1)).toBe(true);
   });

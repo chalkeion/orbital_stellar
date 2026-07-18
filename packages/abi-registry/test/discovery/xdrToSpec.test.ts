@@ -6,7 +6,7 @@ import {
   UnsupportedSpecTypeError,
 } from "../../src/discovery/xdrToSpec.js";
 
-describe("mapTypeDef — composite and edge-case types not covered by the real WASM fixtures", () => {
+describe("mapTypeDef - composite and edge-case types not covered by the real WASM fixtures", () => {
   it("maps map<K,V>", () => {
     const type = xdr.ScSpecTypeDef.scSpecTypeMap(
       new xdr.ScSpecTypeMap({
@@ -55,7 +55,7 @@ describe("mapTypeDef — composite and edge-case types not covered by the real W
   });
 });
 
-describe("mapUdtUnionV0 — Rust enum-with-data (union) cases not present in the real fixtures", () => {
+describe("mapUdtUnionV0 - Rust enum-with-data (union) cases not present in the real fixtures", () => {
   it("maps a void (unit) case and a tuple (data-carrying) case", () => {
     const union = new xdr.ScSpecUdtUnionV0({
       doc: "A union-style UDT",

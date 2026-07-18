@@ -10,7 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   changes:
     runs-on: ubuntu-latest
     permissions:
@@ -39,7 +38,7 @@ jobs:
         with:
           # wasm32-unknown-unknown is rejected by soroban-sdk's build script on
           # Rust 1.82+ (reference-types/multi-value are on by default there and
-          # unsupported by the Soroban environment) — wasm32v1-none is the
+          # unsupported by the Soroban environment) - wasm32v1-none is the
           # supported target.
           targets: wasm32v1-none
 

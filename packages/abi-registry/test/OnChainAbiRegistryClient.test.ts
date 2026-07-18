@@ -12,7 +12,7 @@ vi.mock("@stellar/stellar-sdk", async (importOriginal) => {
   };
 });
 
-// Real, checksum-valid strkeys — Address/Contract in stellar-sdk validate the
+// Real, checksum-valid strkeys - Address/Contract in stellar-sdk validate the
 // checksum, so hand-typed placeholder addresses won't pass construction.
 const REGISTRY_CONTRACT_ID = StrKey.encodeContract(Buffer.alloc(32, 7));
 const TARGET_CONTRACT_ID = "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75";
@@ -224,7 +224,7 @@ describe("OnChainAbiRegistryClient", () => {
     expect(await client.getSpecAt(TARGET_CONTRACT_ID, 50)).toBeNull();
   });
 
-  it("caches resolved specs — a second getSpec call does not re-simulate", async () => {
+  it("caches resolved specs - a second getSpec call does not re-simulate", async () => {
     const spec = testSpec();
     const blob = JSON.stringify(spec);
     const simulate = routingSimulate({

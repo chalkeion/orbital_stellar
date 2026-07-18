@@ -4,7 +4,7 @@
  * Verifies that every NormalizedEvent exposes a non-enumerable lazy cached
  * `timestampDate` getter and that JSON serialization is unaffected.
  *
- * Uses the same `normalize()` private-method cast pattern as pulse-core.test.ts —
+ * Uses the same `normalize()` private-method cast pattern as pulse-core.test.ts -
  * no mock, no engine.start(), no stream infrastructure needed.
  */
 

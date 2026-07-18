@@ -1,4 +1,4 @@
-# ABI Registry — Specs
+# ABI Registry - Specs
 
 This directory contains Soroban contract ABI specs for the Orbital ABI Registry.
 
@@ -35,7 +35,7 @@ Every spec is a JSON file that conforms to `specs/well-known/schema.json`. The r
 | `version` | `string` | Spec revision in `MAJOR.MINOR.PATCH` semver format. |
 | `name` | `string` | Human-readable contract name (1–100 characters). |
 | `description` | `string` | Short description of the contract's purpose (1–500 characters). |
-| `contract_id` | `string` | Canonical mainnet Soroban contract address — C-prefixed strkey, 56 characters. |
+| `contract_id` | `string` | Canonical mainnet Soroban contract address - C-prefixed strkey, 56 characters. |
 | `network` | `"mainnet" \| "testnet" \| "futurenet"` | Stellar network this spec targets. |
 | `source` | `string` | URL or reference identifying where the interface definition was obtained. |
 | `functions` | `array` | List of callable contract functions (at least one entry required). |
@@ -43,10 +43,10 @@ Every spec is a JSON file that conforms to `specs/well-known/schema.json`. The r
 Optional fields: `tags` (string array).
 
 Each entry in `functions` must have:
-- `name` — function name as it appears in the contract ABI.
-- `params` — ordered array of `{ name, type }` objects (Soroban XDR type names such as `Address`, `i128`, `u32`, `String`, `bool`).
-- `outputs` — ordered array of `{ type }` objects; empty array for void functions.
-- `doc` — optional human-readable description (on the function or any param/output).
+- `name` - function name as it appears in the contract ABI.
+- `params` - ordered array of `{ name, type }` objects (Soroban XDR type names such as `Address`, `i128`, `u32`, `String`, `bool`).
+- `outputs` - ordered array of `{ type }` objects; empty array for void functions.
+- `doc` - optional human-readable description (on the function or any param/output).
 
 ---
 
@@ -56,16 +56,16 @@ Each entry in `functions` must have:
 
 A contract qualifies as a well-known spec when it meets **all** of the following:
 
-1. **Mainnet deployment** — the contract is deployed and active on Stellar mainnet with a verifiable C-prefixed contract address.
-2. **Public interface** — the contract interface is publicly documented or derivable via `stellar contract info interface --network mainnet --id <CONTRACT_ID>`.
-3. **Community adoption** — the contract is integrated by at least three independent production applications, or has processed at least 10,000 mainnet transactions.
-4. **Stable interface** — the contract interface is not expected to change without a migration path (i.e., it is not an experimental or alpha deployment).
+1. **Mainnet deployment** - the contract is deployed and active on Stellar mainnet with a verifiable C-prefixed contract address.
+2. **Public interface** - the contract interface is publicly documented or derivable via `stellar contract info interface --network mainnet --id <CONTRACT_ID>`.
+3. **Community adoption** - the contract is integrated by at least three independent production applications, or has processed at least 10,000 mainnet transactions.
+4. **Stable interface** - the contract interface is not expected to change without a migration path (i.e., it is not an experimental or alpha deployment).
 
 ### Initial well-known specs
 
 | Spec file | Contract ID | Rationale |
 |---|---|---|
-| `sac-interface.json` | *(placeholder — SAC addresses are per-asset)* | Reference interface for all SACs; every Stellar classic asset can be wrapped as a SAC. |
+| `sac-interface.json` | *(placeholder - SAC addresses are per-asset)* | Reference interface for all SACs; every Stellar classic asset can be wrapped as a SAC. |
 | `native-asset-wrapper.json` | `CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA` | XLM is the native Stellar asset and the most widely used token on the network. |
 | `usdc.json` | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75` | USDC is the dominant USD stablecoin on Stellar, issued by Circle. |
 | `eurc.json` | `CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV` | EURC is Circle's MiCA-compliant EUR stablecoin on Stellar, launched 2023-09-26. |
@@ -81,16 +81,16 @@ A contract qualifies as a well-known spec when it meets **all** of the following
 
 ## Adding a new well-known spec
 
-1. **Check eligibility** — confirm the contract meets all four criteria above.
-2. **Derive the contract ID** — use the Stellar CLI or SDK to obtain the canonical C-prefixed address.
-3. **Author the spec** — create `specs/well-known/<token-symbol-lowercase>.json` following the schema. Run `pnpm --filter @orbital-stellar/abi-registry validate` to confirm it passes before opening a PR.
-4. **Update the index** — add an entry to `specs/well-known/index.json` with `name`, `contract_id`, `file`, `description`, and `tags`.
-5. **Open a pull request** — include:
+1. **Check eligibility** - confirm the contract meets all four criteria above.
+2. **Derive the contract ID** - use the Stellar CLI or SDK to obtain the canonical C-prefixed address.
+3. **Author the spec** - create `specs/well-known/<token-symbol-lowercase>.json` following the schema. Run `pnpm --filter @orbital-stellar/abi-registry validate` to confirm it passes before opening a PR.
+4. **Update the index** - add an entry to `specs/well-known/index.json` with `name`, `contract_id`, `file`, `description`, and `tags`.
+5. **Open a pull request** - include:
    - The new spec file.
    - The updated `index.json`.
    - Evidence of mainnet deployment (explorer link or CLI output).
    - Evidence of community adoption (links to integrations or on-chain transaction count).
-6. **Review** — a maintainer will verify the contract ID, check the interface against the on-chain WASM, and merge once the spec is confirmed correct.
+6. **Review** - a maintainer will verify the contract ID, check the interface against the on-chain WASM, and merge once the spec is confirmed correct.
 
 ---
 
@@ -141,7 +141,7 @@ node validate.js
 - No extra fields are present (`additionalProperties: false`).
 
 **Exit codes:**
-- `0` — all specs pass.
-- `1` — one or more specs fail; errors are printed to stderr with the file path and the failing field.
+- `0` - all specs pass.
+- `1` - one or more specs fail; errors are printed to stderr with the file path and the failing field.
 
 CI runs `pnpm --filter @orbital-stellar/abi-registry validate` on every pull request that touches `packages/abi-registry/`.

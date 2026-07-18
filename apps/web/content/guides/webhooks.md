@@ -9,7 +9,7 @@ description: Sign, deliver, and verify Stellar event webhooks with @orbital-stel
 
 This guide covers both sides: setting up delivery in your backend, and verifying signatures in the receiving service (Node or edge runtime).
 
-## Sender side — `WebhookDelivery`
+## Sender side - `WebhookDelivery`
 
 ```ts
 import { EventEngine } from "@orbital-stellar/pulse-core";
@@ -37,8 +37,8 @@ When `url` is an array, each endpoint is delivered to in parallel and retried in
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `url` | `string \| string[]` | — | Destination endpoint(s). Must be HTTPS in production |
-| `secret` | `string` | — | Shared secret used to sign payloads |
+| `url` | `string \| string[]` | - | Destination endpoint(s). Must be HTTPS in production |
+| `secret` | `string` | - | Shared secret used to sign payloads |
 | `retries` | `number` | `3` | Retry attempts before emitting `webhook.failed` |
 | `deliveryTimeoutMs` | `number` | `10_000` | Per-attempt abort threshold |
 | `allowPrivateNetworks` | `boolean` | `false` | Bypass SSRF checks for local/private IPs (dev only) |
@@ -59,7 +59,7 @@ Every delivery is a JSON-serialized `NormalizedEvent`. For example, a payment:
 }
 ```
 
-Other event types (`account.created`, `trustline.added`, `offer.updated`, etc.) carry their own payload shapes — `switch` on `event.type` to narrow per branch in TypeScript.
+Other event types (`account.created`, `trustline.added`, `offer.updated`, etc.) carry their own payload shapes - `switch` on `event.type` to narrow per branch in TypeScript.
 
 ## Delivery contract
 
@@ -74,7 +74,7 @@ Other event types (`account.created`, `trustline.added`, `offer.updated`, etc.) 
 - **Retry:** any non-2xx, network error, or timeout. Backoff is exponential: `2^(attempt-1) × 1000 ms`
 - **Failure:** after `retries` failed attempts for a URL, the watcher emits `webhook.failed` with the original event in `raw.originalEvent` and the failed target in `raw.url`
 
-## Receiver side — Node.js
+## Receiver side - Node.js
 
 Use `verifyWebhook` with raw-body middleware:
 
@@ -84,7 +84,7 @@ import express from "express";
 
 const app = express();
 
-// Use raw body parser — do NOT use express.json() for this route
+// Use raw body parser - do NOT use express.json() for this route
 app.post("/hooks/stellar", express.raw({ type: "application/json" }), (req, res) => {
   const signature = req.header("x-orbital-signature");
   const timestamp = req.header("x-orbital-timestamp");
@@ -105,9 +105,9 @@ app.post("/hooks/stellar", express.raw({ type: "application/json" }), (req, res)
 });
 ```
 
-> **Important:** Always verify signatures before processing events. `verifyWebhook` uses `crypto.timingSafeEqual` under the hood — do not roll your own comparison.
+> **Important:** Always verify signatures before processing events. `verifyWebhook` uses `crypto.timingSafeEqual` under the hood - do not roll your own comparison.
 
-## Receiver side — Cloudflare Workers / Vercel Edge
+## Receiver side - Cloudflare Workers / Vercel Edge
 
 Cloudflare Workers and Vercel Edge runtimes don't ship Node.js `crypto`. Use `verifyWebhookEdge`, which uses Web Crypto API and is async:
 
@@ -144,17 +144,17 @@ export default {
 };
 ```
 
-Same in Deno or any other Web-Crypto-supporting runtime — `verifyWebhookEdge` has no Node dependency.
+Same in Deno or any other Web-Crypto-supporting runtime - `verifyWebhookEdge` has no Node dependency.
 
 ## SSRF protection
 
 `pulse-webhooks` blocks delivery to private network ranges by default to prevent SSRF (Server-Side Request Forgery):
 
-- **Loopback** — `127.0.0.0/8`, `::1`
-- **Private** — `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
-- **Link-local** — `169.254.0.0/16`
+- **Loopback** - `127.0.0.0/8`, `::1`
+- **Private** - `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
+- **Link-local** - `169.254.0.0/16`
 
-DNS resolution is verified against the blocklist before delivery to defeat DNS rebinding attacks. To allow private networks for local development, set `allowPrivateNetworks: true` on the `WebhookDelivery` config — never enable this in production.
+DNS resolution is verified against the blocklist before delivery to defeat DNS rebinding attacks. To allow private networks for local development, set `allowPrivateNetworks: true` on the `WebhookDelivery` config - never enable this in production.
 
 ## Listening for delivery failures
 
@@ -171,4 +171,4 @@ watcher.on("webhook.failed", (notification) => {
 
 ## Stopping delivery
 
-`delivery.stop()` removes the delivery driver from the watcher. The underlying watcher continues running — call `engine.unsubscribe(address)` if you also want to tear down the subscription.
+`delivery.stop()` removes the delivery driver from the watcher. The underlying watcher continues running - call `engine.unsubscribe(address)` if you also want to tear down the subscription.

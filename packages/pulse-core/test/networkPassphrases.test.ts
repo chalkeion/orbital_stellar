@@ -3,8 +3,8 @@ import { NETWORK_PASSPHRASES } from "../src/index.js";
 
 // NETWORK_PASSPHRASES is the package's source of truth for the exact passphrase
 // strings (see README "Network passphrases and asset format"). These tests lock
-// the literal values so a stray edit can't silently break consumers — signing
-// helpers, RPC calls, and tests — that depend on byte-exact passphrases.
+// the literal values so a stray edit can't silently break consumers - signing
+// helpers, RPC calls, and tests - that depend on byte-exact passphrases.
 describe("NETWORK_PASSPHRASES", () => {
   it("pins the exact mainnet passphrase string", () => {
     expect(NETWORK_PASSPHRASES.mainnet).toBe("Public Global Stellar Network ; September 2015");

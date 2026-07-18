@@ -10,7 +10,7 @@ function buildEngine(): {
   engine: EventEngine;
   simulateRecord: (record: unknown) => void;
 } {
-  // abiRegistry: false — this suite tests routing/filtering, not registry
+  // abiRegistry: false - this suite tests routing/filtering, not registry
   // resolution; opting out keeps contract.emitted delivery synchronous like
   // the rest of the assertions here assume.
   const engine = new EventEngine({ network: "testnet", abiRegistry: false });
@@ -64,10 +64,10 @@ function makeInvokedRecord(overrides: Record<string, unknown> = {}): Record<stri
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("EventEngine — contract event routing", () => {
+describe("EventEngine - contract event routing", () => {
   it("drops a contract.emitted event when no contract subscriptions exist", () => {
     const { engine, simulateRecord } = buildEngine();
-    // Classic address watcher — should not receive contract events
+    // Classic address watcher - should not receive contract events
     const watcher = engine.subscribe("GABC1234");
     const received: unknown[] = [];
     watcher.on("*", (e) => received.push(e));

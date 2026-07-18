@@ -54,7 +54,7 @@ function buildEngine(abiRegistry?: AbiRegistryClientLike | false): {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("EventEngine — ABI registry integration", () => {
+describe("EventEngine - ABI registry integration", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -189,14 +189,14 @@ describe("EventEngine — ABI registry integration", () => {
 
     simulateRecord(makeEmittedRecord());
 
-    // Synchronous delivery — no async step needed
+    // Synchronous delivery - no async step needed
     expect(received).toHaveLength(1);
     expect(received[0]!.decodedData).toBeUndefined();
   });
 
   it("resolves the bundled well-known registry by default when abiRegistry is omitted entirely", async () => {
     const USDC = "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75";
-    // abiRegistry omitted — buildEngine(undefined) passes CoreConfig.abiRegistry
+    // abiRegistry omitted - buildEngine(undefined) passes CoreConfig.abiRegistry
     // as undefined, which now resolves createDefaultAbiRegistryClient().
     const { engine, simulateRecord } = buildEngine(undefined);
     const received: ContractEmittedEvent[] = [];

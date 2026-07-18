@@ -1,4 +1,4 @@
-# pulse-notify — Transport Backend Contract
+# pulse-notify - Transport Backend Contract
 
 `pulse-notify` supports two transports, selected via the `transport` config field (default: `'sse'`).
 
@@ -18,7 +18,7 @@
 **Endpoint:** `ws(s)://{host}/events/{address}[?token=…]`  
 (`http` → `ws`, `https` → `wss` prefix conversion is applied automatically.)
 
-- Each text frame is a JSON-serialised `NormalizedEvent` — identical shape to the SSE payload.
+- Each text frame is a JSON-serialised `NormalizedEvent` - identical shape to the SSE payload.
 - `withCredentials` is not supported by the WebSocket API; use the `token` query param for auth.
 
 **Heartbeat:** The server should send a JSON ping frame `{"type":"heartbeat"}` every 30 s. The client ignores unknown event types, so no special handling is required.

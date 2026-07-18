@@ -1,6 +1,6 @@
 // TtlLruCache.ts
 // Shared TTL-on-top-of-LRU cache used by both AbiRegistryClient and
-// LocalAbiRegistryClient — extracted so the two clients don't each carry a
+// LocalAbiRegistryClient - extracted so the two clients don't each carry a
 // byte-identical copy of the same eviction/expiry logic.
 
 import { LruCache } from "./LruCache.js";

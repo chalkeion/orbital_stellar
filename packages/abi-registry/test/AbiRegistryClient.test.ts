@@ -284,9 +284,9 @@ describe("AbiRegistryClient", () => {
       await client.getSpecs(["B"]);
       // Refresh A so B becomes LRU.
       await client.getSpecs(["A"]);
-      // Add C — evicts B.
+      // Add C - evicts B.
       await client.getSpecs(["C"]);
-      // Fetch B again — must hit the network.
+      // Fetch B again - must hit the network.
       await client.getSpecs(["B"]);
 
       // Calls: A, B, (A cached), C, B (evicted)

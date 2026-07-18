@@ -92,7 +92,7 @@
     },
     "OptionType": {
       "type": "object",
-      "description": "A Soroban Option<T> — a value that may be present or absent.",
+      "description": "A Soroban Option<T> - a value that may be present or absent.",
       "required": ["type", "inner"],
       "additionalProperties": false,
       "properties": {
@@ -102,7 +102,7 @@
     },
     "ResultType": {
       "type": "object",
-      "description": "A Soroban Result<T, E> — either Ok(T) or Err(E).",
+      "description": "A Soroban Result<T, E> - either Ok(T) or Err(E).",
       "required": ["type", "ok", "err"],
       "additionalProperties": false,
       "properties": {

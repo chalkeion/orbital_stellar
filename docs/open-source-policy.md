@@ -1,8 +1,8 @@
-# Orbital — Open Source Policy
+# Orbital - Open Source Policy
 
 > **TL;DR.** Every package in this repository is MIT and stays MIT forever.
-> Everything in this repository — every SDK, schema, reference implementation,
-> test, and ADR — is committed open. Closed-source code lives in a separate
+> Everything in this repository - every SDK, schema, reference implementation,
+> test, and ADR - is committed open. Closed-source code lives in a separate
 > repository (Orbital Cloud), imports the public packages from npm, and is
 > never folded back into this one.
 >
@@ -18,7 +18,7 @@
 2. [What stays MIT, forever](#what-stays-mit-forever)
 3. [What Orbital monetizes (never open-sourced)](#what-orbital-monetizes-never-open-sourced)
 4. [The architectural boundary](#the-architectural-boundary)
-5. [Contributor guidance — will my PR be accepted?](#contributor-guidance--will-my-pr-be-accepted)
+5. [Contributor guidance - will my PR be accepted?](#contributor-guidance--will-my-pr-be-accepted)
 6. [License commitment](#license-commitment)
 7. [What is not yet decided](#what-is-not-yet-decided)
 8. [Changing this policy](#changing-this-policy)
@@ -29,7 +29,7 @@
 
 **Orbital follows the Vercel / Clerk / Auth0 model: open-source SDKs and standards, monetized operations and certifications.** The SDKs are the protocol; the closed Cloud product is operating that protocol at production scale with multi-tenancy, compliance certifications, and SLAs.
 
-This is deliberately **not** the Supabase / MongoDB / Elastic model — Orbital does not open-source the server. The reason is operational, not ideological: open-sourcing the production server creates asymmetric infrastructure-cost exposure (anyone can run it, only Orbital pays to maintain it at scale) and historically destroys the project's ability to keep maintaining the OSS once the grant-funding window closes.
+This is deliberately **not** the Supabase / MongoDB / Elastic model - Orbital does not open-source the server. The reason is operational, not ideological: open-sourcing the production server creates asymmetric infrastructure-cost exposure (anyone can run it, only Orbital pays to maintain it at scale) and historically destroys the project's ability to keep maintaining the OSS once the grant-funding window closes.
 
 Capture the category in open source. Capture the revenue in operations. Never confuse the two.
 
@@ -41,13 +41,13 @@ Everything below is in `packages/` or `apps/` today, or will be added to one of 
 
 ### Shipped today
 
-- `@orbital-stellar/pulse-core` — EventEngine, Watcher, normalization layer, reconnection state machine, Soroban event subscriber, cursor persistence (`CursorStore` interface + memory/file/Postgres/Redis/S3 adapters)
-- `@orbital-stellar/pulse-webhooks` — `WebhookDelivery`, `verifyWebhook`, `verifyWebhookEdge`, durable retry queues (`RetryQueue` interface + memory/Redis/SQS adapters)
-- `@orbital-stellar/pulse-notify` — `useStellarEvent`, `useContractEvent`, `useStellarPayment`, `useStellarActivity`, `useStellarAddresses`, `useStellarHistory`
-- `@orbital-stellar/abi-registry` — ABI Registry client library, schema, and `RegistryPublisher` interface
-- Event schemas — the `NormalizedEvent` discriminated union and per-event TypeScript shapes, including `contract.invoked` / `contract.emitted`
-- Webhook delivery contract — header format, signing scheme, retry rules
-- Reference composition — the Next.js route handlers in `apps/web/app/api/*` that wire the packages together end-to-end
+- `@orbital-stellar/pulse-core` - EventEngine, Watcher, normalization layer, reconnection state machine, Soroban event subscriber, cursor persistence (`CursorStore` interface + memory/file/Postgres/Redis/S3 adapters)
+- `@orbital-stellar/pulse-webhooks` - `WebhookDelivery`, `verifyWebhook`, `verifyWebhookEdge`, durable retry queues (`RetryQueue` interface + memory/Redis/SQS adapters)
+- `@orbital-stellar/pulse-notify` - `useStellarEvent`, `useContractEvent`, `useStellarPayment`, `useStellarActivity`, `useStellarAddresses`, `useStellarHistory`
+- `@orbital-stellar/abi-registry` - ABI Registry client library, schema, and `RegistryPublisher` interface
+- Event schemas - the `NormalizedEvent` discriminated union and per-event TypeScript shapes, including `contract.invoked` / `contract.emitted`
+- Webhook delivery contract - header format, signing scheme, retry rules
+- Reference composition - the Next.js route handlers in `apps/web/app/api/*` that wire the packages together end-to-end
 - All test suites
 - All ADRs (`docs/adr/`)
 - Marketing + documentation site source (`apps/web/`)
@@ -56,7 +56,7 @@ Everything below is in `packages/` or `apps/` today, or will be added to one of 
 ### Remaining Phase 1 work
 
 - Starter boilerplates (`orbital-next-starter`, `orbital-express-starter`, `orbital-anchor-starter`)
-- `v1.0` stability pledge (`STABILITY.md` — semver contract, deprecation window)
+- `v1.0` stability pledge (`STABILITY.md` - semver contract, deprecation window)
 - ABI Registry schema published as a draft SEP; hosted registry service (see [ABI Registry](#abi-registry) below)
 
 ### ABI Registry
@@ -70,21 +70,21 @@ The hosted verification / publishing service remains a separate Cloud product. T
 
 ### Phase 2 (2027)
 
-- `@orbital-stellar/hooks` — `useAccount`, `useBalance`, `useTransaction`, `useOrderBook`
-- `@orbital-stellar/payments` — send, receive, path-payment, payroll-batch primitives
-- `@orbital-stellar/auth` — WebAuthn / passkey embedded wallet SDK
-- `@orbital-stellar/analytics` — client library + event-volume reference dashboards
-- First SEP submission — formalized event normalization format
+- `@orbital-stellar/hooks` - `useAccount`, `useBalance`, `useTransaction`, `useOrderBook`
+- `@orbital-stellar/payments` - send, receive, path-payment, payroll-batch primitives
+- `@orbital-stellar/auth` - WebAuthn / passkey embedded wallet SDK
+- `@orbital-stellar/analytics` - client library + event-volume reference dashboards
+- First SEP submission - formalized event normalization format
 - Reference reactor contracts (Soroban Rust, open for anyone to fork)
 
 ### Phase 3 (2028+)
 
-- `@orbital-stellar/x402` — Express / Next.js middleware for payment-gated API access
-- `@orbital-stellar/agent-sdk` — payment client for autonomous AI agents
-- `@orbital-stellar/anchor-sdk` — SEP-24 / SEP-31 lifecycle client
-- Intent compiler — at maturity, the DSL + graph runtime become OSS
+- `@orbital-stellar/x402` - Express / Next.js middleware for payment-gated API access
+- `@orbital-stellar/agent-sdk` - payment client for autonomous AI agents
+- `@orbital-stellar/anchor-sdk` - SEP-24 / SEP-31 lifecycle client
+- Intent compiler - at maturity, the DSL + graph runtime become OSS
 - Shadow-fork simulator OSS core
-- ZK-proof generation library (Noir / RiscZero circuits) — runnable locally
+- ZK-proof generation library (Noir / RiscZero circuits) - runnable locally
 
 **Rule of thumb for what lands here:** if a competent engineer would expect to `pnpm add` it and use it in a private project, it's MIT.
 
@@ -105,7 +105,7 @@ These live in a **separate private repository** (Orbital Cloud) that imports the
 | **Priority / latency markets** | Sub-100ms guaranteed delivery tier; off-chain auction matching publishers to subscribers by priority |
 | **Parametric insurance** | Missed-webhook payouts from a collateralized pool |
 | **Proprietary datasets** | Aggregate analytics derived from operating, not raw event data |
-| **Hosted ABI Registry** | The verification / publishing service operated by Orbital (the **schema** and **client** are MIT — only the hosted service is closed) |
+| **Hosted ABI Registry** | The verification / publishing service operated by Orbital (the **schema** and **client** are MIT - only the hosted service is closed) |
 
 **Rule of thumb for what lives there:** if the value comes from **operating** something at scale or **certifying** it, it's closed. If the value comes from the **code itself**, it's open.
 
@@ -129,7 +129,7 @@ This split lets us ship enterprise features without forking `pulse-core`, and le
 
 ---
 
-## Contributor guidance — will my PR be accepted?
+## Contributor guidance - will my PR be accepted?
 
 A short decision aid before you open a PR.
 
@@ -153,7 +153,7 @@ A short decision aid before you open a PR.
 - Hosted dashboards beyond the marketing-demo sandbox
 - Anything that would require Orbital to operate infrastructure on the contributor's behalf
 
-### Uncertain — please discuss in an issue first
+### Uncertain - please discuss in an issue first
 
 - Intent DSL / graph compiler interfaces (Phase 3; the **runtime** is OSS at maturity, the **hosted compilation service** is not)
 - Shadow-fork simulator extensions (Phase 3; OSS core, hosted SaaS version closed)
@@ -168,7 +168,7 @@ If you are not sure where a PR falls, open an issue with the `policy-question` l
 - **All current packages** ship under MIT and will not be relicensed. Specifically, Orbital commits to **not** adopting source-available licenses (SSPL, BSL, Elastic License, Functional Source License, or successors) for any code that has shipped under MIT.
 - **All future SDK packages** under the `@orbital-stellar/` namespace will ship under MIT.
 - **Reference implementations, schemas, and specs** ship under MIT. This includes the event normalization format, the webhook delivery contract, and the Soroban ABI Registry schema.
-- **The marketing and documentation site** (`apps/web/`) is MIT — you may fork and adapt it.
+- **The marketing and documentation site** (`apps/web/`) is MIT - you may fork and adapt it.
 
 If Orbital is ever acquired or restructured, the MIT licenses already granted are irrevocable for the code that has shipped under them. The strongest guarantee a contributor can rely on is the public commit history under this license.
 
@@ -181,7 +181,7 @@ These are honest uncertainties as of `v0.1.0`. They will be resolved in writing 
 | Question | Status |
 |---|---|
 | Will the Soroban ABI Registry **data** (the published contract schemas) be a public good or a paid dataset? | The **client** and **schema** are MIT. The **hosted service** is currently planned as a free public good, with a paid tier for high-volume integrators. Final structure TBD by Phase 1 close. |
-| Will the intent compiler ship as runnable-locally OSS at maturity (Phase 3)? | Current intent is yes — see [`ROADMAP.md`](../ROADMAP.md) Phase 3. Subject to scope decomposition closer to Phase 2 close. |
+| Will the intent compiler ship as runnable-locally OSS at maturity (Phase 3)? | Current intent is yes - see [`ROADMAP.md`](../ROADMAP.md) Phase 3. Subject to scope decomposition closer to Phase 2 close. |
 | Will the reactor-contract certification service be Orbital-operated or community-governed? | TBD. The contracts themselves are MIT; the certification service may be operated commercially or via an Orbital Foundation. |
 
 When these resolve, the row will be moved to §2 or §3 as appropriate.
@@ -196,7 +196,7 @@ This document is the public contract Orbital makes with its contributors and con
 2. A 14-day public comment window via GitHub Discussions.
 3. Sign-off from the maintainer, recorded in the merged PR.
 
-Changes that **remove items from §2 (MIT) or add items to §3 (Closed)** are subject to the constraint that already-shipped code under MIT remains MIT — see [License commitment](#license-commitment). New scope can be assigned to either column; existing scope cannot move from open to closed.
+Changes that **remove items from §2 (MIT) or add items to §3 (Closed)** are subject to the constraint that already-shipped code under MIT remains MIT - see [License commitment](#license-commitment). New scope can be assigned to either column; existing scope cannot move from open to closed.
 
 Editorial changes (typos, link updates, doc references) follow the normal PR flow without the comment window.
 
@@ -204,9 +204,9 @@ Editorial changes (typos, link updates, doc references) follow the normal PR flo
 
 ## Related documents
 
-- [`LICENSE`](../LICENSE) — the MIT license text
-- [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) — the technical map, including extension-point interfaces
-- [`docs/proposal.md`](./proposal.md) — the SCF grant case
-- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — the dev loop and PR process
-- [`SECURITY.md`](../SECURITY.md) — vulnerability disclosure policy
-- [`ROADMAP.md`](../ROADMAP.md) — multi-year phase plan
+- [`LICENSE`](../LICENSE) - the MIT license text
+- [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) - the technical map, including extension-point interfaces
+- [`docs/proposal.md`](./proposal.md) - the SCF grant case
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) - the dev loop and PR process
+- [`SECURITY.md`](../SECURITY.md) - vulnerability disclosure policy
+- [`ROADMAP.md`](../ROADMAP.md) - multi-year phase plan

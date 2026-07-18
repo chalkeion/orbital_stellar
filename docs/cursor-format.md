@@ -60,7 +60,7 @@ When moving from one cursor store to another (e.g., file → Redis at scale-up),
 
 ### Recommended sequence
 
-1. **Stop the engine** — call `engine.stop()` and wait for it to resolve so no new cursors are written during the copy.
+1. **Stop the engine** - call `engine.stop()` and wait for it to resolve so no new cursors are written during the copy.
 2. **Run the migration**:
    ```ts
    import { migrateCursors } from "@orbital-stellar/pulse-core";
@@ -68,9 +68,9 @@ When moving from one cursor store to another (e.g., file → Redis at scale-up),
    const result = await migrateCursors(oldStore, newStore);
    console.log(`Migrated ${result.migrated} cursor(s)`);
    ```
-3. **Restart with the new store** — update `cursorStore` in your `EventEngine` config to point at the new store and call `engine.start()`.
+3. **Restart with the new store** - update `cursorStore` in your `EventEngine` config to point at the new store and call `engine.start()`.
 4. **Remove the old store** once the engine has confirmed healthy operation on the new store.
 
 ### Idempotency
 
-The migration is **idempotent** — running it multiple times overwrites the target entries with the same source values. This lets you retry the migration safely if it is interrupted.
+The migration is **idempotent** - running it multiple times overwrites the target entries with the same source values. This lets you retry the migration safely if it is interrupted.

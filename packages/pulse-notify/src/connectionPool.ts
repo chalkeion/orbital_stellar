@@ -123,7 +123,7 @@ function acquireSseConnection(
         if (newEntry.devId) {
           mod.updateConnection(newEntry.devId, {
             connected: false,
-            error: "Connection lost — retrying...",
+            error: "Connection lost - retrying...",
           });
         }
       });

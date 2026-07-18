@@ -1,5 +1,5 @@
 // In-memory rate / concurrency tracking for the public marketing demo.
-// Sized to keep Vercel costs bounded — this is a sandbox, not a service.
+// Sized to keep Vercel costs bounded - this is a sandbox, not a service.
 
 export const DEMO_LIMITS = {
   /** One concurrent SSE stream per IP. */
@@ -8,7 +8,7 @@ export const DEMO_LIMITS = {
   streamDurationMs: 25_000,
   /** One webhook-sample signing call per IP every N ms. */
   webhookCooldownMs: 20_000,
-  /** One "fire test event" on-chain invocation per IP every N ms — a real signed testnet transaction, cooled down independently of the webhook sample. */
+  /** One "fire test event" on-chain invocation per IP every N ms - a real signed testnet transaction, cooled down independently of the webhook sample. */
   fireEventCooldownMs: 20_000,
   /** Upgrade URL surfaced in 429 responses. */
   upgradeUrl: "/cloud",
@@ -34,7 +34,7 @@ export type RateLimitEnvelope = EnvelopeBase & {
 export type LimitEnvelope = StreamLimitEnvelope | RateLimitEnvelope;
 
 export function acquireStream(
-  ip: string
+  ip: string,
 ): { ok: true; release: () => void } | { ok: false; body: StreamLimitEnvelope } {
   const count = activeStreams.get(ip) ?? 0;
   if (count >= DEMO_LIMITS.perIpStreams) {
@@ -64,7 +64,7 @@ export function acquireStream(
 }
 
 export function checkWebhookCooldown(
-  ip: string
+  ip: string,
 ): { ok: true } | { ok: false; body: RateLimitEnvelope } {
   const now = Date.now();
   const last = lastWebhookAt.get(ip);
@@ -87,7 +87,7 @@ export function checkWebhookCooldown(
 }
 
 export function checkFireEventCooldown(
-  ip: string
+  ip: string,
 ): { ok: true } | { ok: false; body: RateLimitEnvelope } {
   const now = Date.now();
   const last = lastFireEventAt.get(ip);

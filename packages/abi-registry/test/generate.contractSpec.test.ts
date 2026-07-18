@@ -45,7 +45,7 @@ const USDC_RAW = {
   ],
 };
 
-describe("generateContractArtifacts — canonical ContractSpec path", () => {
+describe("generateContractArtifacts - canonical ContractSpec path", () => {
   it("generates typed Params/Returns interfaces for each function", () => {
     const spec = wellKnownToContractSpec(USDC_RAW);
     const artifacts = generateContractArtifacts(spec);
@@ -67,7 +67,7 @@ describe("generateContractArtifacts — canonical ContractSpec path", () => {
 
     expect(artifacts.declarations).toContain("export interface TransferEvent {");
     expect(artifacts.declarations).toContain("amount: string;");
-    // "from"/"to" are topics, not data — should not appear in the event's data interface.
+    // "from"/"to" are topics, not data - should not appear in the event's data interface.
     const eventInterfaceBlock = artifacts.declarations
       .split("export interface TransferEvent {")[1]!
       .split("}")[0]!;
@@ -164,7 +164,7 @@ describe("generateContractArtifacts — canonical ContractSpec path", () => {
 
   it("the generated declarations are syntactically valid, standalone-compilable TypeScript", () => {
     const spec = wellKnownToContractSpec(USDC_RAW);
-    // declarations only — schemas import zod, which isn't resolvable from a
+    // declarations only - schemas import zod, which isn't resolvable from a
     // bare temp dir with no node_modules; the interfaces/types are the
     // hand-generated, error-prone half anyway.
     const { declarations } = generateContractArtifacts(spec);
@@ -190,7 +190,7 @@ describe("generateContractArtifacts — canonical ContractSpec path", () => {
           "NodeNext",
           file,
         ],
-        // cwd must be the isolated temp dir, not the test runner's cwd —
+        // cwd must be the isolated temp dir, not the test runner's cwd -
         // the latter has its own tsconfig.json, which trips TS5112 ("files
         // specified on commandline" conflicts with an ambient config).
         { stdio: "pipe", encoding: "utf-8", cwd: dir },

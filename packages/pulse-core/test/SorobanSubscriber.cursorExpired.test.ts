@@ -12,7 +12,7 @@ class MemoryCursorStore {
   }
 }
 
-describe("SorobanSubscriber — cursor expiration", () => {
+describe("SorobanSubscriber - cursor expiration", () => {
   it("catches out-of-range cursor, emits engine.cursor_expired, and sets startLedger", async () => {
     let calls = 0;
     const limits: number[] = [];

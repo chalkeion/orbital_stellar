@@ -30,4 +30,4 @@ paste any stack traces or error messages here
 ```
 
 **Additional context**
-Any other context — related issues, recent Stellar network changes, upstream SDK versions, etc.
+Any other context - related issues, recent Stellar network changes, upstream SDK versions, etc.

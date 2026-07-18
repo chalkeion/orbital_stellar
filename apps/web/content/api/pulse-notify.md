@@ -7,7 +7,7 @@ description: React hooks for subscribing to live Stellar events.
 
 `@orbital-stellar/pulse-notify` opens a browser-native `EventSource` connection to a backend that exposes Orbital events as Server-Sent Events, subscribes to an address, and re-renders your component whenever a new event arrives.
 
-The hooks are intentionally thin — no global store, no custom cache, no peer dependency on a state manager. You point them at your own backend (built on `@orbital-stellar/pulse-core` — `apps/web` ships a copy-paste reference at `app/api/events/[address]/route.ts`) or at Orbital Cloud (in development), and pass the address you want to watch.
+The hooks are intentionally thin - no global store, no custom cache, no peer dependency on a state manager. You point them at your own backend (built on `@orbital-stellar/pulse-core` - `apps/web` ships a copy-paste reference at `app/api/events/[address]/route.ts`) or at Orbital Cloud (in development), and pass the address you want to watch.
 
 ## Installation
 
@@ -32,7 +32,7 @@ const { event, connected, error } = useStellarEvent(
   { event: "payment.received" },
 );
 
-// Multiple types — one connection
+// Multiple types - one connection
 const { event } = useStellarEvent(
   "https://events.example.com",
   "GABC...",
@@ -47,16 +47,16 @@ const { event } = useStellarEvent(
 );
 ```
 
-Also accepts a single config object — see the package README for stable-config rules and `useMemo` patterns when passing object literals.
+Also accepts a single config object - see the package README for stable-config rules and `useMemo` patterns when passing object literals.
 
 ### Config
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `serverUrl` | `string` | — | Base URL of your Orbital-powered backend |
-| `address` | `string` | — | Stellar address to watch |
-| `event` | `string \| string[]` | `"*"` | Event type filter — see [taxonomy](./pulse-core#event-taxonomy) for all 21 types |
-| `token` | `string` | — | API key, forwarded as `?token=` query parameter |
+| `serverUrl` | `string` | - | Base URL of your Orbital-powered backend |
+| `address` | `string` | - | Stellar address to watch |
+| `event` | `string \| string[]` | `"*"` | Event type filter - see [taxonomy](./pulse-core#event-taxonomy) for all 21 types |
+| `token` | `string` | - | API key, forwarded as `?token=` query parameter |
 
 ### Return value
 
@@ -77,7 +77,7 @@ A [React Suspense](https://react.dev/reference/react/Suspense)-compatible hook. 
 import { Suspense } from "react";
 import { useStellarEventSuspense } from "@orbital-stellar/pulse-notify";
 
-// The component never receives null — it is suspended until data arrives.
+// The component never receives null - it is suspended until data arrives.
 function LiveBalance({ address }: { address: string }) {
   const event = useStellarEventSuspense(
     "https://events.example.com",
@@ -96,7 +96,7 @@ export default function Page() {
 }
 ```
 
-Also accepts a single config object — same shape as `useStellarEvent`.
+Also accepts a single config object - same shape as `useStellarEvent`.
 
 ### Return value
 
@@ -104,21 +104,21 @@ Returns `T` (never `null`). The component is suspended until the first event arr
 
 ### Shared connection
 
-Uses the same connection pool as `useStellarEvent` — multiple hook instances with the same `(serverUrl, address)` arguments share one `EventSource`. The connection is released when the last instance unmounts.
+Uses the same connection pool as `useStellarEvent` - multiple hook instances with the same `(serverUrl, address)` arguments share one `EventSource`. The connection is released when the last instance unmounts.
 
 ### Trade-offs
 
 | Consideration | Detail |
 |---|---|
-| **Invisible until ready** | The component renders nothing (fallback shows instead) until the first event arrives. For addresses that rarely receive events this can mean a long — or permanent — fallback. |
+| **Invisible until ready** | The component renders nothing (fallback shows instead) until the first event arrives. For addresses that rarely receive events this can mean a long - or permanent - fallback. |
 | **No loading skeleton inside** | You cannot render partial UI inside the suspended component. Put loading UI in the `fallback` prop of `<Suspense>` instead. |
 | **Prefer `useStellarEvent` when…** | You want to show a "no events yet" state, a loading indicator inside the component, or you need `connected` / `error` status. |
 | **Client-only** | `EventSource` is not available in Node.js. Mark consuming components with `"use client"` in Next.js App Router. |
-| **Error boundaries** | Pair with an `<ErrorBoundary>` to handle connection failures gracefully — the hook does not surface errors through its return value. |
+| **Error boundaries** | Pair with an `<ErrorBoundary>` to handle connection failures gracefully - the hook does not surface errors through its return value. |
 
 ## useStellarPayment
 
-Convenience hook — only updates on `payment.received` events. Equivalent to `useStellarEvent(serverUrl, address, { event: "payment.received" })`.
+Convenience hook - only updates on `payment.received` events. Equivalent to `useStellarEvent(serverUrl, address, { event: "payment.received" })`.
 
 ```tsx
 import { useStellarPayment } from "@orbital-stellar/pulse-notify";
@@ -144,7 +144,7 @@ function IncomingPayments({ address }: { address: string }) {
 
 ## useStellarActivity
 
-Convenience hook — updates on all events (`*`). Equivalent to `useStellarEvent(serverUrl, address, { event: "*" })`.
+Convenience hook - updates on all events (`*`). Equivalent to `useStellarEvent(serverUrl, address, { event: "*" })`.
 
 ```tsx
 import { useStellarActivity } from "@orbital-stellar/pulse-notify";
@@ -197,7 +197,7 @@ const { event } = useStellarEvent<WalletEvents>(
 
 ## Authentication
 
-If your backend enforces an API token, pass it via the `token` config field. The hook forwards it as a `?token=` query parameter — `EventSource` cannot set custom headers in browsers, so query-string is the only option.
+If your backend enforces an API token, pass it via the `token` config field. The hook forwards it as a `?token=` query parameter - `EventSource` cannot set custom headers in browsers, so query-string is the only option.
 
 ```tsx
 useStellarEvent(serverUrl, address, {
@@ -209,7 +209,7 @@ useStellarEvent(serverUrl, address, {
 
 ## Server-side rendering
 
-The hooks are client-only — they rely on `EventSource`, which doesn't exist in Node.
+The hooks are client-only - they rely on `EventSource`, which doesn't exist in Node.
 
 - **Next.js App Router:** mark consuming components with `"use client"`
 - **Remix or Vite SSR:** gate the hook behind a client-only boundary
@@ -219,7 +219,7 @@ The hooks are client-only — they rely on `EventSource`, which doesn't exist in
 - Hook instances with the same `serverUrl`, `address`, and `token` share one `EventSource`
 - Browser handles reconnection automatically on transient network errors
 - Connections are cleaned up on unmount or when `address` / `serverUrl` change
-- Each render returns the *most recent* event — accumulate history yourself in component state if needed
+- Each render returns the *most recent* event - accumulate history yourself in component state if needed
 
 ## License
 

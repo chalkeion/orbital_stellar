@@ -41,7 +41,7 @@ function makeEmittedRecord(overrides: Record<string, unknown> = {}): Record<stri
   };
 }
 
-describe("EventEngine.subscribeContract — filter predicate", () => {
+describe("EventEngine.subscribeContract - filter predicate", () => {
   const log = {
     info: vi.fn(),
     warn: vi.fn(),
@@ -122,7 +122,7 @@ describe("EventEngine.subscribeContract — filter predicate", () => {
 
     expect(second).toBe(first);
     expect(log.warn).toHaveBeenCalledWith(
-      "[pulse-core] subscribeContract() called for address sub1 which already has an active watcher — filter option ignored.",
+      "[pulse-core] subscribeContract() called for address sub1 which already has an active watcher - filter option ignored.",
       { id: "sub1", hasFilter: true },
     );
   });

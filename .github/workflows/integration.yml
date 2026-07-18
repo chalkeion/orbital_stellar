@@ -3,7 +3,7 @@ name: Integration Tests
 on:
   schedule:
     # Run integration tests daily at 2:00 AM UTC
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
     # Allow manual triggering for debugging
 
@@ -42,7 +42,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -53,7 +53,7 @@ jobs:
       - name: Run integration tests
         env:
           INTEGRATION_TESTS: true
-          # Deployed testnet contract + funded invoker account — see
+          # Deployed testnet contract + funded invoker account - see
           # contracts/deploy/deploy_testnet.sh. Unset until those repo
           # secrets are added, in which case the live Soroban case in
           # test/integration/soroban.test.ts self-skips with a clear message.

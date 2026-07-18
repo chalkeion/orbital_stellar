@@ -5,12 +5,12 @@ import prettier from "eslint-config-prettier";
 /**
  * Flat ESLint config for the published packages (`packages/*`).
  *
- * `apps/web` is intentionally excluded — it lints via Next.js (`next lint`).
+ * `apps/web` is intentionally excluded - it lints via Next.js (`next lint`).
  * Formatting rules are delegated to Prettier (`eslint-config-prettier`).
  *
  * Rule philosophy: type-safety and correctness rules are errors (they block
  * CI); stylistic / pedantic rules that the existing code base trips on are
- * warnings — visible tech debt to burn down, not a wall.
+ * warnings - visible tech debt to burn down, not a wall.
  */
 export default tseslint.config(
   {
@@ -41,16 +41,19 @@ export default tseslint.config(
       ],
       // Empty catch blocks are an intentional "ignore and continue" in a few places.
       "no-empty": ["error", { allowEmptyCatch: true }],
-      // Existing tech debt — surfaced as warnings, not blockers.
+      // Existing tech debt - surfaced as warnings, not blockers.
       "@typescript-eslint/no-require-imports": "warn",
-      // Allow `interface X extends Y {}` — used for type-alias indirection.
-      "@typescript-eslint/no-empty-object-type": ["warn", { allowInterfaces: "with-single-extends" }],
+      // Allow `interface X extends Y {}` - used for type-alias indirection.
+      "@typescript-eslint/no-empty-object-type": [
+        "warn",
+        { allowInterfaces: "with-single-extends" },
+      ],
       "@typescript-eslint/no-unused-expressions": "warn",
       "@typescript-eslint/ban-ts-comment": "warn",
       // Off: false-positives on fallback inits / TS definite-assignment patterns.
       "no-useless-assignment": "off",
       "no-case-declarations": "warn",
-      // Rethrows without `{ cause }` — good practice, surfaced as warnings to burn down.
+      // Rethrows without `{ cause }` - good practice, surfaced as warnings to burn down.
       "preserve-caught-error": "warn",
     },
   },

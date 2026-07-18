@@ -27,14 +27,14 @@ export type AutoPublishIndexerConfig = {
   engine: EventEngine;
   /** Used to check whether a contractId already has a published spec before discovering/publishing a new one. */
   registryClient: AbiRegistryClientLike;
-  /** Used to publish newly discovered specs — typically an `OnChainRegistryPublisher`. */
+  /** Used to publish newly discovered specs - typically an `OnChainRegistryPublisher`. */
   publisher: RegistryPublisher;
   /** Soroban RPC endpoint used to fetch a contract's WASM for discovery. */
   rpcUrl: string;
   network?: "mainnet" | "testnet" | "futurenet";
   /**
    * Decides where a newly discovered spec's JSON blob will be hosted before
-   * publishing — the registry contract stores this pointer alongside a hash
+   * publishing - the registry contract stores this pointer alongside a hash
    * of `canonicalJson`, so whatever URL this returns must actually serve
    * that exact content once this resolves (e.g. commit it somewhere and
    * return the URL it'll be served from).
@@ -48,14 +48,14 @@ export type AutoPublishIndexerConfig = {
 /**
  * Watches an `EventEngine`'s contract stream for `contractId`s the registry
  * doesn't yet have a spec for, discovers their interface via WASM
- * auto-discovery, and publishes the result under Orbital's key — closing
+ * auto-discovery, and publishes the result under Orbital's key - closing
  * the loop so Orbital writes on-chain continuously as part of normal
  * operation, per maintainer.md's stage 4. Manual `abi-registry publish`
  * stays available as the override path for teams that want custom naming;
  * this indexer never touches or overrides publications under any publisher
  * address other than the one configured on `publisher`.
  *
- * Deliberately NOT wired into any public-facing route — anonymous visitors
+ * Deliberately NOT wired into any public-facing route - anonymous visitors
  * triggering real signed transactions per typed contract ID is an abuse
  * vector. This is a standalone process/script class.
  */
@@ -71,7 +71,7 @@ export class AutoPublishIndexer {
     if (this.listening) return;
     this.listening = true;
     const watcher = this.config.engine.subscribeContract(SUBSCRIPTION_ID, {
-      // No type/contractIds restriction — per EventEngine's
+      // No type/contractIds restriction - per EventEngine's
       // matchesContractFilters, an empty filter object matches every
       // contract.emitted and contract.invoked event, which is exactly what
       // "watch for unknown contractIds" requires.
@@ -93,7 +93,7 @@ export class AutoPublishIndexer {
    * `null` if the contract has no embedded spec to discover (and is
    * currently within its backoff window) or discovery is already in flight
    * for a contract that turns out undiscoverable. Concurrent calls for the
-   * same not-yet-known `contractId` share one in-flight discovery —
+   * same not-yet-known `contractId` share one in-flight discovery -
    * duplicate events for the same unseen contract don't trigger duplicate
    * publish attempts.
    */
@@ -129,7 +129,7 @@ export class AutoPublishIndexer {
     const existing = await this.config.registryClient.getSpec(contractId);
     if (existing != null) {
       // Already published (by this indexer on a prior run, or by a team's
-      // own manual override) — nothing to do.
+      // own manual override) - nothing to do.
       return existing as ContractSpec;
     }
 

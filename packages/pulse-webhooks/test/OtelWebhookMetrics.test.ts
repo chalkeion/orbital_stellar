@@ -80,7 +80,7 @@ describe("OtelWebhookMetrics", () => {
 
   it("accepts a structurally-compatible Meter without depending on @opentelemetry/api", () => {
     // Mirrors how a real @opentelemetry/api Meter would be passed, without
-    // importing the package — proves the interface is duck-typed.
+    // importing the package - proves the interface is duck-typed.
     const add = vi.fn();
     const record = vi.fn();
     const otelLikeMeter = {

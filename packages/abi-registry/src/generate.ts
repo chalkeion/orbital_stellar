@@ -184,7 +184,7 @@ function generateFromXdrContractSpec(spec: XdrContractSpec): GeneratedContractAr
 // ---------------------------------------------------------------------------
 // Canonical ContractSpec → TS declarations + Zod schemas.
 //
-// Unlike the XDR path above (events only, no function signatures — that's
+// Unlike the XDR path above (events only, no function signatures - that's
 // all the raw XDR entries alone conveniently give you), a ContractSpec is
 // already fully structured, so this path also emits typed function
 // parameter/return declarations and named UDT interfaces, per maintainer.md

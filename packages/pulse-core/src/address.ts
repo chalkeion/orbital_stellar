@@ -4,9 +4,9 @@
  * Every string that holds a Stellar address looks identical at runtime, but
  * the three address spaces are semantically distinct:
  *
- *   AccountAddress  — Ed25519 public key, starts with "G"
- *   MuxedAddress    — Multiplexed account, starts with "M"
- *   ContractAddress — Soroban contract ID, starts with "C"
+ *   AccountAddress  - Ed25519 public key, starts with "G"
+ *   MuxedAddress    - Multiplexed account, starts with "M"
+ *   ContractAddress - Soroban contract ID, starts with "C"
  *
  * Branding is a compile-time-only technique: the runtime value is still a
  * plain `string`, so there is zero overhead and no serialisation impact.
@@ -46,7 +46,7 @@ export type MuxedAddress = string & Brand<"MuxedAddress">;
 export type ContractAddress = string & Brand<"ContractAddress">;
 
 /**
- * Any valid Stellar address — account, muxed, or contract.
+ * Any valid Stellar address - account, muxed, or contract.
  */
 export type StellarAddress = AccountAddress | MuxedAddress | ContractAddress;
 
@@ -87,7 +87,7 @@ export function isStellarAddress(s: string): s is StellarAddress {
 }
 
 // ---------------------------------------------------------------------------
-// Unsafe casts — use only at validated trust boundaries (e.g. after Horizon
+// Unsafe casts - use only at validated trust boundaries (e.g. after Horizon
 // has already confirmed the address is well-formed).
 // ---------------------------------------------------------------------------
 

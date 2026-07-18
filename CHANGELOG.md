@@ -13,7 +13,7 @@ Per-package changelogs live in each package directory.
 
 ### Added
 
-- `STABILITY.md` — strict semver on the public API of all `@orbital-stellar/*`
+- `STABILITY.md` - strict semver on the public API of all `@orbital-stellar/*`
   packages, wire/data contracts covered (webhook headers, HMAC scheme, retry
   semantics, `NormalizedEvent` JSON shape, cursor format, registry schema
   format), a 6-month deprecation window, and a documented security exception.
@@ -23,13 +23,13 @@ Per-package changelogs live in each package directory.
 
 - **Roadmap refocused on the decoding standard.** Maintainer sign-off for
   scope removal per `ROADMAP.md`'s own contribution rules. The former Phase 2
-  (SDK Ecosystem) is replaced by Phase 2 — The Decoding Standard (SEP draft,
+  (SDK Ecosystem) is replaced by Phase 2 - The Decoding Standard (SEP draft,
   `orbital codegen`, semantic layer, hosted registry). `@orbital-stellar/anchor-sdk`
-  is pulled forward into a new Phase 3 — Anchor Events. The former Phase 3
+  is pulled forward into a new Phase 3 - Anchor Events. The former Phase 3
   (Trust & Agent Layer: x402, agent-sdk, intent compiler, shadow-fork) and
   Phase 4 (Protocol Permanence: identity layer, reactor library, 10+ SEPs)
   are frozen and moved to an explicit Frozen section in `ROADMAP.md` with
-  per-item rationale and an unfreeze procedure. No shipped code is removed —
+  per-item rationale and an unfreeze procedure. No shipped code is removed -
   planned scope only.
 
 ### Fixed
@@ -38,7 +38,7 @@ Per-package changelogs live in each package directory.
 
 ---
 
-## [0.1.0] — 2026-05-28
+## [0.1.0] - 2026-05-28
 
 First versioned release. The three packages cover the full Stellar classic
 operation taxonomy and are stable for testnet development today. Soroban
@@ -47,7 +47,7 @@ in Phase 1 (Q2–Q3 2026).
 
 ### Added
 
-- `@orbital-stellar/pulse-core`: `EventEngine` — Horizon SSE subscription with AWS
+- `@orbital-stellar/pulse-core`: `EventEngine` - Horizon SSE subscription with AWS
   Full-Jitter exponential backoff, automatic reconnection, and a per-address
   `Watcher` pub/sub model built on Node's `EventEmitter`.
 - `@orbital-stellar/pulse-core`: full classic operation taxonomy normalized into a
@@ -61,7 +61,7 @@ in Phase 1 (Q2–Q3 2026).
   - Claimable balances: `claimable.created`, `claimable.claimed`
   - Liquidity pools: `lp.deposited`, `lp.withdrawn`
   - Data entries: `data.set`, `data.cleared`
-- `@orbital-stellar/pulse-core`: lifecycle notifications — `engine.reconnecting`,
+- `@orbital-stellar/pulse-core`: lifecycle notifications - `engine.reconnecting`,
   `engine.reconnected`, `engine.rate_limited` (with parsed `Retry-After`),
   and `engine.stopped`.
 - `@orbital-stellar/pulse-core`: `CoreConfig.horizonUrl` override for self-hosted
@@ -109,7 +109,7 @@ in Phase 1 (Q2–Q3 2026).
 
 - `@orbital-stellar/pulse-webhooks`: timing-safe HMAC comparison via
   `crypto.timingSafeEqual` (Node) and constant-time XOR (Web Crypto).
-- `@orbital-stellar/pulse-webhooks`: SSRF hardening on delivery targets — private,
+- `@orbital-stellar/pulse-webhooks`: SSRF hardening on delivery targets - private,
   loopback, and link-local IP ranges are blocked by default, with DNS
   rebinding defense.
 - Strict TypeScript across all packages (`noUncheckedIndexedAccess`,
@@ -124,7 +124,7 @@ in Phase 1 (Q2–Q3 2026).
   verification baked in, and render live data in React without writing SSE
   plumbing.
 - Edge-runtime verification unblocks webhook receivers on Cloudflare
-  Workers and Vercel Edge — a deployment surface QuickNode and Moralis do
+  Workers and Vercel Edge - a deployment surface QuickNode and Moralis do
   not natively support for Stellar.
 - The reference composition (`apps/web/app/api/events/[address]/route.ts`)
   is now a single Next.js file rather than a separate Express server, so
@@ -133,13 +133,13 @@ in Phase 1 (Q2–Q3 2026).
 ### Known limitations (as of this release)
 
 - Soroban contract events (`invoke_host_function`) are not yet normalized
-  — Phase 1.
+  - Phase 1.
 - Webhook retries are in-process; restarting loses pending retries.
   Persistent retry queues ship in Phase 1 alongside cursor persistence.
 - Packages are not yet published to npm. Until `v0.1.0` is tagged and
   released, consume via `pnpm install` against the workspace.
 
-> **Update (2026-07-06):** all three limitations above have since been resolved —
+> **Update (2026-07-06):** all three limitations above have since been resolved -
 > Soroban event subscription, durable retry queues, and cursor persistence shipped
 > (see `ROADMAP.md` Wave 1.1–1.3), and all four packages are now published to npm
 > under the `@orbital-stellar` scope (published out-of-band; the `release.yml`

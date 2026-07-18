@@ -67,7 +67,7 @@ beforeEach(() => {
   streamInstances.length = 0;
 });
 
-describe("EventEngine — multi-network", () => {
+describe("EventEngine - multi-network", () => {
   it("constructs one independent sub-engine per network source", () => {
     const engine = new EventEngine({
       network: [{ network: "testnet" }, { network: "mainnet" }],

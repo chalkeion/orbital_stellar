@@ -60,7 +60,7 @@ function makeEvent(
   return { id, pagingToken, topic, value: "data", contractId, type: "contract.emitted" };
 }
 
-describe("SorobanSubscriber — coalescing and parallel filters", () => {
+describe("SorobanSubscriber - coalescing and parallel filters", () => {
   let rpc: MockRpc;
   let cursorStore: MemoryCursorStore;
 

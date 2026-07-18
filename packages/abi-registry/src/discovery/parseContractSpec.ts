@@ -1,7 +1,7 @@
 /**
  * Parses the `contractspecv0` custom WASM section soroban-sdk embeds via
  * `#[contractimpl]`/`#[contractevent]`/`#[contracttype]` into the canonical
- * spec building blocks — no human, no JSON file.
+ * spec building blocks - no human, no JSON file.
  *
  * The WASM section-walking logic and the streaming multi-entry XDR read loop
  * below were both verified against real WASM binaries built from
@@ -19,11 +19,11 @@ import type { EventSpec, FunctionSpec, UserDefinedType } from "../spec.js";
 // bundler: plain Node resolves its CJS `main` entry (a flat exports object,
 // no static ESM exports to speak of), while Turbopack/webpack (via Next.js)
 // resolves its real-ESM `module` entry (named exports, no default). A
-// static `import` — default, namespace, or named — can't satisfy both:
+// static `import` - default, namespace, or named - can't satisfy both:
 // Turbopack statically verifies every export reference against whichever
 // shape it resolved, including inside an unreached `??` branch, so even a
 // dual-fallback expression trips "Export default doesn't exist". `require`
-// sidesteps this entirely — it's opaque to static export analysis and
+// sidesteps this entirely - it's opaque to static export analysis and
 // always resolves the flat CJS shape. Safe here because every call path
 // into this module runs under Next.js's `nodejs` runtime (not Edge), where
 // `require` is available. Verified against a plain Node run and a real
@@ -36,7 +36,7 @@ const XdrReader: typeof XdrReaderType = (
 export class NoEmbeddedSpecError extends Error {
   constructor() {
     super(
-      "No embedded contractspecv0 section found in this contract's WASM — likely a non-Rust or stripped contract. Fall back to a manually published registry override.",
+      "No embedded contractspecv0 section found in this contract's WASM - likely a non-Rust or stripped contract. Fall back to a manually published registry override.",
     );
     this.name = "NoEmbeddedSpecError";
   }
@@ -100,13 +100,13 @@ export type ParsedWasmSpec = {
 /**
  * Parses a contract's WASM bytecode into the canonical spec building blocks.
  * Protocol-23+ contracts built with `#[contractevent]` yield full event
- * schemas; older contracts yield functions/UDTs only with `events: []` —
+ * schemas; older contracts yield functions/UDTs only with `events: []` -
  * `contractspecv0` predates `#[contractevent]`, so older builds simply never
  * emitted `ScSpecEntryEventV0` entries in the first place (this function
  * doesn't need special-case logic for that; it falls out naturally from
  * there being no such entries to map).
  *
- * Throws {@link NoEmbeddedSpecError} when the section is absent — stripped
+ * Throws {@link NoEmbeddedSpecError} when the section is absent - stripped
  * or non-Rust contracts have no embedded spec to discover.
  */
 export function parseWasmSpec(wasmBytes: Uint8Array): ParsedWasmSpec {
@@ -118,14 +118,14 @@ export function parseWasmSpec(wasmBytes: Uint8Array): ParsedWasmSpec {
   // xdr.ScSpecEntry.fromXDR() only handles a buffer containing exactly one
   // value; the section is a back-to-back concatenation of entries with no
   // outer framing, so we stream them with a shared cursor instead. Verified
-  // against real WASM binaries — reader.eof correctly lands exactly on the
+  // against real WASM binaries - reader.eof correctly lands exactly on the
   // section boundary after reading all entries.
   const reader = new XdrReader(payload);
   const entries: xdr.ScSpecEntry[] = [];
   while (!reader.eof) {
     // ScSpecEntry.read()'s public .d.ts types `io` as `Buffer`, but the
     // generated implementation accepts any reader exposing the cursor
-    // protocol XdrReader implements — verified at runtime.
+    // protocol XdrReader implements - verified at runtime.
     entries.push(xdr.ScSpecEntry.read(reader as unknown as Buffer));
   }
 

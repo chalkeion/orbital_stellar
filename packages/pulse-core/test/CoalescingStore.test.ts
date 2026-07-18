@@ -3,7 +3,7 @@ import { coalesceCursorStore, CoalescingStore } from "../src/coalesceCursorStore
 import { CursorStore } from "../src/CursorStore.js";
 
 // ---------------------------------------------------------------------------
-// FakeInnerStore — records all calls, stores state in memory
+// FakeInnerStore - records all calls, stores state in memory
 // ---------------------------------------------------------------------------
 
 class FakeInnerStore extends CursorStore {
@@ -194,7 +194,7 @@ describe("CoalescingStore flush", () => {
     expect(inner.setManyCalls).toHaveLength(0);
   });
 
-  it("flush drains buffer — calls InnerStore.setMany exactly once with all entries", async () => {
+  it("flush drains buffer - calls InnerStore.setMany exactly once with all entries", async () => {
     await store.set("key-a", "cursor-a");
     await store.set("key-b", "cursor-b");
 
@@ -260,7 +260,7 @@ describe("CoalescingStore timer", () => {
     expect(inner.setManyCalls).toHaveLength(0);
   });
 
-  it("dispose with buffered entries does not flush — entries are discarded", async () => {
+  it("dispose with buffered entries does not flush - entries are discarded", async () => {
     const inner = new FakeInnerStore();
     const store = coalesceCursorStore(inner, { intervalMs: 1000 });
 

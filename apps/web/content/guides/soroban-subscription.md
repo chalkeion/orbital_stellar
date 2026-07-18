@@ -16,9 +16,9 @@ const engine = new EventEngine({
   network: "testnet",
   soroban: {
     rpcUrl: "https://soroban-testnet.stellar.org",
-    pollIntervalMs: 2000,        // default — poll every 2 s
-    startLedgerLookback: 0,      // default — start from the latest ledger
-    pageLimit: 100,              // default — events per getEvents call (max 10,000)
+    pollIntervalMs: 2000,        // default - poll every 2 s
+    startLedgerLookback: 0,      // default - start from the latest ledger
+    pageLimit: 100,              // default - events per getEvents call (max 10,000)
   },
 });
 
@@ -33,7 +33,7 @@ engine.start();
 
 There are two call forms.
 
-### Simple — subscribe by ID
+### Simple - subscribe by ID
 
 Pass a subscription ID and an optional filter list:
 
@@ -55,7 +55,7 @@ watcher.on("contract.invoked", (event) => {
 
 Call `engine.unsubscribeContract("my-token")` to tear it down.
 
-### Config-based — full RPC filter shape
+### Config-based - full RPC filter shape
 
 Use `ContractSubscriptionConfig` when you need RPC-level topic matching:
 
@@ -115,7 +115,7 @@ type ContractEmittedEvent = {
 
 ### `contract.invoked`
 
-Fires for Soroban `system` and `diagnostic` event types — contract function invocations captured at the ledger level.
+Fires for Soroban `system` and `diagnostic` event types - contract function invocations captured at the ledger level.
 
 ```ts
 type ContractInvokedEvent = {
@@ -162,7 +162,7 @@ The loop is non-blocking: each poll waits for the previous one to settle, so a s
 
 ---
 
-## Working example — testnet token contract
+## Working example - testnet token contract
 
 The snippet below runs against a public Stellar testnet endpoint. Replace `CONTRACT_ID` with any deployed testnet contract that emits events.
 
@@ -190,7 +190,7 @@ const watcher = engine.subscribeContract("token-watcher", {
 
 watcher.on("contract.emitted", (event: ContractEmittedEvent) => {
   const [fnName] = event.topics;
-  console.log(`[${event.ledger}] ${fnName} — txHash: ${event.txHash}`);
+  console.log(`[${event.ledger}] ${fnName} - txHash: ${event.txHash}`);
   console.log("  topics:", event.topics);
   console.log("  data  :", event.data);
 });
@@ -250,5 +250,5 @@ engine.resumeSource("soroban");  // restart from the last cursor
 
 ## Related
 
-- [ABI Registry & Typed Event Decoding](./abi-registry.md) — decode raw Soroban event data into typed JavaScript objects
-- [Real-time Events guide](./real-time-events.md) — Horizon account streaming with `engine.subscribe`
+- [ABI Registry & Typed Event Decoding](./abi-registry.md) - decode raw Soroban event data into typed JavaScript objects
+- [Real-time Events guide](./real-time-events.md) - Horizon account streaming with `engine.subscribe`

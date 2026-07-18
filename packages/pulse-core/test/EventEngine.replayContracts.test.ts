@@ -1,5 +1,5 @@
 /**
- * EventEngine.replayContracts — bounded replay tests
+ * EventEngine.replayContracts - bounded replay tests
  *
  * Verifies the contract from issue #326:
  *   1. replayContracts() calls onEvent for every event in [startLedger, endLedger).
@@ -60,7 +60,7 @@ class StubRpc implements SorobanRpcLike {
 }
 
 /**
- * A cursor store spy — lets us verify that saveCursor() is never called
+ * A cursor store spy - lets us verify that saveCursor() is never called
  * during replay.
  */
 class SpyCursorStore {
@@ -97,7 +97,7 @@ describe("EventEngine.replayContracts", () => {
   });
 
   it("delivers all events in [startLedger, endLedger) and resolves via onDone", async () => {
-    // Events on ledgers 10, 11, 12, 13, 14 — endLedger = 13 (exclusive)
+    // Events on ledgers 10, 11, 12, 13, 14 - endLedger = 13 (exclusive)
     const allEvents = [10, 11, 12, 13, 14].map((l) => makeEvent(l));
     const rpc = new StubRpc(allEvents);
 
@@ -206,7 +206,7 @@ describe("EventEngine.replayContracts", () => {
     });
 
     expect(done).toBe(true);
-    // The spy was never wired to the subscriber — confirming replay never
+    // The spy was never wired to the subscriber - confirming replay never
     // touches an external cursor store.
     expect(spy.saveCalls).toHaveLength(0);
   });
@@ -245,9 +245,9 @@ describe("EventEngine.replayContracts", () => {
       },
     });
 
-    // First pass — deliver all events
+    // First pass - deliver all events
     await subscriber.pollOnce();
-    // Second pass — should be a no-op because subscriber stopped itself
+    // Second pass - should be a no-op because subscriber stopped itself
     await subscriber.pollOnce();
 
     expect(received.map((e) => e.id)).toEqual(["30-0", "31-0"]);

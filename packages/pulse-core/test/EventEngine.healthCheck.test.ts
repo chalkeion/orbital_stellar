@@ -128,9 +128,9 @@ describe("engine.healthCheck()", () => {
       asset_type: "native",
     });
     vi.advanceTimersByTime(45 * 1000);
-    // 30s threshold — should fail
+    // 30s threshold - should fail
     expect((await engine.healthCheck(30_000)).ok).toBe(false);
-    // 60s threshold — should pass
+    // 60s threshold - should pass
     expect((await engine.healthCheck(60_000)).ok).toBe(true);
   });
 
@@ -222,7 +222,7 @@ describe("engine.healthCheck()", () => {
         isRunning: overrides.isRunning ?? true,
         lastEventAt: overrides.lastEventAt !== undefined ? overrides.lastEventAt : now,
       };
-      // @ts-expect-error — accessing private field for test injection
+      // @ts-expect-error - accessing private field for test injection
       engine.sorobanSubscriber = mockSubscriber;
       return engine;
     }

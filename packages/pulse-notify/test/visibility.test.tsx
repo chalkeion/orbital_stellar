@@ -80,7 +80,7 @@ describe("Visibility-API integration", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
 
-    // Advance time before hideAfterMs threshold — connection must still be open
+    // Advance time before hideAfterMs threshold - connection must still be open
     await act(async () => {
       await vi.advanceTimersByTimeAsync(4000);
     });
@@ -88,7 +88,7 @@ describe("Visibility-API integration", () => {
     expect(getByTestId("connected").textContent).toBe("connected");
     expect(__getConnectionPoolSizeForTests()).toBe(1);
 
-    // Advance past hideAfterMs threshold — connection must close
+    // Advance past hideAfterMs threshold - connection must close
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1500);
     });
@@ -97,7 +97,7 @@ describe("Visibility-API integration", () => {
     expect(__getConnectionPoolSizeForTests()).toBe(0);
     expect(MockEventSource.instances[0]!.closeCount).toBe(1);
 
-    // Show the tab again — connection must restore
+    // Show the tab again - connection must restore
     act(() => {
       Object.defineProperty(document, "visibilityState", {
         value: "visible",

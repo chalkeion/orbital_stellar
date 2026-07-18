@@ -94,7 +94,7 @@
     },
     "events": {
       "type": "array",
-      "description": "List of events the contract emits. Optional — omit for contracts with no known event schema.",
+      "description": "List of events the contract emits. Optional - omit for contracts with no known event schema.",
       "items": {
         "type": "object",
         "required": ["name", "topics", "data"],

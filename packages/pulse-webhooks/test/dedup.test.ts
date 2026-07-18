@@ -109,7 +109,7 @@ describe("dedupReceiver", () => {
     await expect(wrapped(event)).rejects.toThrow("handler error");
     expect(handler).toHaveBeenCalledTimes(1);
 
-    // Second call should be skipped — already marked
+    // Second call should be skipped - already marked
     await wrapped(event);
     expect(handler).toHaveBeenCalledTimes(1);
   });

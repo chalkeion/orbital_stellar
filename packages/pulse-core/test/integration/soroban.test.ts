@@ -13,7 +13,7 @@ import type { ContractEmittedEvent } from "../../src/index.js";
 // ── Gating ────────────────────────────────────────────────────────────────────
 // The whole suite is gated behind INTEGRATION_TESTS=true. The live test
 // additionally needs a deployed testnet contract and a funded invoker account
-// (the fixture the maintainer provisions) supplied via env — without them the
+// (the fixture the maintainer provisions) supplied via env - without them the
 // live case skips with a clear message instead of failing.
 const shouldRun = process.env.INTEGRATION_TESTS === "true";
 
@@ -22,7 +22,7 @@ const CONTRACT_ID = process.env.SOROBAN_CONTRACT_ID ?? "";
 const INVOKER_SECRET = process.env.SOROBAN_INVOKER_SECRET ?? "";
 // Contract function to invoke; it must emit at least one contract event and
 // take no arguments. Defaults to the `orbital-demo-emitter` contract's
-// `ping()` (see contracts/demo-emitter) — a zero-arg, no-auth, always-emits
+// `ping()` (see contracts/demo-emitter) - a zero-arg, no-auth, always-emits
 // function that exists specifically to be a trivial standing on-chain proof.
 const CONTRACT_FN = process.env.SOROBAN_CONTRACT_FN ?? "ping";
 
@@ -80,7 +80,7 @@ async function waitFor<T>(predicate: () => T | undefined, timeoutMs: number): Pr
   throw new Error(`waitFor: timed out after ${timeoutMs}ms`);
 }
 
-describe.runIf(shouldRun)("Soroban testnet subscriber — integration", () => {
+describe.runIf(shouldRun)("Soroban testnet subscriber - integration", () => {
   let engine: EventEngine | undefined;
 
   afterEach(async () => {
@@ -107,7 +107,7 @@ describe.runIf(shouldRun)("Soroban testnet subscriber — integration", () => {
       await engine
         .awaitContractSubscriptionActive({ contractId: CONTRACT_ID }, { timeoutMs: 20_000 })
         .catch(() => {
-          /* best-effort — fall through to the event wait below */
+          /* best-effort - fall through to the event wait below */
         });
 
       const { txHash, ledger } = await invokeContract();
@@ -134,7 +134,7 @@ describe.runIf(shouldRun)("Soroban testnet subscriber — integration", () => {
     "skips the live invocation when SOROBAN_CONTRACT_ID / SOROBAN_INVOKER_SECRET are unset",
     () => {
       console.warn(
-        "[soroban integration] live test skipped — set SOROBAN_CONTRACT_ID and " +
+        "[soroban integration] live test skipped - set SOROBAN_CONTRACT_ID and " +
           "SOROBAN_INVOKER_SECRET (a funded testnet account) to run it against a deployed contract.",
       );
       expect(hasConfig).toBe(false);
@@ -142,7 +142,7 @@ describe.runIf(shouldRun)("Soroban testnet subscriber — integration", () => {
   );
 });
 
-describe.skipIf(shouldRun)("Soroban testnet subscriber — integration (gated)", () => {
+describe.skipIf(shouldRun)("Soroban testnet subscriber - integration (gated)", () => {
   it("skips unless INTEGRATION_TESTS=true", () => {
     expect(shouldRun).toBe(false);
   });

@@ -5,7 +5,7 @@
  *
  * Field mappings below were verified against real WASM binaries built from
  * `contracts/registry` and `contracts/demo-emitter` (soroban-sdk 27,
- * `#[contractimpl]`/`#[contractevent]`/`#[contracterror]`), not guessed —
+ * `#[contractimpl]`/`#[contractevent]`/`#[contracterror]`), not guessed -
  * see the discovery module's test fixtures.
  */
 
@@ -67,7 +67,7 @@ export function mapTypeDef(type: xdr.ScSpecTypeDef): TypeSpec {
     case "scSpecTypeAddress":
       return "address";
     // Timepoint/duration are u64-based semantic wrappers with no dedicated
-    // PrimitiveType slot — represented by their underlying wire type.
+    // PrimitiveType slot - represented by their underlying wire type.
     case "scSpecTypeTimepoint":
     case "scSpecTypeDuration":
       return "u64";
@@ -96,7 +96,7 @@ export function mapTypeDef(type: xdr.ScSpecTypeDef): TypeSpec {
       return { type: "bytes_n", size: type.bytesN().n() };
     case "scSpecTypeUdt":
       return { type: "named", name: toStr(type.udt().name()) };
-    // The generic error-value slot — see PrimitiveType's "error" doc comment
+    // The generic error-value slot - see PrimitiveType's "error" doc comment
     // in spec.ts. Real, common: it's how Result<T, Error>'s err arm is
     // encoded regardless of which #[contracterror] enum is named.
     case "scSpecTypeError":
@@ -156,7 +156,7 @@ export function mapUdtEnumV0(en: xdr.ScSpecUdtEnumV0): UserDefinedType {
 
 export function mapUdtErrorEnumV0(en: xdr.ScSpecUdtErrorEnumV0): UserDefinedType {
   // Structurally identical to a C-style enum (name + numeric discriminant
-  // cases) on the wire — #[contracterror] enums just carry a distinct
+  // cases) on the wire - #[contracterror] enums just carry a distinct
   // ScSpecEntry kind, so they map onto our `enum` UserDefinedType too.
   return {
     kind: "enum",
@@ -184,7 +184,7 @@ export function mapUdtUnionV0(union: xdr.ScSpecUdtUnionV0): UserDefinedType {
       return {
         name: toStr(tupleCase.name()),
         ...optionalDoc(tupleCase.doc()),
-        // Tuple-case fields are unnamed on the wire — synthesize positional names.
+        // Tuple-case fields are unnamed on the wire - synthesize positional names.
         fields: tupleCase.type().map((t, i) => ({ name: `_${i}`, type: mapTypeDef(t) })),
       };
     }),

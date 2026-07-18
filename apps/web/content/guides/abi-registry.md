@@ -3,34 +3,34 @@ title: ABI Registry & Typed Event Decoding
 description: Wire AbiRegistryClient into EventEngine to decode raw Soroban contract events into fully-typed JavaScript objects.
 ---
 
-By default, every `contract.emitted` event that reaches your watcher carries the raw on-chain data in its `data` field — an opaque XDR blob or an untyped JSON object depending on how the Soroban RPC decoded it. Without a contract ABI, `decodedData` is always `undefined`.
+By default, every `contract.emitted` event that reaches your watcher carries the raw on-chain data in its `data` field - an opaque XDR blob or an untyped JSON object depending on how the Soroban RPC decoded it. Without a contract ABI, `decodedData` is always `undefined`.
 
 The **ABI Registry** solves this: once you attach a registry client to `EventEngine`, every `contract.emitted` event for a known contract is enriched with a fully-typed `decodedData` value before it hits your handler.
 
 ## Before and after
 
-### Before — raw event (no registry)
+### Before - raw event (no registry)
 
 ```ts
 watcher.on("contract.emitted", (event) => {
   console.log(event.data);
-  // { sym: "transfer" } — or a raw XDR base64 string, depending on the RPC
+  // { sym: "transfer" } - or a raw XDR base64 string, depending on the RPC
   console.log(event.decodedData);
   // undefined  ← nothing to work with
 });
 ```
 
-### After — decoded event (registry attached)
+### After - decoded event (registry attached)
 
 ```ts
 watcher.on("contract.emitted", (event) => {
   console.log(event.data);
-  // { sym: "transfer" } — raw value still present
+  // { sym: "transfer" } - raw value still present
   console.log(event.decodedData);
   // {
   //   functionName: "transfer",
   //   topics: ["transfer", "GABC…sender", "GXYZ…recipient"],
-  //   data: "150000000"   // i128 as a string — 15 USDC (7 decimals)
+  //   data: "150000000"   // i128 as a string - 15 USDC (7 decimals)
   // }
 });
 ```
@@ -41,7 +41,7 @@ watcher.on("contract.emitted", (event) => {
 
 The `@orbital-stellar/abi-registry` package ships two clients. Both implement the same `AbiRegistryClientLike` interface accepted by `CoreConfig.abiRegistry`, so they are interchangeable.
 
-### `AbiRegistryClient` — hosted registry (recommended for production)
+### `AbiRegistryClient` - hosted registry (recommended for production)
 
 Fetches specs over HTTP from your hosted ABI registry and keeps them in an LRU cache (default: 512 entries, 5-minute TTL).
 
@@ -68,11 +68,11 @@ All outbound requests include:
 Accept: application/vnd.orbital.abi-registry+json; version=1
 ```
 
-A `406 Not Acceptable` response means the server doesn't support spec version 1 — the client throws rather than silently parse an incompatible payload.
+A `406 Not Acceptable` response means the server doesn't support spec version 1 - the client throws rather than silently parse an incompatible payload.
 
 ---
 
-### `LocalAbiRegistryClient` — file-system registry (offline / self-hosted)
+### `LocalAbiRegistryClient` - file-system registry (offline / self-hosted)
 
 Reads spec JSON files from a local directory. Zero network calls; ideal for CI, development, or air-gapped deployments.
 
@@ -125,7 +125,7 @@ That is the only change required. The engine looks up each `contract.emitted` ev
 > **`decodedData` is `undefined` when:**
 > - No `abiRegistry` is configured.
 > - The registry returns `null` for the contract (spec not found).
-> - Decoding fails — a structured `{ error: string }` object is logged, but the raw event is still delivered unmodified.
+> - Decoding fails - a structured `{ error: string }` object is logged, but the raw event is still delivered unmodified.
 
 ---
 
@@ -143,7 +143,7 @@ import path from "node:path";
 const USDC_CONTRACT_ID = "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75";
 
 const abiRegistry = new LocalAbiRegistryClient({
-  // Use the bundled well-known specs — USDC is included.
+  // Use the bundled well-known specs - USDC is included.
   specsDir: path.resolve("node_modules/@orbital-stellar/abi-registry/specs/well-known"),
 });
 
@@ -161,7 +161,7 @@ const watcher = engine.subscribeContract("usdc-transfers", {
 
 watcher.on("contract.emitted", (event: ContractEmittedEvent) => {
   if (!event.decodedData) {
-    // Registry miss or decode error — fall back to raw data
+    // Registry miss or decode error - fall back to raw data
     console.warn("undecodable event", event.data);
     return;
   }
@@ -195,7 +195,7 @@ watcher.on("contract.emitted", (event: ContractEmittedEvent) => {
 }
 ```
 
-The `data` value is an `i128` represented as a decimal string to preserve full 64-bit (and 128-bit) precision — never a JavaScript `number`. Divide by `10_000_000` (10^7) to get the human-readable USDC amount.
+The `data` value is an `i128` represented as a decimal string to preserve full 64-bit (and 128-bit) precision - never a JavaScript `number`. Divide by `10_000_000` (10^7) to get the human-readable USDC amount.
 
 ---
 
@@ -211,7 +211,7 @@ type DecodedEvent = {
   data: DecodedValue;     // decoded data payload
 };
 
-// Failure — event.decodedData will contain this object
+// Failure - event.decodedData will contain this object
 type DecodeError = {
   error: string;
 };
@@ -229,7 +229,7 @@ type DecodeError = {
 | `bytes`       | `string` (hex-encoded)                                |
 | `String`      | `string`                                              |
 | `Symbol`      | `string`                                              |
-| `Address`     | `string` (strkey — `G…` or `C…`)                     |
+| `Address`     | `string` (strkey - `G…` or `C…`)                     |
 | `void`        | `null`                                                |
 | `vec<T>`      | `DecodedValue[]`                                      |
 | `map<K,V>`    | `Array<{ key: DecodedValue; value: DecodedValue }>`   |
@@ -250,7 +250,7 @@ The repository bundles ABI specs for the most common Stellar contracts in
 | `eurc.json`              | Euro Coin (EURC)                    | `CDTKP…JBQLV`                                            |
 | `aqua.json`              | Aquarius (AQUA)                     | `CAUIK…ZXAEFBX`                                          |
 
-Use `LocalAbiRegistryClient` pointed at this directory to get typed decoding for any of these contracts with zero network calls. Pass the directory path via `specsDir` — the client resolves `<contractId>.json` automatically.
+Use `LocalAbiRegistryClient` pointed at this directory to get typed decoding for any of these contracts with zero network calls. Pass the directory path via `specsDir` - the client resolves `<contractId>.json` automatically.
 
 To add your own contract, drop a JSON file named `<contractId>.json` alongside the existing specs and follow the schema in
 `packages/abi-registry/specs/well-known/schema.json`.
@@ -259,7 +259,7 @@ To add your own contract, drop a JSON file named `<contractId>.json` alongside t
 
 ## Using a custom transport (e.g. for testing)
 
-`AbiRegistryClient` accepts an optional `transport` override — any function with the same signature as `fetch`. Use it to inject fixtures in tests without hitting a real registry:
+`AbiRegistryClient` accepts an optional `transport` override - any function with the same signature as `fetch`. Use it to inject fixtures in tests without hitting a real registry:
 
 ```ts
 import { AbiRegistryClient } from "@orbital-stellar/abi-registry";
@@ -283,6 +283,6 @@ const abiRegistry = new AbiRegistryClient({
 
 ## Related
 
-- [`packages/abi-registry/specs/well-known/`](../../../../packages/abi-registry/specs/well-known/) — bundled specs index and individual contract JSON files
-- [`packages/abi-registry/specs/well-known/schema.json`](../../../../packages/abi-registry/specs/well-known/schema.json) — spec JSON schema
-- [Real-time events guide](./real-time-events.md) — how `EventEngine` and `subscribeContract` work
+- [`packages/abi-registry/specs/well-known/`](../../../../packages/abi-registry/specs/well-known/) - bundled specs index and individual contract JSON files
+- [`packages/abi-registry/specs/well-known/schema.json`](../../../../packages/abi-registry/specs/well-known/schema.json) - spec JSON schema
+- [Real-time events guide](./real-time-events.md) - how `EventEngine` and `subscribeContract` work

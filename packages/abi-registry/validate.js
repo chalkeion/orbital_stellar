@@ -1,5 +1,5 @@
 /**
- * validate.js — Validates all well-known ABI spec files against schema.json.
+ * validate.js - Validates all well-known ABI spec files against schema.json.
  *
  * Usage:
  *   node validate.js
@@ -17,7 +17,7 @@ import Ajv from "ajv";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const SCHEMA_PATH = resolve(__dirname, "specs/well-known/schema.json");
-const SPECS_DIR   = resolve(__dirname, "specs/well-known");
+const SPECS_DIR = resolve(__dirname, "specs/well-known");
 
 // Files that are not contract specs and should be skipped.
 const SKIP = new Set(["schema.json", "index.json"]);

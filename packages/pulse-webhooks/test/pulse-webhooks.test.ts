@@ -1642,7 +1642,7 @@ describe("pulse-webhooks DeadLetterStore", () => {
     dlq.recordFailure(url, now - 30_000);
     dlq.recordSuccess(url, now - 40_000);
 
-    // 1 failure outside the window — must be ignored
+    // 1 failure outside the window - must be ignored
     dlq.recordFailure(url, now - 90_000);
 
     const rate = await dlq.failureRate(url, windowMs);

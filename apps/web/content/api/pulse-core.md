@@ -1,13 +1,13 @@
 ---
 title: pulse-core
-description: Event engine for Stellar Horizon — normalization, watchers, reconnection.
+description: Event engine for Stellar Horizon - normalization, watchers, reconnection.
 ---
 
 ## Overview
 
 `@orbital-stellar/pulse-core` opens a streaming connection to Horizon, normalizes each incoming record into a uniform `NormalizedEvent`, and emits it to any `Watcher` subscribed to the affected address. Reconnection, backoff, and rate-limit handling are automatic.
 
-Install when you want to consume Stellar events in-process — typically inside a server, background worker, or CLI. Layer [`@orbital-stellar/pulse-webhooks`](./pulse-webhooks) or [`@orbital-stellar/pulse-notify`](./pulse-notify) on top for delivery and React integration.
+Install when you want to consume Stellar events in-process - typically inside a server, background worker, or CLI. Layer [`@orbital-stellar/pulse-webhooks`](./pulse-webhooks) or [`@orbital-stellar/pulse-notify`](./pulse-notify) on top for delivery and React integration.
 
 ## Installation
 
@@ -48,7 +48,7 @@ Closes the upstream connection and tears down all watchers. Emits `engine.stoppe
 
 ### `engine.subscribe(address, options?)` → `Watcher`
 
-Returns a `Watcher` for the given Stellar public key. Watchers are deduplicated — calling `subscribe` twice with the same address returns the same instance.
+Returns a `Watcher` for the given Stellar public key. Watchers are deduplicated - calling `subscribe` twice with the same address returns the same instance.
 
 ### `engine.unsubscribe(address)`
 
@@ -78,7 +78,7 @@ Once a watcher is stopped, listeners added afterward log a warning and are not r
 
 ## Event taxonomy
 
-Every event delivered to a `Watcher` is a member of the `NormalizedEvent` discriminated union — `switch` on `event.type` for full TypeScript narrowing.
+Every event delivered to a `Watcher` is a member of the `NormalizedEvent` discriminated union - `switch` on `event.type` for full TypeScript narrowing.
 
 | Event type | Fired when |
 |---|---|
@@ -104,7 +104,7 @@ Every event delivered to a `Watcher` is a member of the `NormalizedEvent` discri
 | `data.set` | A `manage_data` operation set or updated a data entry |
 | `data.cleared` | A `manage_data` operation removed a data entry |
 
-Soroban contract events (`contract.invoked`, `contract.emitted`) are also supported — see the [Soroban Event Subscription guide](/docs/guides/soroban-subscription).
+Soroban contract events (`contract.invoked`, `contract.emitted`) are also supported - see the [Soroban Event Subscription guide](/docs/guides/soroban-subscription).
 
 ## Engine notifications
 
@@ -119,8 +119,8 @@ In addition to event payloads, watchers receive lifecycle notifications:
 | `engine.cursor_expired` | The stream cursor has expired or is no longer valid, requiring a reset |
 
 For `engine.cursor_expired` notifications, the payload includes extra fields:
-- `lostCursor?: string` — The value of the expired or lost cursor.
-- `source?: "horizon" | "soroban"` — The subscription engine source where the expiry occurred.
+- `lostCursor?: string` - The value of the expired or lost cursor.
+- `source?: "horizon" | "soroban"` - The subscription engine source where the expiry occurred.
 
 ## NormalizedEvent shape
 
@@ -128,7 +128,7 @@ The exact shape varies per event type; the shared envelope is:
 
 ```ts
 type NormalizedEventBase = {
-  type: string;        // discriminator — see taxonomy table
+  type: string;        // discriminator - see taxonomy table
   emittedAt: string;   // ISO 8601 timestamp the engine emitted the event
   raw: unknown;        // Original Horizon record, for escape-hatch inspection
 };

@@ -33,6 +33,6 @@ jobs:
 
       - name: Print full audit report
         if: always()
-        # || true is intentional — prints the full report without failing the job
+        # || true is intentional - prints the full report without failing the job
         # The audit-level=high step above is the actual gate
         run: pnpm audit --json || true

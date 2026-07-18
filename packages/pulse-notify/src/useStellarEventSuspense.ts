@@ -85,7 +85,7 @@ function getOrCreateResource<T extends NormalizedEvent>(
  * import { useStellarEventSuspense } from "@orbital-stellar/pulse-notify";
  *
  * function LiveBalance({ address }: { address: string }) {
- *   // Never returns null — component is suspended until data arrives.
+ *   // Never returns null - component is suspended until data arrives.
  *   const event = useStellarEventSuspense(
  *     "https://events.example.com",
  *     address,
@@ -103,12 +103,12 @@ function getOrCreateResource<T extends NormalizedEvent>(
  * }
  * ```
  *
- * Also accepts a single config object — same shape as `useStellarEvent`.
+ * Also accepts a single config object - same shape as `useStellarEvent`.
  *
  * **Trade-offs**
  *
  * - The component is invisible until the first event arrives. For addresses
- *   that rarely receive events this can mean a long — or permanent — fallback.
+ *   that rarely receive events this can mean a long - or permanent - fallback.
  *   Prefer `useStellarEvent` when you want to render a loading skeleton or a
  *   "no events yet" state instead.
  * - You cannot render partial UI inside the suspended component; put loading
@@ -147,7 +147,7 @@ export function useStellarEventSuspense<T extends NormalizedEvent = NormalizedEv
     typeof configOrUrl === "string" ? (options?.event ?? "*") : (configOrUrl.event ?? "*");
   const token = typeof configOrUrl === "string" ? options?.token : configOrUrl.token;
 
-  // Stable string key — same strategy as useStellarEvent.
+  // Stable string key - same strategy as useStellarEvent.
   const eventKey = Array.isArray(eventType) ? [...eventType].sort().join(",") : eventType;
 
   const resourceKey = buildResourceKey(serverUrl, addr, eventKey, token);
@@ -162,7 +162,7 @@ export function useStellarEventSuspense<T extends NormalizedEvent = NormalizedEv
 
   // Increment refCount once per (instance × resourceKey). We do this during
   // render (not inside useEffect) so the count is correct before the first
-  // paint — important when StrictMode double-invokes render.
+  // paint - important when StrictMode double-invokes render.
   if (resourceKeyRef.current !== resourceKey) {
     entry.refCount += 1;
     resourceKeyRef.current = resourceKey;
@@ -180,7 +180,7 @@ export function useStellarEventSuspense<T extends NormalizedEvent = NormalizedEv
       { serverUrl, address: addr, token },
       {
         onOpen: () => {
-          // Connection open — nothing to do for Suspense state.
+          // Connection open - nothing to do for Suspense state.
         },
         onEvent: (incoming) => {
           const allowed =
@@ -196,21 +196,21 @@ export function useStellarEventSuspense<T extends NormalizedEvent = NormalizedEv
             currentEntry.status = { status: "ready", event: incoming as T };
             resolve();
           } else {
-            // Already resolved — update the stored event for subsequent renders.
+            // Already resolved - update the stored event for subsequent renders.
             currentEntry.status = { status: "ready", event: incoming as T };
           }
         },
         onParseError: () => {
-          // Malformed message — stay suspended or keep the last good event.
+          // Malformed message - stay suspended or keep the last good event.
         },
         onError: () => {
-          // Connection error — stay suspended; browser will reconnect.
+          // Connection error - stay suspended; browser will reconnect.
         },
       },
     );
 
     // If the connection was already open when we subscribed (e.g. shared pool
-    // entry), there's nothing extra to do — we wait for the next event.
+    // entry), there's nothing extra to do - we wait for the next event.
 
     return () => {
       connection.unsubscribe();

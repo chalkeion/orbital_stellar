@@ -1,6 +1,6 @@
 # orbital/web
 
-**The public Orbital site** — landing page, documentation, and live testnet demos. Built with Next.js 16, Tailwind CSS, and Framer Motion. Also hosts the marketing-demo API routes (`/api/events/[address]`, `/api/webhook-sample`) that power the on-page sandbox.
+**The public Orbital site** - landing page, documentation, and live testnet demos. Built with Next.js 16, Tailwind CSS, and Framer Motion. Also hosts the marketing-demo API routes (`/api/events/[address]`, `/api/webhook-sample`) that power the on-page sandbox.
 
 ## Running locally
 
@@ -21,8 +21,8 @@ The site runs on `http://localhost:3000`.
 
 The on-page demos are intentionally sandboxed so they don't burn Vercel resources:
 
-- **`/api/events/[address]`** — 1 concurrent SSE stream per IP, 25-second max duration per stream.
-- **`/api/webhook-sample`** — 1 signing request per IP every 20 seconds.
+- **`/api/events/[address]`** - 1 concurrent SSE stream per IP, 25-second max duration per stream.
+- **`/api/webhook-sample`** - 1 signing request per IP every 20 seconds.
 
 When a limit trips, the route returns `429` with a JSON envelope (`{ error: "demo_limit_reached", reason, message, upgradeUrl }`) and the demo components surface an "Upgrade to Orbital Cloud" call-to-action. Tune the numbers in `lib/demo-limits.ts`.
 
@@ -33,14 +33,14 @@ When a limit trips, the route returns `429` with a JSON envelope (`{ error: "dem
 | `app/` | Next.js App Router pages, layouts, and `/api/*` route handlers |
 | `components/` | Reusable UI components |
 | `content/` | Markdown-sourced content (docs, blog posts) rendered via `gray-matter` + `marked` |
-| `lib/` | Utilities — content loaders, demo engine singleton, rate limits, env validation |
+| `lib/` | Utilities - content loaders, demo engine singleton, rate limits, env validation |
 
 ## Content authoring
 
 Documentation pages are authored in Markdown under `content/`. Frontmatter is parsed by `gray-matter`; body is rendered by `marked`. To add a new page:
 
 1. Drop a `.md` file into the appropriate `content/` subdirectory.
-2. Register it in `lib/docroutes.ts` under the relevant section — this controls the sidebar order, search indexing, and static route generation. Pages not registered there will not appear in the sidebar or search results.
+2. Register it in `lib/docroutes.ts` under the relevant section - this controls the sidebar order, search indexing, and static route generation. Pages not registered there will not appear in the sidebar or search results.
 
 ## Styling
 
@@ -52,7 +52,7 @@ The site is deployed via Vercel from the `main` branch. Preview deploys run auto
 
 ## Contributing
 
-Content corrections, typo fixes, and new tutorial pages are welcome. For larger changes (new sections, design overhauls) open an issue first — the design system is intentionally constrained.
+Content corrections, typo fixes, and new tutorial pages are welcome. For larger changes (new sections, design overhauls) open an issue first - the design system is intentionally constrained.
 
 ## License
 

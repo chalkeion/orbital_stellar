@@ -77,7 +77,7 @@ app.post("/hooks/stellar", express.raw({ type: "application/json" }), (req, res)
 });
 ```
 
-Cloudflare Workers? Use `verifyWebhookEdge` instead — same arguments, returns a `Promise`. See the [webhooks guide](../guides/webhooks) for the full edge example.
+Cloudflare Workers? Use `verifyWebhookEdge` instead - same arguments, returns a `Promise`. See the [webhooks guide](../guides/webhooks) for the full edge example.
 
 ## 3. Add React hooks (`pulse-notify`)
 
@@ -109,5 +109,5 @@ See the [real-time events guide](../guides/real-time-events) for the full hook s
 
 ## Next step
 
-→ [Webhooks guide](../guides/webhooks) — fan-out, retry policy, SSRF hardening, edge-runtime verification.
-→ [Real-time events guide](../guides/real-time-events) — React hooks, SSE plumbing, type narrowing.
+→ [Webhooks guide](../guides/webhooks) - fan-out, retry policy, SSRF hardening, edge-runtime verification.
+→ [Real-time events guide](../guides/real-time-events) - React hooks, SSE plumbing, type narrowing.

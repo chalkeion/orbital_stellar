@@ -115,7 +115,7 @@ describe("caughtUp flag", () => {
     const { result } = renderHook(() => useStellarEvent(SERVER, ADDRESS));
     const src = getSource();
 
-    // Initial connection — receive an event with an SSE id
+    // Initial connection - receive an event with an SSE id
     act(() => {
       src.onopen?.();
     });
@@ -124,7 +124,7 @@ describe("caughtUp flag", () => {
     });
     expect(result.current.caughtUp).toBe(true);
 
-    // Network drop — EventSource fires onerror, then auto-reconnects (onopen again)
+    // Network drop - EventSource fires onerror, then auto-reconnects (onopen again)
     act(() => {
       src.onerror?.();
     });
@@ -182,7 +182,7 @@ describe("caughtUp flag", () => {
       src.onopen?.();
     });
 
-    // No prior id — server wasn't sending id fields, so no replay expected
+    // No prior id - server wasn't sending id fields, so no replay expected
     expect(result.current.caughtUp).toBe(true);
   });
 });

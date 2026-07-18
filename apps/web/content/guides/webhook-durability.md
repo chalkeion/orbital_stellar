@@ -74,5 +74,5 @@ The same concepts apply to SQS; replace the `redis-cli` commands with `aws sqs r
 
 ## Further Reading
 
-- [pulse-webhooks API reference](/docs/api/pulse-webhooks) — `RetryQueue` and `DeadLetterStore` interfaces, adapter constructors
-- [Cursor Persistence](/docs/guides/cursor-persistence) — the equivalent durability story on the subscription side
+- [pulse-webhooks API reference](/docs/api/pulse-webhooks) - `RetryQueue` and `DeadLetterStore` interfaces, adapter constructors
+- [Cursor Persistence](/docs/guides/cursor-persistence) - the equivalent durability story on the subscription side

@@ -16,7 +16,7 @@ function loadFixture(name: string): Buffer {
 // A minimal, valid, empty WASM module: magic + version, zero sections.
 const EMPTY_WASM = Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
 
-describe("parseWasmSpec — real WASM fixtures (contracts/demo-emitter, contracts/registry)", () => {
+describe("parseWasmSpec - real WASM fixtures (contracts/demo-emitter, contracts/registry)", () => {
   it("parses demo-emitter.wasm: one Ping event, one ping() function", () => {
     const parsed = parseWasmSpec(loadFixture("demo-emitter.wasm"));
 
@@ -62,7 +62,7 @@ describe("parseWasmSpec — real WASM fixtures (contracts/demo-emitter, contract
       { type: "bytes_n", size: 32 },
       "string",
     ]);
-    // Result<(), Error> — the XDR spec encodes the err arm as the generic
+    // Result<(), Error> - the XDR spec encodes the err arm as the generic
     // "error" primitive, not a named reference to the Error UDT (verified).
     expect(publish.returns).toEqual({ type: "result", ok: "void", err: "error" });
 
@@ -109,7 +109,7 @@ describe("parseWasmSpec — real WASM fixtures (contracts/demo-emitter, contract
   });
 });
 
-describe("parseWasmSpec — error cases", () => {
+describe("parseWasmSpec - error cases", () => {
   it("throws NoEmbeddedSpecError for a WASM binary with no contractspecv0 section", () => {
     expect(() => parseWasmSpec(EMPTY_WASM)).toThrow(NoEmbeddedSpecError);
   });

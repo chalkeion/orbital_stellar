@@ -1,4 +1,4 @@
-# Orbital — Cookbook
+# Orbital - Cookbook
 
 > Copy-paste recipes. Each one is the smallest working snippet that
 > demonstrates one capability. For narrative walkthroughs (full setups,
@@ -45,13 +45,13 @@ watcher.on("payment.received", (event) => {
 });
 ```
 
-Send a test payment from the [Stellar Laboratory](https://laboratory.stellar.org) and the event prints within seconds. `engine.stop()` cleanly closes the upstream connection — always call it in your shutdown path.
+Send a test payment from the [Stellar Laboratory](https://laboratory.stellar.org) and the event prints within seconds. `engine.stop()` cleanly closes the upstream connection - always call it in your shutdown path.
 
 ---
 
 ## 2. Subscribe to multiple addresses with one engine
 
-One Horizon connection, many watchers. The engine fans events out internally — no extra network cost per subscriber. ✅
+One Horizon connection, many watchers. The engine fans events out internally - no extra network cost per subscriber. ✅
 
 ```ts
 import { EventEngine } from "@orbital-stellar/pulse-core";
@@ -69,7 +69,7 @@ for (const address of accounts) {
 }
 ```
 
-`engine.subscribe()` is idempotent — calling it twice for the same address returns the same `Watcher`. To stop watching one account without tearing down the stream: `engine.unsubscribe(address)`. To stop watching everything: `engine.unsubscribeAll()`.
+`engine.subscribe()` is idempotent - calling it twice for the same address returns the same `Watcher`. To stop watching one account without tearing down the stream: `engine.unsubscribe(address)`. To stop watching everything: `engine.unsubscribeAll()`.
 
 ---
 
@@ -94,7 +94,7 @@ watcher.on("payment.received", (event) => {
 });
 ```
 
-A predicate that throws is treated as `false` (suppress, with a warn log) — the engine never crashes on a bad filter.
+A predicate that throws is treated as `false` (suppress, with a warn log) - the engine never crashes on a bad filter.
 
 ---
 
@@ -147,7 +147,7 @@ const engine = new EventEngine({
 engine.start();
 ```
 
-The URL must be `http://` or `https://`. The engine validates the URL at construction time and throws synchronously if it's malformed — you get a fast error, not a silent SSE failure.
+The URL must be `http://` or `https://`. The engine validates the URL at construction time and throws synchronously if it's malformed - you get a fast error, not a silent SSE failure.
 
 ---
 
@@ -155,7 +155,7 @@ The URL must be `http://` or `https://`. The engine validates the URL at constru
 
 `WebhookDelivery` attaches to a watcher and POSTs every event to your endpoint with HMAC-SHA256 signing, exponential backoff retry, and a configurable per-attempt timeout. ✅
 
-**Sender side** — attach delivery to the watcher:
+**Sender side** - attach delivery to the watcher:
 
 ```ts
 import { EventEngine } from "@orbital-stellar/pulse-core";
@@ -174,7 +174,7 @@ new WebhookDelivery(watcher, {
 });
 ```
 
-**Receiver side** — verify the signature and enforce the replay window with `maxAgeMs`:
+**Receiver side** - verify the signature and enforce the replay window with `maxAgeMs`:
 
 ```ts
 import { verifyWebhook } from "@orbital-stellar/pulse-webhooks";
@@ -205,13 +205,13 @@ app.post(
 );
 ```
 
-Each request carries `x-orbital-signature` (hex HMAC-SHA256 over `${timestamp}.${body}`), `x-orbital-timestamp`, and `x-orbital-attempt`. Always pass `maxAgeMs` to bound replay — a signature without a replay window is valid indefinitely. The default is `300_000` (5 minutes), matching the recommendation in `SECURITY.md`.
+Each request carries `x-orbital-signature` (hex HMAC-SHA256 over `${timestamp}.${body}`), `x-orbital-timestamp`, and `x-orbital-attempt`. Always pass `maxAgeMs` to bound replay - a signature without a replay window is valid indefinitely. The default is `300_000` (5 minutes), matching the recommendation in `SECURITY.md`.
 
 ---
 
 ## 7. Verify a webhook in a Cloudflare Worker
 
-`verifyWebhookEdge` uses Web Crypto, so it runs on Cloudflare Workers, Vercel Edge, Deno, and browsers — anywhere without Node's `crypto` module. ✅
+`verifyWebhookEdge` uses Web Crypto, so it runs on Cloudflare Workers, Vercel Edge, Deno, and browsers - anywhere without Node's `crypto` module. ✅
 
 ```ts
 import { verifyWebhookEdge } from "@orbital-stellar/pulse-webhooks";
@@ -245,13 +245,13 @@ export default {
 };
 ```
 
-The verifier returns `null` on any failure (bad signature, malformed timestamp, bad JSON) — fail closed, never assume success.
+The verifier returns `null` on any failure (bad signature, malformed timestamp, bad JSON) - fail closed, never assume success.
 
 ---
 
 ## 8. Fan out one event to multiple URLs
 
-`WebhookDelivery.config.url` accepts an array. Each URL retries independently — one slow endpoint does not block delivery to the others. ✅
+`WebhookDelivery.config.url` accepts an array. Each URL retries independently - one slow endpoint does not block delivery to the others. ✅
 
 ```ts
 new WebhookDelivery(watcher, {
@@ -302,13 +302,13 @@ watcher.on("webhook.failed", async (event) => {
 declare function persistToDLQ(record: unknown): Promise<void>;
 ```
 
-`webhook.dropped` fires when the concurrent-retry cap evicts a pending retry — handle it the same way if you care about every miss.
+`webhook.dropped` fires when the concurrent-retry cap evicts a pending retry - handle it the same way if you care about every miss.
 
 ---
 
 ## 10. Render live payments in React with type narrowing
 
-`useStellarEvent<T>` is generic — pass a narrow union as `T` to get full autocomplete and exhaustive `switch` checking. ✅
+`useStellarEvent<T>` is generic - pass a narrow union as `T` to get full autocomplete and exhaustive `switch` checking. ✅
 
 ```tsx
 "use client";
@@ -342,13 +342,13 @@ export function Wallet({ address }: { address: string }) {
 }
 ```
 
-A `switch` over `event.type` with no `default` clause will produce a TypeScript error if you ever miss a case — the narrow union does the work.
+A `switch` over `event.type` with no `default` clause will produce a TypeScript error if you ever miss a case - the narrow union does the work.
 
 ---
 
 ## 11. Stand up an SSE endpoint in Next.js
 
-The hooks expect a backend that re-emits Orbital events as Server-Sent Events. The marketing site ships a working reference at `apps/web/app/api/events/[address]/route.ts` — copy it, strip the demo limits in `apps/web/lib/demo-limits.ts`, and you have your production SSE handler. ✅
+The hooks expect a backend that re-emits Orbital events as Server-Sent Events. The marketing site ships a working reference at `apps/web/app/api/events/[address]/route.ts` - copy it, strip the demo limits in `apps/web/lib/demo-limits.ts`, and you have your production SSE handler. ✅
 
 ```ts
 // app/api/events/[address]/route.ts
@@ -401,7 +401,7 @@ export async function GET(
 }
 ```
 
-The `globalThis` trick keeps one `EventEngine` alive across Next.js HMR. In production (`next start`) it persists for the lifetime of the Node process. On Vercel serverless, expect periodic reconnects when the function instance recycles — fine for demos, not for production Cloud.
+The `globalThis` trick keeps one `EventEngine` alive across Next.js HMR. In production (`next start`) it persists for the lifetime of the Node process. On Vercel serverless, expect periodic reconnects when the function instance recycles - fine for demos, not for production Cloud.
 
 ---
 
@@ -430,7 +430,7 @@ watcher.on("contract.emitted", (event) => {
 });
 ```
 
-Decoding to typed `decodedData` requires the ABI Registry client (`@orbital-stellar/abi-registry`), wired in via `EventEngine`'s ABI registry config — see [`packages/abi-registry/README.md`](../packages/abi-registry/README.md). Without a registered ABI, raw XDR is exposed in `event.raw`.
+Decoding to typed `decodedData` requires the ABI Registry client (`@orbital-stellar/abi-registry`), wired in via `EventEngine`'s ABI registry config - see [`packages/abi-registry/README.md`](../packages/abi-registry/README.md). Without a registered ABI, raw XDR is exposed in `event.raw`.
 
 ---
 
@@ -466,8 +466,8 @@ Combine this with `vi.useFakeTimers()` to verify that retries happen after the e
 
 ## Related documents
 
-- [`apps/web/content/guides/`](../apps/web/content/guides/) — narrative walkthroughs (real-time events, webhooks)
-- [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) — system diagrams, lifecycle, trust boundaries
-- [`packages/pulse-core/README.md`](../packages/pulse-core/README.md) — full API reference
-- [`packages/pulse-webhooks/README.md`](../packages/pulse-webhooks/README.md) — delivery contract, security
-- [`packages/pulse-notify/README.md`](../packages/pulse-notify/README.md) — React hook reference
+- [`apps/web/content/guides/`](../apps/web/content/guides/) - narrative walkthroughs (real-time events, webhooks)
+- [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) - system diagrams, lifecycle, trust boundaries
+- [`packages/pulse-core/README.md`](../packages/pulse-core/README.md) - full API reference
+- [`packages/pulse-webhooks/README.md`](../packages/pulse-webhooks/README.md) - delivery contract, security
+- [`packages/pulse-notify/README.md`](../packages/pulse-notify/README.md) - React hook reference

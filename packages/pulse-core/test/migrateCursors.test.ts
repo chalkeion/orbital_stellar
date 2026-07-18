@@ -59,7 +59,7 @@ describe("migrateCursors", () => {
     expect(result).toEqual({ migrated: 0 });
   });
 
-  it("idempotent — running twice produces the same result", async () => {
+  it("idempotent - running twice produces the same result", async () => {
     const source = new InMemoryCursorStore();
     await source.set("stream-a", "cursor-1");
 

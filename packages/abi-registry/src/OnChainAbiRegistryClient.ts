@@ -22,7 +22,7 @@ export type OnChainAbiRegistryClientConfig = {
   /** Network passphrase for the target network (e.g. `Networks.TESTNET`). */
   networkPassphrase: string;
   /**
-   * On-chain `publisher` address to resolve specs under — the registry keys
+   * On-chain `publisher` address to resolve specs under - the registry keys
    * every spec by `(contract_id, publisher, version)`, so a resolver must
    * pick whose publications it trusts. Pass Orbital's canonical publisher
    * address to resolve the specs Orbital itself publishes (well-known specs,
@@ -51,15 +51,15 @@ type SpecRecord = {
  * Resolves {@link ContractSpec}s by reading the on-chain Orbital ABI registry
  * contract directly via Soroban RPC simulation (no HTTP registry server
  * involved). For each `(contract_id, publisher)` pair this fetches every
- * published version's `SpecRecord` (hash + off-chain pointer), then — on
- * `getSpec`/`getSpecAt` — fetches the pointed-at blob and verifies its sha256
+ * published version's `SpecRecord` (hash + off-chain pointer), then - on
+ * `getSpec`/`getSpecAt` - fetches the pointed-at blob and verifies its sha256
  * matches the on-chain `spec_hash` before returning it. A hash mismatch
  * throws rather than silently returning a possibly-tampered spec.
  *
  * Read-only: every RPC call here is a `simulateTransaction`, signed by a
  * throwaway, unfunded keypair. Simulation never touches the source account's
  * balance or sequence number, so no funded key is needed just to resolve
- * specs — only {@link OnChainRegistryPublisher} (which submits a real,
+ * specs - only {@link OnChainRegistryPublisher} (which submits a real,
  * fee-paying transaction) needs one. This "unfunded source is sufficient for
  * simulation" assumption should be verified against a live network before
  * relying on it in production; it has not been exercised against a deployed
@@ -86,7 +86,7 @@ export class OnChainAbiRegistryClient {
   }
 
   /**
-   * Resolves whichever spec version was current as of `ledger` — the most
+   * Resolves whichever spec version was current as of `ledger` - the most
    * recently published version whose `published_at_ledger` is `<= ledger`.
    * Returns `null` if no version had been published yet at that ledger.
    */
@@ -136,7 +136,7 @@ export class OnChainAbiRegistryClient {
     const actualHash = createHash("sha256").update(text).digest("hex");
     if (actualHash !== record.specHash) {
       throw new Error(
-        `OnChainAbiRegistryClient: spec_hash mismatch for ${contractId}@${record.version} — expected ${record.specHash}, got ${actualHash}. The fetched blob does not match the on-chain hash and was not returned.`,
+        `OnChainAbiRegistryClient: spec_hash mismatch for ${contractId}@${record.version} - expected ${record.specHash}, got ${actualHash}. The fetched blob does not match the on-chain hash and was not returned.`,
       );
     }
 
@@ -187,7 +187,7 @@ export class OnChainAbiRegistryClient {
 
   private async simulate(fn: string, args: xdr.ScVal[]): Promise<xdr.ScVal | null> {
     const server = new SorobanRpc.Server(this.config.rpcUrl);
-    // Throwaway, unfunded source — see the class doc comment above.
+    // Throwaway, unfunded source - see the class doc comment above.
     const source = new Account(Keypair.random().publicKey(), "0");
     const contract = new Contract(this.config.contractId);
 

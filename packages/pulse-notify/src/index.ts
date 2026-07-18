@@ -14,7 +14,7 @@ export type UseEventConfig<T extends NormalizedEvent = NormalizedEvent> = {
   serverUrl: string;
   address: string;
   event?: string | string[];
-  /** API key forwarded as ?token= query param — required when the server has authentication enabled */
+  /** API key forwarded as ?token= query param - required when the server has authentication enabled */
   token?: string;
   /**
    * Async callback that returns a fresh token when the current one expires.
@@ -227,7 +227,7 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
           setState((prev) => ({
             ...prev,
             connected: false,
-            error: "Connection lost — retrying...",
+            error: "Connection lost - retrying...",
           }));
         },
         onAuthExpired: () => {
@@ -259,7 +259,7 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
     return () => {
       connection.unsubscribe();
     };
-    // ✅ eventKey is a serialised string — stable even when the caller passes
+    // ✅ eventKey is a serialised string - stable even when the caller passes
     // an array literal, which would otherwise be a new reference every render.
   }, [
     serverUrl,
@@ -284,7 +284,7 @@ export type { PaymentEvent, ContractInvokedEvent, ContractEmittedEvent };
  * Converts a Stellar decimal amount string (e.g. "12.3456789") to stroops
  * (1 XLM = 10,000,000 stroops) as a bigint.
  *
- * Uses integer arithmetic only — no parseFloat, no floating-point rounding.
+ * Uses integer arithmetic only - no parseFloat, no floating-point rounding.
  * Returns null if the string is not a valid non-negative decimal number.
  */
 function amountToStroop(amount: string): bigint | null {
@@ -483,7 +483,7 @@ export function useContractEvent<
           setState((prev) => ({
             ...prev,
             connected: false,
-            error: "Connection lost — retrying...",
+            error: "Connection lost - retrying...",
           }));
         },
         onAuthExpired: () => {
@@ -604,7 +604,7 @@ export function useStellarAddresses<T extends NormalizedEvent = NormalizedEvent>
   const addressKey = [...addresses].sort().join(",");
   const eventKey = Array.isArray(eventType) ? [...eventType].sort().join(",") : (eventType ?? "*");
 
-  // Initialise state lazily — one EventState entry per address.
+  // Initialise state lazily - one EventState entry per address.
   const [states, setStates] = useState<Record<string, EventState<T>>>(() => {
     const initial: Record<string, EventState<T>> = {};
     for (const addr of addresses) {
@@ -706,7 +706,7 @@ export function useStellarAddresses<T extends NormalizedEvent = NormalizedEvent>
               [addr]: {
                 ...prev[addr]!,
                 connected: false,
-                error: "Connection lost — retrying...",
+                error: "Connection lost - retrying...",
               },
             }));
           },
@@ -750,7 +750,7 @@ export function useStellarAddresses<T extends NormalizedEvent = NormalizedEvent>
         connection.unsubscribe();
       }
     };
-    // ✅ addressKey and eventKey are stable serialised strings — safe as deps
+    // ✅ addressKey and eventKey are stable serialised strings - safe as deps
     // even when the caller passes inline array literals.
   }, [serverUrl, addressKey, eventKey, currentToken, tokenRefreshKey, withCredentials]);
 

@@ -207,7 +207,7 @@ describe("PostgresRetryQueue", () => {
     const queue = new PostgresRetryQueue(new MockPg(), { now: () => 9_000 });
     const lockedNewest = retryRecord({ id: "locked-newest", nextRetryAt: 9_000 });
     await queue.enqueue(lockedNewest);
-    await queue.dequeue(9_000); // locks "locked-newest" — it's the only ready record
+    await queue.dequeue(9_000); // locks "locked-newest" - it's the only ready record
 
     const oldest = retryRecord({ id: "oldest", nextRetryAt: 1_000 });
     const newest = retryRecord({ id: "newest", nextRetryAt: 5_000 });

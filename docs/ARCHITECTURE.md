@@ -1,4 +1,4 @@
-# Orbital — Architecture
+# Orbital - Architecture
 
 > How the pieces fit together. This document is the map a new contributor reads
 > before opening a PR, the reviewer consults before approving one, and the
@@ -27,18 +27,18 @@
 
 ## 1. System overview
 
-Orbital is three planes sharing one vocabulary — the **normalized event**:
+Orbital is three planes sharing one vocabulary - the **normalized event**:
 
-- **Subscription plane** — `@orbital-stellar/pulse-core` opens and maintains
+- **Subscription plane** - `@orbital-stellar/pulse-core` opens and maintains
   connections to Stellar (Horizon SSE and Stellar RPC for Soroban contract
   events), normalizes raw operations into a typed `NormalizedEvent` union, and
   routes each event to per-address `Watcher` subscribers.
-- **Delivery plane** — `@orbital-stellar/pulse-webhooks` attaches to a `Watcher`,
+- **Delivery plane** - `@orbital-stellar/pulse-webhooks` attaches to a `Watcher`,
   signs each event with HMAC-SHA256, and POSTs it to one or more HTTPS
   endpoints with retry, timeout, and SSRF safety. A second export
   (`verifyWebhookEdge`) lets receivers verify the signature on Cloudflare
   Workers, Vercel Edge, Deno, and browsers without Node `crypto`.
-- **Consumption plane** — `@orbital-stellar/pulse-notify` opens a browser
+- **Consumption plane** - `@orbital-stellar/pulse-notify` opens a browser
   `EventSource` to a backend that re-emits the events as Server-Sent
   Events, and re-renders React components on each event.
 
@@ -78,7 +78,7 @@ flowchart LR
 Each plane is independently installable from npm and independently
 composable. The reference composition that powers the marketing
 demo at `apps/web/app/api/events/[address]/route.ts` shows all three wired
-together inside a single Next.js route handler — about 50 lines of glue.
+together inside a single Next.js route handler - about 50 lines of glue.
 
 ---
 
@@ -158,7 +158,7 @@ Steps in detail:
    never delivers to the same watcher twice.
 4. **Filter.** If the subscriber passed a `filter` predicate, the engine
    calls it; a `false` return suppresses delivery. A thrown predicate is
-   treated as `false` and logged as a warning — the stream stays up.
+   treated as `false` and logged as a warning - the stream stays up.
 5. **Emit.** The watcher emits the event under its discriminated type
    (`"payment.received"`) and also under the wildcard `"*"`. Consumers can
    listen to either or both.
@@ -191,7 +191,7 @@ type NormalizedEvent =
   | TrustAuthEvent;
 ```
 
-The 13 Horizon operation types map to **21 normalized event types** — the
+The 13 Horizon operation types map to **21 normalized event types** - the
 difference comes from operations that fan out into multiple semantic events
 (a `change_trust` becomes one of `trustline.added`, `trustline.removed`, or
 `trustline.updated` depending on the new limit; a `manage_sell_offer` becomes
@@ -248,8 +248,8 @@ Every watcher receives lifecycle notifications alongside operation events:
 | `engine.cursor_expired` | Stream cursor expired (Horizon or Soroban) |
 
 For `engine.cursor_expired` notifications, the payload includes:
-- `lostCursor?: string` — The value of the expired or lost cursor.
-- `source?: "horizon" | "soroban"` — The subscription engine source where the expiry occurred.
+- `lostCursor?: string` - The value of the expired or lost cursor.
+- `source?: "horizon" | "soroban"` - The subscription engine source where the expiry occurred.
 
 Consumers can subscribe to these via `watcher.on("engine.reconnecting", …)`
 to surface UI banners or write structured logs.
@@ -286,14 +286,14 @@ to surface UI banners or write structured logs.
 Delivery targets are validated at construction time and re-validated against
 DNS resolution before each request. Loopback (`127.0.0.0/8`, `::1`), private
 RFC 1918 ranges, and link-local (`169.254.0.0/16`) addresses are blocked by
-default. Setting `allowPrivateNetworks: true` opts out — useful for local
+default. Setting `allowPrivateNetworks: true` opts out - useful for local
 development, never appropriate for production.
 
 ### Edge-runtime verification
 
 `verifyWebhookEdge` is a parallel implementation of `verifyWebhook` that
 uses Web Crypto's `crypto.subtle.sign` instead of Node's `createHmac`. It
-runs on Cloudflare Workers, Vercel Edge, Deno, and browsers — anywhere with
+runs on Cloudflare Workers, Vercel Edge, Deno, and browsers - anywhere with
 the standard `crypto.subtle` API. The constant-time XOR comparison
 substitutes for Node's `timingSafeEqual`.
 
@@ -331,7 +331,7 @@ type WalletEvents = Extract<NormalizedEvent, { type: "payment.received" | "payme
 const { event } = useStellarEvent<WalletEvents>(url, address, { event: ["payment.received", "payment.sent"] });
 ```
 
-The hook is browser-only — `EventSource` doesn't exist in Node. In Next.js
+The hook is browser-only - `EventSource` doesn't exist in Node. In Next.js
 App Router, mark consuming components with `"use client"`. In Remix or Vite
 SSR, gate the hook behind a client-only boundary.
 
@@ -343,7 +343,7 @@ SSR, gate the hook behind a client-only boundary.
 |---|---|---|---|
 | **Webhook signature** | The signed `${timestamp}.${payload}` body emitted by `WebhookDelivery`. | Network, intermediate proxies, the receiver's logs. | HMAC-SHA256 with a shared secret; `verifyWebhook` uses timing-safe comparison. |
 | **Webhook target URL** | The host configured by the operator. | The DNS resolver and the network it points at. | SSRF block-list on construction *and* re-validated post-DNS to defend against DNS rebinding. |
-| **SSE stream from Stellar** | `EventEngine` → `Watcher` callbacks. | Horizon, intermediate CDNs. | The engine treats every record as untrusted input — every field is `typeof`-checked before normalization; malformed records are dropped with a warn log, not thrown. |
+| **SSE stream from Stellar** | `EventEngine` → `Watcher` callbacks. | Horizon, intermediate CDNs. | The engine treats every record as untrusted input - every field is `typeof`-checked before normalization; malformed records are dropped with a warn log, not thrown. |
 | **API key on the demo backend** | A single `process.env.NEXT_PUBLIC_NETWORK`-validated singleton. | Public internet, every visitor. | The demo enforces a 1-stream-per-IP concurrency cap and a 25s session timer; production self-hosters should swap in their own auth (the SDKs do not prescribe one). |
 | **HMAC secret** | The operator's secret store. | Source control, logs, debug output. | The reference composition reads from env; consumers are expected to use a secrets manager. |
 
@@ -405,7 +405,7 @@ already depend on:
   Pending retries survive process restarts when configured.
 
 Consumers opt in by passing new config (`cursorStore`, `retryQueue`,
-`soroban`) — existing `on()` handlers are unaffected.
+`soroban`) - existing `on()` handlers are unaffected.
 
 Still ahead (tracked in [`ROADMAP.md`](../ROADMAP.md) Wave 1.4–1.5):
 
@@ -413,7 +413,7 @@ Still ahead (tracked in [`ROADMAP.md`](../ROADMAP.md) Wave 1.4–1.5):
   discriminated by `type` but several fields are `unknown` for type-safety
   reasons (the raw Horizon record). A future pass narrows these to typed
   shapes with the help of generated schemas from Horizon's OpenAPI.
-- **`STABILITY.md`** — a formal semver contract and deprecation window,
+- **`STABILITY.md`** - a formal semver contract and deprecation window,
   the last gate before a `v1.0.0` tag.
 
 ---
@@ -424,10 +424,10 @@ Still ahead (tracked in [`ROADMAP.md`](../ROADMAP.md) Wave 1.4–1.5):
 orbital_stellar/
 ├── packages/                      # Published SDKs (MIT, npm)
 │   ├── pulse-core/
-│   │   ├── src/                   # 27 files — engine, normalizers, routing,
+│   │   ├── src/                   # 27 files - engine, normalizers, routing,
 │   │   │   │                      # Soroban subscriber/RPC client, 5 cursor-store
 │   │   │   │                      # adapters, backoff, address/amount helpers
-│   │   │   ├── EventEngine.ts     # ~2300 lines — engine + normalizers + routing
+│   │   │   ├── EventEngine.ts     # ~2300 lines - engine + normalizers + routing
 │   │   │   ├── SorobanSubscriber.ts   # Soroban RPC polling + reconnect
 │   │   │   ├── SorobanRpcClient.ts    # Stellar RPC getEvents client
 │   │   │   ├── CursorStore.ts + {Memory,File,Postgres,Redis,S3}CursorStore.ts
@@ -478,10 +478,10 @@ orbital_stellar/
 
 ## Related documents
 
-- [`PROGRESS.md`](../PROGRESS.md) — Status snapshot and completion checklist
-- [`ROADMAP.md`](../ROADMAP.md) — Phase 0 → Phase 4 timeline
-- [`CHANGELOG.md`](../CHANGELOG.md) — Per-release notes
-- [`docs/proposal.md`](./proposal.md) — SCF grant proposal
+- [`PROGRESS.md`](../PROGRESS.md) - Status snapshot and completion checklist
+- [`ROADMAP.md`](../ROADMAP.md) - Phase 0 → Phase 4 timeline
+- [`CHANGELOG.md`](../CHANGELOG.md) - Per-release notes
+- [`docs/proposal.md`](./proposal.md) - SCF grant proposal
 - Per-package READMEs:
   [`pulse-core`](../packages/pulse-core/README.md),
   [`pulse-webhooks`](../packages/pulse-webhooks/README.md),

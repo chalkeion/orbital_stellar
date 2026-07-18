@@ -10,9 +10,9 @@ pnpm add @orbital-stellar/pulse-webhooks @orbital-stellar/pulse-core
 
 `pulse-webhooks` is the "push" side of Orbital. It listens to a `Watcher`, serializes events to JSON, signs the payload with HMAC-SHA256, and POSTs to one or more endpoints. On transient failure it retries each URL independently with configurable backoff; on permanent failure it emits a `webhook.failed` event you can catch and route to a dead-letter queue.
 
-Consumers verify the signature using the shared secret you provisioned — `verifyWebhook` is exported for that purpose.
+Consumers verify the signature using the shared secret you provisioned - `verifyWebhook` is exported for that purpose.
 
-## Quickstart — sender side
+## Quickstart - sender side
 
 ```ts
 import { EventEngine } from "@orbital-stellar/pulse-core";
@@ -35,7 +35,7 @@ new WebhookDelivery(watcher, {
 });
 ```
 
-## Quickstart — receiver side
+## Quickstart - receiver side
 
 ```ts
 import { verifyWebhook } from "@orbital-stellar/pulse-webhooks";
@@ -151,7 +151,7 @@ const redisStore: DedupStore = {
 const handlePayment = dedupReceiver(processEvent, redisStore);
 ```
 
-Use `NX` (set-if-not-exists) to make `mark` atomic — concurrent deliveries of the same event cannot both pass the `seen` check when they race to set the key.
+Use `NX` (set-if-not-exists) to make `mark` atomic - concurrent deliveries of the same event cannot both pass the `seen` check when they race to set the key.
 
 ### Postgres store
 
@@ -219,7 +219,7 @@ The wrapped handler calls `store.mark` before invoking `handler`, so even if `ha
 
 ## Verifying in Cloudflare Workers
 
-Cloudflare Workers don't have Node.js crypto — they use Web Crypto API. Use `verifyWebhookEdge` for edge runtime compatibility:
+Cloudflare Workers don't have Node.js crypto - they use Web Crypto API. Use `verifyWebhookEdge` for edge runtime compatibility:
 
 ```js
 import { verifyWebhookEdge } from "@orbital-stellar/pulse-webhooks";
@@ -274,8 +274,8 @@ Attaches a delivery driver to a `Watcher`. Every event the watcher emits is deli
 
 | Field                         | Type                 | Default  | Description                                                                           |
 | ----------------------------- | -------------------- | -------- | ------------------------------------------------------------------------------------- |
-| `config.url`                  | `string \| string[]` | —        | One destination endpoint or a fan-out list of endpoints. Must be HTTPS in production. |
-| `config.secret`               | `string`             | —        | Shared secret used to sign payloads                                                   |
+| `config.url`                  | `string \| string[]` | -        | One destination endpoint or a fan-out list of endpoints. Must be HTTPS in production. |
+| `config.secret`               | `string`             | -        | Shared secret used to sign payloads                                                   |
 | `config.retries`              | `number`             | `3`      | Number of retry attempts before emitting `webhook.failed`                             |
 | `config.deliveryTimeoutMs`    | `number`             | `10_000` | Abort threshold for each HTTP attempt                                                 |
 | `config.allowPrivateNetworks` | `boolean`            | `false`  | If true, bypass SSRF checks for local/private IP ranges                               |
@@ -286,7 +286,7 @@ Attaches a delivery driver to a `Watcher`. Every event the watcher emits is deli
 
 Verifies that `payload` was signed with `secret` using `timestamp + "." + payload`. Returns the parsed event on success, `null` on any failure (bad signature, malformed JSON, invalid timestamp, length mismatch, or signature outside the replay window).
 
-Uses `crypto.timingSafeEqual` under the hood — do not roll your own comparison.
+Uses `crypto.timingSafeEqual` under the hood - do not roll your own comparison.
 
 | Option        | Type     | Default   | Description                                                    |
 | ------------- | -------- | --------- | -------------------------------------------------------------- |
@@ -326,9 +326,9 @@ app.get("/metrics", async (req, res) => {
 
 The following metric names are exposed:
 
-- `orbital_webhook_attempts_total` — counter; labels: `url`, `status`
-- `orbital_webhook_duration_seconds` — histogram; labels: `url`, `status`
-- `orbital_webhook_terminal_outcomes_total` — counter; labels: `url`, `outcome`
+- `orbital_webhook_attempts_total` - counter; labels: `url`, `status`
+- `orbital_webhook_duration_seconds` - histogram; labels: `url`, `status`
+- `orbital_webhook_terminal_outcomes_total` - counter; labels: `url`, `outcome`
 
 > Note: URLs are used as label values, which can increase cardinality. Normalize or aggregate labels as needed in production.
 
@@ -379,7 +379,7 @@ watcher.on("webhook.dropped", (event) => {
 
 ## Idempotency / deduplication
 
-Retries of the same delivery carry the same `x-orbital-delivery-id`, allowing receivers to safely deduplicate. The UUID v4 is computed once per (event, URL) pair and reused on every subsequent attempt. A new event — even with the same payload — gets a new ID.
+Retries of the same delivery carry the same `x-orbital-delivery-id`, allowing receivers to safely deduplicate. The UUID v4 is computed once per (event, URL) pair and reused on every subsequent attempt. A new event - even with the same payload - gets a new ID.
 
 ### Receiver-side dedup (built-in)
 
@@ -399,7 +399,7 @@ const handler = dedupReceiver(
   seen,
   {
     // Extract delivery ID from the x-orbital-delivery-id header.
-    // The default extractor uses event.raw.id — override to use
+    // The default extractor uses event.raw.id - override to use
     // the delivery ID header instead:
     idExtractor: (event) =>
       (event.raw as Record<string, string>)["x-orbital-delivery-id"],
@@ -418,7 +418,7 @@ export interface DedupStore {
 }
 ```
 
-**Note:** Keep the dedup window bounded — use TTL-based stores (e.g., Redis `SET` with `EX`) to expire old IDs after the replay-window duration (default 5 minutes).
+**Note:** Keep the dedup window bounded - use TTL-based stores (e.g., Redis `SET` with `EX`) to expire old IDs after the replay-window duration (default 5 minutes).
 
 ## Dead Letter Queue (DLQ)
 
@@ -499,7 +499,7 @@ Get the total number of entries in the store.
 
 ## Durable retry queues
 
-By default, pending retries live in-process — a restart drops them. Pass a `RetryQueue` on `config.retryQueue` to persist them instead:
+By default, pending retries live in-process - a restart drops them. Pass a `RetryQueue` on `config.retryQueue` to persist them instead:
 
 ```ts
 import { WebhookDelivery, RedisRetryQueue } from "@orbital-stellar/pulse-webhooks";
@@ -514,19 +514,19 @@ new WebhookDelivery(watcher, {
 });
 ```
 
-`RedisRetryQueue` expects a client exposing `zadd` / `zrangebyscore` / `zrevrange` / `zrem` / `zcard` (the `RedisLike` type) — `ioredis` matches this directly; other clients need a thin wrapper.
+`RedisRetryQueue` expects a client exposing `zadd` / `zrangebyscore` / `zrevrange` / `zrem` / `zcard` (the `RedisLike` type) - `ioredis` matches this directly; other clients need a thin wrapper.
 
 `WebhookDelivery` polls the queue (`retryQueuePollIntervalMs`, default 1000ms) instead of using in-process `setTimeout` retries when `retryQueue` is configured. On process restart, any records left in the queue are picked back up.
 
 | Adapter | Backing store | Constructor |
 |---|---|---|
-| `MemoryRetryQueue` | In-process `Map` (default if you build one yourself; not persistent — same limitation as no queue at all, useful mainly for tests) | `new MemoryRetryQueue(options?)` |
+| `MemoryRetryQueue` | In-process `Map` (default if you build one yourself; not persistent - same limitation as no queue at all, useful mainly for tests) | `new MemoryRetryQueue(options?)` |
 | `RedisRetryQueue` | Redis sorted set, keyed by due time | `new RedisRetryQueue(client, options?)` |
 | `SqsRetryQueue` | Amazon SQS (standard or FIFO) | `new SqsRetryQueue(client, options)` |
 
-All three implement the same `RetryQueue` interface (`enqueue`, `dequeue`, `ack`, `nack`, `evictNewest`, `size`), so custom adapters (e.g. Postgres) are a drop-in — see [`src/RetryQueue.ts`](./src/RetryQueue.ts) for the exact contract.
+All three implement the same `RetryQueue` interface (`enqueue`, `dequeue`, `ack`, `nack`, `evictNewest`, `size`), so custom adapters (e.g. Postgres) are a drop-in - see [`src/RetryQueue.ts`](./src/RetryQueue.ts) for the exact contract.
 
-Note: durable retry queues and the `DeadLetterStore` above solve different problems — the retry queue holds *pending* retries so they survive a restart; the DLQ holds *terminally failed* deliveries (retries exhausted) for inspection and replay. They're independent and can be used together.
+Note: durable retry queues and the `DeadLetterStore` above solve different problems - the retry queue holds *pending* retries so they survive a restart; the DLQ holds *terminally failed* deliveries (retries exhausted) for inspection and replay. They're independent and can be used together.
 
 ## Index Requirements for Adapter Authors
 
@@ -578,7 +578,7 @@ For a full breakdown of adversaries, assets, and mitigations (including secret r
 
 ```ts
 const event = verifyWebhook(payload, signature, secret, timestamp, {
-  maxAgeMs: 5 * 60 * 1000, // 5 minutes — reject replayed signatures
+  maxAgeMs: 5 * 60 * 1000, // 5 minutes - reject replayed signatures
 });
 ```
 
@@ -588,15 +588,15 @@ Always pass `maxAgeMs` explicitly. A consumer that omits the option still receiv
 
 - **Retries live in-process unless a `retryQueue` is configured.** See [Durable retry queues](#durable-retry-queues) above for the Redis/SQS adapters that persist pending retries across restarts.
 - **Retries use a small built-in strategy set.** For specialized schedules, pass a custom `BackoffStrategy` through `config.backoff`.
-- **No signature versioning.** The header format is fixed at `x-orbital-signature` (HMAC-SHA256 hex) — there is no `v1=…` prefix. If the algorithm needs to change, a future `x-orbital-signature-v2` header will be introduced alongside `v1` for a deprecation window.
+- **No signature versioning.** The header format is fixed at `x-orbital-signature` (HMAC-SHA256 hex) - there is no `v1=…` prefix. If the algorithm needs to change, a future `x-orbital-signature-v2` header will be introduced alongside `v1` for a deprecation window.
 
 ## Related documents
 
-- [`docs/ARCHITECTURE.md` § 6 Webhook delivery internals](../../docs/ARCHITECTURE.md#6-webhook-delivery-internals) — full delivery and verification design
-- [`docs/COOKBOOK.md`](../../docs/COOKBOOK.md) — recipes 6–9 cover delivery, verification, fan-out, and dead-letter routing
-- [`docs/open-source-policy.md`](../../docs/open-source-policy.md) — interface vs adapter boundary
-- [`SECURITY.md`](../../SECURITY.md) — threat model, secret rotation runbook, best practices for consumers
-- [`CHANGELOG.md`](../../CHANGELOG.md) — release notes
+- [`docs/ARCHITECTURE.md` § 6 Webhook delivery internals](../../docs/ARCHITECTURE.md#6-webhook-delivery-internals) - full delivery and verification design
+- [`docs/COOKBOOK.md`](../../docs/COOKBOOK.md) - recipes 6–9 cover delivery, verification, fan-out, and dead-letter routing
+- [`docs/open-source-policy.md`](../../docs/open-source-policy.md) - interface vs adapter boundary
+- [`SECURITY.md`](../../SECURITY.md) - threat model, secret rotation runbook, best practices for consumers
+- [`CHANGELOG.md`](../../CHANGELOG.md) - release notes
 
 ## License
 

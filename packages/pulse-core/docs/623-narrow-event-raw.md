@@ -1,7 +1,7 @@
-# #623 — Discriminated union refinement: narrow event.raw
+# #623 - Discriminated union refinement: narrow event.raw
 
 **Status:** Already implemented on `main`. This branch (`refactor/623-narrow-event-raw`) is
-identical to `main` — the entire feature was completed in three earlier commits.
+identical to `main` - the entire feature was completed in three earlier commits.
 
 ---
 
@@ -39,7 +39,7 @@ Defines `RawSorobanEvent` for Soroban contract events.
 
 ### 3. Event types narrowed to specific `raw` interfaces
 
-**File:** `packages/pulse-core/src/index.ts` — each event type now carries the correct raw type:
+**File:** `packages/pulse-core/src/index.ts` - each event type now carries the correct raw type:
 
 | Event type | `raw` type | Lines |
 |---|---|---|
@@ -76,7 +76,7 @@ Runtime test `"narrows event.raw successfully using an exhaustive switch"` cover
 
 **File:** `packages/pulse-core/test/types.exhaustive.test-d.ts` (68 lines)
 
-Compile-time `never` exhaustiveness check — omitting a variant from the switch produces
+Compile-time `never` exhaustiveness check - omitting a variant from the switch produces
 a build error. Includes both a positive (all branches handled) and negative
 (`@ts-expect-error` with incomplete switch) test.
 

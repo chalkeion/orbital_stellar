@@ -1,6 +1,9 @@
 #![no_std]
 
-use soroban_sdk::{contract, contracterror, contractevent, contractimpl, contracttype, Address, BytesN, Env, String, Vec};
+use soroban_sdk::{
+    contract, contracterror, contractevent, contractimpl, contracttype, Address, BytesN, Env,
+    String, Vec,
+};
 
 // Persistent storage entries are bumped on every touch so a spec never
 // silently archives out from under a live registry. ~30 days of ledgers
@@ -15,7 +18,7 @@ const LIFETIME_THRESHOLD: u32 = BUMP_AMOUNT - DAY_IN_LEDGERS;
 #[repr(u32)]
 pub enum Error {
     /// A spec for this (contract_id, publisher, version) already exists.
-    /// Specs are immutable per version — republish under a new version instead.
+    /// Specs are immutable per version - republish under a new version instead.
     AlreadyPublished = 1,
     EmptyVersion = 2,
     EmptyPointer = 3,
@@ -28,7 +31,7 @@ pub struct SpecRecord {
     /// sha256 of the canonical off-chain ContractSpec JSON.
     pub spec_hash: BytesN<32>,
     /// Off-chain locator for the full spec blob. The contract does not
-    /// interpret this value — integrity is verified by the caller re-hashing
+    /// interpret this value - integrity is verified by the caller re-hashing
     /// the fetched blob and comparing it against `spec_hash`.
     pub pointer: String,
     pub publisher: Address,
@@ -66,7 +69,7 @@ pub struct AbiRegistry;
 impl AbiRegistry {
     /// Publishes a new spec version for `contract_id` under `publisher`'s
     /// namespace. Requires `publisher`'s authorization. Rejects republishing
-    /// an existing (contract_id, publisher, version) triple — specs are
+    /// an existing (contract_id, publisher, version) triple - specs are
     /// immutable once published. Emits `SpecPublished` on success.
     pub fn publish(
         env: Env,

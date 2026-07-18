@@ -3,7 +3,7 @@ import { RedisCursorStore } from "../src/RedisCursorStore.js";
 import type { RedisLike } from "../src/RedisCursorStore.js";
 
 // ---------------------------------------------------------------------------
-// In-memory mock RedisLike — records calls and stores state
+// In-memory mock RedisLike - records calls and stores state
 // ---------------------------------------------------------------------------
 
 function makeMockRedis(): {

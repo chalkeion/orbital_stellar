@@ -18,7 +18,7 @@ try {
   execFileSync("pnpm", ["exec", "typedoc", "--version"], { cwd: repoRoot, stdio: "ignore" });
 } catch {
   console.log(
-    "typedoc is not installed yet — skipping reference doc generation (see scripts/generate-reference-docs.mjs).",
+    "typedoc is not installed yet - skipping reference doc generation (see scripts/generate-reference-docs.mjs).",
   );
   process.exit(0);
 }

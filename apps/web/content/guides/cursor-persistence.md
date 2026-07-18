@@ -35,14 +35,14 @@ abstract class CursorStore {
   abstract get(streamKey: string): Promise<string | null>;
   abstract set(streamKey: string, cursor: string): Promise<void>;
 
-  // Optional batch operations — override for efficiency
+  // Optional batch operations - override for efficiency
   async getMany(keys: string[]): Promise<Record<string, string | null>>;
   async setMany(entries: Record<string, string>): Promise<void>;
 
-  // Optional enumeration — used by migrateCursors
+  // Optional enumeration - used by migrateCursors
   async getAll(): Promise<Array<{ streamKey: string; cursor: string }>>;
 
-  // Optional health check — used by engine.healthCheck()
+  // Optional health check - used by engine.healthCheck()
   ping?(): Promise<void>;
 }
 ```
@@ -91,7 +91,7 @@ const redis = new Redis(process.env.REDIS_URL);
 const store = new RedisCursorStore(redis);
 ```
 
-**Minimal client interface** — any object with `get`, `set`, `mget`, `mset` methods works:
+**Minimal client interface** - any object with `get`, `set`, `mget`, `mset` methods works:
 
 ```ts
 interface RedisLike {
@@ -154,7 +154,7 @@ interface S3Like {
 }
 ```
 
-**Loss window:** Variable. S3 is eventually consistent — recent writes may not be visible immediately on failover.
+**Loss window:** Variable. S3 is eventually consistent - recent writes may not be visible immediately on failover.
 
 **Best for:** Active-passive failover deployments where only one instance writes at a time.
 
@@ -359,7 +359,7 @@ console.log(`Migrated ${result.migrated} cursor(s)`);
 4. Verify the engine resumes correctly
 5. Remove the old store once healthy operation is confirmed
 
-**Idempotency:** Running the migration multiple times is safe — it overwrites target entries with source values.
+**Idempotency:** Running the migration multiple times is safe - it overwrites target entries with source values.
 
 **Limitation:** The source store must implement `getAll()`. Not all stores support enumeration (e.g., `RedisCursorStore` without key scanning). Postgres, File, and Memory stores support `getAll` out of the box.
 
@@ -374,7 +374,7 @@ if (!result.ok) {
 }
 ```
 
-None of the built-in stores implement `ping` today — `healthCheck()` only reports on cursor store liveness if your store (built-in or custom) defines it. Add a `ping` method to a custom store to opt in, e.g. running `SELECT 1` against Postgres or `PING` against Redis.
+None of the built-in stores implement `ping` today - `healthCheck()` only reports on cursor store liveness if your store (built-in or custom) defines it. Add a `ping` method to a custom store to opt in, e.g. running `SELECT 1` against Postgres or `PING` against Redis.
 
 ## Custom Stores
 
@@ -431,8 +431,8 @@ Override `getMany` / `setMany` if your backend supports batch operations. Overri
 
 **Decorator utilities:**
 
-- **`coalesceCursorStore`** — batch writes to reduce I/O cost (introduces bounded loss window)
-- **`cacheCursorStore`** — cache reads to reduce latency (no loss window)
+- **`coalesceCursorStore`** - batch writes to reduce I/O cost (introduces bounded loss window)
+- **`cacheCursorStore`** - cache reads to reduce latency (no loss window)
 
 **Production recommendations:**
 

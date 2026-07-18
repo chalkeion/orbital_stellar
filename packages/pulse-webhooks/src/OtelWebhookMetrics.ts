@@ -18,7 +18,7 @@ import type {
  *
  * Accepts any object structurally compatible with `@opentelemetry/api`'s
  * `Meter` interface (see {@link Meter}), matching this package's existing
- * `Tracer`/`Span` pattern — pulse-webhooks does not need a hard dependency
+ * `Tracer`/`Span` pattern - pulse-webhooks does not need a hard dependency
  * on `@opentelemetry/api`. Construct with a real `Meter` from
  * `metrics.getMeter("orbital-pulse-webhooks")` (or any collector adapter
  * exposing the same shape) and export it to your OTel collector as usual.

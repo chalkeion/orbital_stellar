@@ -25,7 +25,7 @@ type Entry = { record: RetryRecord; seq: number };
  * timeout), `evictNewest` sheds the furthest-future record under backpressure,
  * and `size` counts only queued (not in-flight) records.
  *
- * Being in-memory it is **not durable** across process restarts — it exists as
+ * Being in-memory it is **not durable** across process restarts - it exists as
  * the canonical contract reference and for tests; use {@link RedisRetryQueue}
  * (or another backing store) for real durability.
  */

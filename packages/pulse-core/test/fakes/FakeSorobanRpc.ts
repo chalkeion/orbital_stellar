@@ -35,7 +35,7 @@ export class FakeSorobanRpc {
    * Simulates fetching events from Soroban RPC with limit-based pagination.
    *
    * Accepts an optional `AbortSignal`; if the signal fires while the call is
-   * stalled the method rejects with an `AbortError` — matching the behaviour
+   * stalled the method rejects with an `AbortError` - matching the behaviour
    * of the real Fetch API / undici.
    */
   async getEvents(

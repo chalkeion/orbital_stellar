@@ -2,7 +2,7 @@
 
 use soroban_sdk::{contract, contractevent, contractimpl, contracttype, Env};
 
-// Refreshed the same way the registry bumps its own entries — see
+// Refreshed the same way the registry bumps its own entries - see
 // registry/src/lib.rs for the ledger-math rationale.
 const DAY_IN_LEDGERS: u32 = 17_280;
 const BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
@@ -31,16 +31,11 @@ pub struct DemoEmitter;
 impl DemoEmitter {
     /// Increments the call counter, emits a `Ping` event carrying the new
     /// count, and returns it. Takes no arguments and requires no
-    /// authorization from the caller — the only gate on who can call this is
+    /// authorization from the caller - the only gate on who can call this is
     /// whoever holds the key that signs the transaction (kept outside this
     /// contract, in the server route that invokes it).
     pub fn ping(env: Env) -> u32 {
-        let count: u32 = env
-            .storage()
-            .instance()
-            .get(&DataKey::Count)
-            .unwrap_or(0)
-            + 1;
+        let count: u32 = env.storage().instance().get(&DataKey::Count).unwrap_or(0) + 1;
         env.storage().instance().set(&DataKey::Count, &count);
         env.storage()
             .instance()

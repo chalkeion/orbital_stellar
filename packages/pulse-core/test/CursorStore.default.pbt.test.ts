@@ -39,7 +39,7 @@ const safeKey = fc.string({ minLength: 1 }).filter((k) => !PROTO_KEYS.includes(k
 // ---------------------------------------------------------------------------
 
 describe("CursorStore default PBT", () => {
-  it("Property 1: Default getMany round-trip — for any written entries, getMany returns the written values", async () => {
+  it("Property 1: Default getMany round-trip - for any written entries, getMany returns the written values", async () => {
     await fc.assert(
       fc.asyncProperty(fc.dictionary(safeKey, fc.string({ minLength: 1 })), async (entries) => {
         const store = new InMemoryCursorStore();
@@ -68,11 +68,11 @@ describe("CursorStore default PBT", () => {
   // Validates: Requirements 1.6, 2.1
   // ---------------------------------------------------------------------------
 
-  it("Property 2: Default getMany null for missing keys — keys never written map to null", async () => {
+  it("Property 2: Default getMany null for missing keys - keys never written map to null", async () => {
     await fc.assert(
       fc.asyncProperty(fc.array(safeKey, { minLength: 1, maxLength: 20 }), async (keys) => {
         const store = new InMemoryCursorStore();
-        // Nothing written — all keys are missing
+        // Nothing written - all keys are missing
 
         const result = await store.getMany(keys);
 
@@ -91,7 +91,7 @@ describe("CursorStore default PBT", () => {
   // Validates: Requirements 2.2, 5.2
   // ---------------------------------------------------------------------------
 
-  it("Property 3: Default setMany delegates once per entry — set is called exactly once per key", async () => {
+  it("Property 3: Default setMany delegates once per entry - set is called exactly once per key", async () => {
     await fc.assert(
       fc.asyncProperty(fc.dictionary(safeKey, fc.string({ minLength: 1 })), async (entries) => {
         const store = new InMemoryCursorStore();

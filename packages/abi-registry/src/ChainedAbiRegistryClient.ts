@@ -1,7 +1,7 @@
 /**
  * Minimal structural interface every ABI registry client in this package
  * happens to satisfy (`AbiRegistryClient`, `LocalAbiRegistryClient`,
- * `OnChainAbiRegistryClient`, `BundledWellKnownClient`) — matches
+ * `OnChainAbiRegistryClient`, `BundledWellKnownClient`) - matches
  * pulse-core's `AbiRegistryClientLike` without importing pulse-core (which
  * depends on this package; importing back would be circular).
  */
@@ -12,7 +12,7 @@ export interface AbiRegistryReader {
 
 /**
  * Tries each client in order, returning the first non-null result. Used to
- * compose a resolution chain — e.g. bundled offline specs first, falling
+ * compose a resolution chain - e.g. bundled offline specs first, falling
  * through to the on-chain registry for anything not bundled.
  */
 export class ChainedAbiRegistryClient implements AbiRegistryReader {

@@ -957,7 +957,7 @@ describe("pulse-core EventEngine", () => {
 
       expect(duplicate).toBe(watcher);
       expect(log.warn).toHaveBeenCalledWith(
-        "[pulse-core] subscribe() called for treasury-feed (GDEST) which already has an active watcher — filter option ignored.",
+        "[pulse-core] subscribe() called for treasury-feed (GDEST) which already has an active watcher - filter option ignored.",
         { address: "GDEST", hasFilter: true },
       );
     });

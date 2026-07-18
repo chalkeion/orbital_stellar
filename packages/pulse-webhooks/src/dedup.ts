@@ -28,7 +28,7 @@ export type DedupReceiverOptions = {
 const DEFAULT_ID_EXTRACTOR = (event: NormalizedEvent): string => {
   const id = (event as Record<string, unknown>).raw as Record<string, unknown> | null | undefined;
   if (id != null && typeof id.id === "string") return id.id;
-  throw new Error("dedupReceiver: event has no raw.id string — provide a custom idExtractor");
+  throw new Error("dedupReceiver: event has no raw.id string - provide a custom idExtractor");
 };
 
 export function dedupReceiver(

@@ -12,11 +12,11 @@ type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
 /**
  * Type-only exhaustiveness test for the `NormalizedEvent` discriminated union
- * (issue #298 — M3 "discriminated union refinement").
+ * (issue #298 - M3 "discriminated union refinement").
  *
  * This file is never executed. It is compiled by `tsconfig.typetest.json`
- * (wired into the package `test` script) so that the TypeScript compiler — not
- * manual inspection — guarantees every event type is handled. Add a new member
+ * (wired into the package `test` script) so that the TypeScript compiler - not
+ * manual inspection - guarantees every event type is handled. Add a new member
  * to the `NormalizedEvent` union without updating the switch below and the build
  * fails.
  *
@@ -62,7 +62,7 @@ export function assertExhaustive(event: NormalizedEvent): string {
 
 // Negative case: an intentionally incomplete switch must NOT compile. Only one
 // branch is handled, so in `default` the value is not `never` and the assignment
-// is an error — which `@ts-expect-error` asserts. If the union ever shrank to a
+// is an error - which `@ts-expect-error` asserts. If the union ever shrank to a
 // single member (making this exhaustive), the directive would become unused and
 // the build would fail, proving the guard genuinely detects unhandled variants.
 export function assertIncompleteIsRejected(event: NormalizedEvent): string {

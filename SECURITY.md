@@ -47,25 +47,25 @@ We will acknowledge your report within **72 hours** and aim to ship a fix within
 
 ### In scope
 
-- `packages/pulse-core` — SSE stream handling, event normalization, reconnection logic, watcher routing
-- `packages/pulse-webhooks` — HMAC signing, delivery, SSRF protections, edge-runtime verification, timing-safe comparison
-- `packages/pulse-notify` — React hook lifecycle, token forwarding, SSE parsing
-- `apps/web/app/api/*` — the reference Next.js route handlers (note: rate-limit bypasses on the public demo are tracked here)
+- `packages/pulse-core` - SSE stream handling, event normalization, reconnection logic, watcher routing
+- `packages/pulse-webhooks` - HMAC signing, delivery, SSRF protections, edge-runtime verification, timing-safe comparison
+- `packages/pulse-notify` - React hook lifecycle, token forwarding, SSE parsing
+- `apps/web/app/api/*` - the reference Next.js route handlers (note: rate-limit bypasses on the public demo are tracked here)
 - Documentation in `docs/` and per-package READMEs that recommends an unsafe pattern
 
 ### Out of scope
 
-- Vulnerabilities in third-party dependencies — report upstream; open a Dependabot advisory here if you want to track it
+- Vulnerabilities in third-party dependencies - report upstream; open a Dependabot advisory here if you want to track it
 - Issues that require physical access to the server running Orbital
 - Denial-of-service against the Stellar network itself (Horizon, Stellar RPC)
 - Demo-site rate-limit bypass that does not impact other users (the marketing demo is intentionally sandboxed; abuse is bounded by Vercel's connection limits)
-- Misconfiguration of self-hosted deployments — the SDKs ship safe defaults; we cannot defend you against deliberate misconfiguration
+- Misconfiguration of self-hosted deployments - the SDKs ship safe defaults; we cannot defend you against deliberate misconfiguration
 
 ---
 
 ## Threat model
 
-Adversaries, assets, and mitigations. Each scenario describes the failure mode, the mitigation in our codebase, and the detection signal. If a scenario below is not defended, it is a bug — file a private advisory.
+Adversaries, assets, and mitigations. Each scenario describes the failure mode, the mitigation in our codebase, and the detection signal. If a scenario below is not defended, it is a bug - file a private advisory.
 
 ### Webhook payload tampering
 
@@ -85,9 +85,9 @@ Adversaries, assets, and mitigations. Each scenario describes the failure mode, 
 
 ### Malformed SSE input
 
-**Threat.** Horizon — or a man-in-the-middle proxy — emits a record with unexpected shape or missing fields, attempting to crash the engine or smuggle data.
+**Threat.** Horizon - or a man-in-the-middle proxy - emits a record with unexpected shape or missing fields, attempting to crash the engine or smuggle data.
 
-**Mitigation.** Every field is `typeof`-checked before normalization. Malformed records are dropped with a `warn` log, not thrown — the stream stays up. The `raw` field on every normalized event preserves the original record for consumer-side audit.
+**Mitigation.** Every field is `typeof`-checked before normalization. Malformed records are dropped with a `warn` log, not thrown - the stream stays up. The `raw` field on every normalized event preserves the original record for consumer-side audit.
 
 **Detection.** Warn logs from the `[pulse-core] normalize()` prefix.
 
@@ -95,7 +95,7 @@ Adversaries, assets, and mitigations. Each scenario describes the failure mode, 
 
 **Threat.** The webhook secret is committed to source control, logged in stdout, or exfiltrated via a downstream consumer's debug output.
 
-**Mitigation.** The SDKs read the secret from the operator's config object — we never log it. Receivers using `verifyWebhook` / `verifyWebhookEdge` pass the secret as an argument; the verifiers do not log it on failure. Consumers are responsible for storing the secret in a secrets manager (Vault, AWS Secrets Manager, Vercel env, etc.), not in `.env` files committed to repos.
+**Mitigation.** The SDKs read the secret from the operator's config object - we never log it. Receivers using `verifyWebhook` / `verifyWebhookEdge` pass the secret as an argument; the verifiers do not log it on failure. Consumers are responsible for storing the secret in a secrets manager (Vault, AWS Secrets Manager, Vercel env, etc.), not in `.env` files committed to repos.
 
 **Detection.** None directly inside Orbital. Use GitHub secret scanning and Dependabot secret-scan alerts at the repo level.
 
@@ -103,7 +103,7 @@ Adversaries, assets, and mitigations. Each scenario describes the failure mode, 
 
 **Threat.** A secret is suspected compromised. Without a rotation procedure, every signed delivery using the old secret remains forgeable.
 
-**Mitigation.** [Secret rotation runbook](#secret-rotation-runbook) below. Receivers can be configured to accept both an old and new secret during a rotation window — the verifier returns success if either secret produces a matching signature.
+**Mitigation.** [Secret rotation runbook](#secret-rotation-runbook) below. Receivers can be configured to accept both an old and new secret during a rotation window - the verifier returns success if either secret produces a matching signature.
 
 **Detection.** None directly. Operator must trigger rotation on suspicion.
 
@@ -129,7 +129,7 @@ Adversaries, assets, and mitigations. Each scenario describes the failure mode, 
 
 If you suspect a webhook secret has leaked, rotate immediately. The general procedure assumes you control both the sender (`WebhookDelivery`) and the receiver.
 
-1. **Generate a new secret.** Use a cryptographically secure source — `openssl rand -hex 32`, AWS KMS, Vault, or an equivalent. Store it in your secrets manager alongside the existing one (do not replace yet).
+1. **Generate a new secret.** Use a cryptographically secure source - `openssl rand -hex 32`, AWS KMS, Vault, or an equivalent. Store it in your secrets manager alongside the existing one (do not replace yet).
 2. **Update the receiver to accept both.** Modify the verification path to try the new secret first, fall back to the old. Both must use `timingSafeEqual` / constant-time comparison:
    ```ts
    const event =
@@ -152,15 +152,15 @@ A short checklist if you are building on top of Orbital.
 
 ### `pulse-core`
 
-- **Always call `engine.stop()` in your shutdown path** — `process.on("SIGTERM", () => engine.stop())`. Leaking watchers leaks file descriptors at scale.
-- **Subscribe with a `filter` predicate when possible** — reduces the event volume crossing the application boundary, smaller attack surface for consumer-side bugs.
-- **Treat `event.raw` as untrusted** — it is preserved verbatim from Horizon for audit. If you parse it directly, apply your own validation.
+- **Always call `engine.stop()` in your shutdown path** - `process.on("SIGTERM", () => engine.stop())`. Leaking watchers leaks file descriptors at scale.
+- **Subscribe with a `filter` predicate when possible** - reduces the event volume crossing the application boundary, smaller attack surface for consumer-side bugs.
+- **Treat `event.raw` as untrusted** - it is preserved verbatim from Horizon for audit. If you parse it directly, apply your own validation.
 
 ### `pulse-webhooks`
 
 - **Never deploy with `allowPrivateNetworks: true`** in production. It is a developer convenience for `localhost` testing only.
 - **Enforce HTTPS at every layer where users supply a webhook URL.** The SDK enforces it; your registration UI should too.
-- **Reject signatures older than 5 minutes** in your receiver — bound replay window:
+- **Reject signatures older than 5 minutes** in your receiver - bound replay window:
   ```ts
   if (Date.now() - Number(timestamp) > 5 * 60 * 1000) {
     return res.sendStatus(401);
@@ -171,8 +171,8 @@ A short checklist if you are building on top of Orbital.
 
 ### `pulse-notify`
 
-- **Never ship a server-only secret to the browser.** The `token` config field is forwarded as a query parameter — issue per-user short-lived tokens from your backend, never your master API key.
-- **Use `withCredentials: true` only with same-site `httpOnly` cookies** set by your backend — never store session tokens in `localStorage` for SSE auth.
+- **Never ship a server-only secret to the browser.** The `token` config field is forwarded as a query parameter - issue per-user short-lived tokens from your backend, never your master API key.
+- **Use `withCredentials: true` only with same-site `httpOnly` cookies** set by your backend - never store session tokens in `localStorage` for SSE auth.
 - **Gate hooks behind `"use client"`** in Next.js App Router. SSR is not supported (the hooks use `EventSource`, which is browser-only).
 
 ---
@@ -188,6 +188,6 @@ For high-severity issues we coordinate with downstream consumers (the named inte
 ## Related documents
 
 - [`docs/ARCHITECTURE.md` § 8 Trust boundaries and invariants](./docs/ARCHITECTURE.md#8-trust-boundaries-and-invariants)
-- [`docs/open-source-policy.md`](./docs/open-source-policy.md) — license commitments
+- [`docs/open-source-policy.md`](./docs/open-source-policy.md) - license commitments
 - [`docs/COOKBOOK.md` § 9 Route `webhook.failed` to a dead-letter queue](./docs/COOKBOOK.md#9-route-webhookfailed-to-a-dead-letter-queue)
-- [`packages/pulse-webhooks/README.md`](./packages/pulse-webhooks/README.md) — full delivery contract
+- [`packages/pulse-webhooks/README.md`](./packages/pulse-webhooks/README.md) - full delivery contract

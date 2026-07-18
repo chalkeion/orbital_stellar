@@ -26,9 +26,9 @@ setting.
 ## Adoption
 
 This Code of Conduct adopts the **[Contributor Covenant](https://www.contributor-covenant.org), version 2.1**.
-The full text — including the complete list of expected and prohibited
+The full text - including the complete list of expected and prohibited
 behaviors, enforcement responsibilities, and the enforcement guidelines /
-escalation ladder — is available at:
+escalation ladder - is available at:
 
 <https://www.contributor-covenant.org/version/2/1/code_of_conduct/>
 

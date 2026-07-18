@@ -10,7 +10,7 @@ pnpm add @orbital-stellar/pulse-core
 
 `pulse-core` opens streaming connections to Horizon and, when configured, Stellar RPC for Soroban contract events, normalizes each incoming record into a uniform shape, and emits it to any `Watcher` subscribed to the affected address. Reconnection, backoff, and cleanup are handled automatically.
 
-You install `pulse-core` when you want to consume Stellar events in-process — typically inside a server, background worker, or CLI. If you need webhook delivery or React integration, layer [`@orbital-stellar/pulse-webhooks`](../pulse-webhooks) or [`@orbital-stellar/pulse-notify`](../pulse-notify) on top.
+You install `pulse-core` when you want to consume Stellar events in-process - typically inside a server, background worker, or CLI. If you need webhook delivery or React integration, layer [`@orbital-stellar/pulse-webhooks`](../pulse-webhooks) or [`@orbital-stellar/pulse-notify`](../pulse-notify) on top.
 
 ## Quickstart
 
@@ -50,11 +50,11 @@ watcher.on("payment.self", (event) => {
 
 ### `engine.start()` / `engine.stop()`
 
-Open or close the SSE stream. Idempotent — calling `start()` twice logs a warning and returns.
+Open or close the SSE stream. Idempotent - calling `start()` twice logs a warning and returns.
 
 ### `engine.subscribe(address)` → `Watcher`
 
-Returns a `Watcher` for the given Stellar public key. Watchers are deduplicated — calling `subscribe` twice with the same address returns the same instance.
+Returns a `Watcher` for the given Stellar public key. Watchers are deduplicated - calling `subscribe` twice with the same address returns the same instance.
 
 Once a watcher has been stopped, it will not accept new listeners. Calling `watcher.on(...)` after `watcher.stop()` logs a warning and leaves the listener unregistered. If you construct a watcher directly with `{ strictStoppedListeners: true }`, the same call throws instead.
 
@@ -101,8 +101,8 @@ Normalized asset strings follow one rule across every event payload:
 
 > [!NOTE]
 > For `engine.cursor_expired` notifications, the `WatcherNotification` payload includes additional fields:
-> - `lostCursor`: `string` — The value of the cursor that expired.
-> - `source`: `"horizon" | "soroban"` — The subscription engine source where the expiry occurred.
+> - `lostCursor`: `string` - The value of the cursor that expired.
+> - `source`: `"horizon" | "soroban"` - The subscription engine source where the expiry occurred.
 
 
 ### `NormalizedEvent` shape
@@ -250,15 +250,15 @@ Each matching contract subscription receives both the typed event and the `*` wi
 ## Current limitations
 
 - **In-process only.** Horizontal scale and multi-region coordination belong in the deployment layer, not in the SDK. See [`docs/open-source-policy.md`](../../docs/open-source-policy.md) for the public/private boundary.
-- **Cursor starts at `now` unless a `cursorStore` is configured.** Without `CoreConfig.cursorStore`, every run starts from `"now"` (matches previous behavior). Passing a `cursorStore` (memory, file, Postgres, Redis, or S3 adapter — see [`ROADMAP.md`](../../ROADMAP.md#wave-13--cursor-persistence-and-replay-primitives)) makes the engine resume from the last persisted cursor on reconnect or restart instead.
+- **Cursor starts at `now` unless a `cursorStore` is configured.** Without `CoreConfig.cursorStore`, every run starts from `"now"` (matches previous behavior). Passing a `cursorStore` (memory, file, Postgres, Redis, or S3 adapter - see [`ROADMAP.md`](../../ROADMAP.md#wave-13--cursor-persistence-and-replay-primitives)) makes the engine resume from the last persisted cursor on reconnect or restart instead.
 
 ## Related documents
 
-- [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) — system diagrams, lifecycle sequence, reconnection state machine, trust boundaries
-- [`docs/COOKBOOK.md`](../../docs/COOKBOOK.md) — copy-paste recipes for the most common patterns
-- [`docs/open-source-policy.md`](../../docs/open-source-policy.md) — what stays MIT, what becomes Cloud
-- [`CHANGELOG.md`](../../CHANGELOG.md) — release notes
-- [`SECURITY.md`](../../SECURITY.md) — threat model and vulnerability reporting
+- [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) - system diagrams, lifecycle sequence, reconnection state machine, trust boundaries
+- [`docs/COOKBOOK.md`](../../docs/COOKBOOK.md) - copy-paste recipes for the most common patterns
+- [`docs/open-source-policy.md`](../../docs/open-source-policy.md) - what stays MIT, what becomes Cloud
+- [`CHANGELOG.md`](../../CHANGELOG.md) - release notes
+- [`SECURITY.md`](../../SECURITY.md) - threat model and vulnerability reporting
 
 ## License
 

@@ -78,7 +78,7 @@ describe("PostgresCursorStore Integration Test", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Unit tests for getMany / setMany — no real Postgres required
+// Unit tests for getMany / setMany - no real Postgres required
 // ---------------------------------------------------------------------------
 
 describe("PostgresCursorStore unit tests (mock PgLike)", () => {

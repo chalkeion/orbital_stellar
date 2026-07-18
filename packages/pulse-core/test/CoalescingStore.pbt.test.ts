@@ -12,7 +12,7 @@ class FakeInnerStore extends CursorStore {
   readonly getCalls: string[] = [];
   readonly getManyCalls: string[][] = [];
   readonly setManyCalls: Array<Record<string, string>> = [];
-  /** Optional artificial delay for setMany (ms) — used in concurrency tests */
+  /** Optional artificial delay for setMany (ms) - used in concurrency tests */
   setManyDelayMs = 0;
 
   async get(key: string): Promise<string | null> {
@@ -110,7 +110,7 @@ describe("CoalescingStore PBT", () => {
   // Validates: Requirements 2.2, 3.4
   // ---------------------------------------------------------------------------
 
-  it("Property 3: Last-write-wins coalescing — get and flush return the last written value", async () => {
+  it("Property 3: Last-write-wins coalescing - get and flush return the last written value", async () => {
     await fc.assert(
       fc.asyncProperty(
         safeKey,
@@ -198,7 +198,7 @@ describe("CoalescingStore PBT", () => {
             }
           }
 
-          // Buffer is empty — second flush produces no additional call
+          // Buffer is empty - second flush produces no additional call
           await store.flush();
           store.dispose();
           return inner.setManyCalls.length === 1;
@@ -301,12 +301,12 @@ describe("CoalescingStore PBT", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Property 9: Concurrent flush serialization — each entry written exactly once
-  // Feature: coalesce-cursor-store, Property 9: Concurrent flush serialization — each entry written exactly once
+  // Property 9: Concurrent flush serialization - each entry written exactly once
+  // Feature: coalesce-cursor-store, Property 9: Concurrent flush serialization - each entry written exactly once
   // Validates: Requirements 4.3
   // ---------------------------------------------------------------------------
 
-  it("Property 9: Concurrent flush serialization — each entry written exactly once", async () => {
+  it("Property 9: Concurrent flush serialization - each entry written exactly once", async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.dictionary(safeKey, fc.string({ minLength: 1 }), { minKeys: 1, maxKeys: 10 }),

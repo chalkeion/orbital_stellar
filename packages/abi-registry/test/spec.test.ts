@@ -284,9 +284,9 @@ describe("spec.schema.json", () => {
   });
 });
 
-// ── validateSpec — representative spec ───────────────────────────────────────
+// ── validateSpec - representative spec ───────────────────────────────────────
 
-describe("validateSpec — representative spec validates", () => {
+describe("validateSpec - representative spec validates", () => {
   it("accepts the full representative SEP-41 token spec", () => {
     const result = validateSpec(sampleSpec);
     if (!result.valid) {
@@ -296,9 +296,9 @@ describe("validateSpec — representative spec validates", () => {
   });
 });
 
-// ── validateSpec — valid inputs ───────────────────────────────────────────────
+// ── validateSpec - valid inputs ───────────────────────────────────────────────
 
-describe("validateSpec — valid inputs", () => {
+describe("validateSpec - valid inputs", () => {
   it("accepts a minimal spec", () => {
     const minimal: ContractSpec = {
       version: "0.1.0",
@@ -438,9 +438,9 @@ describe("validateSpec — valid inputs", () => {
   });
 });
 
-// ── validateSpec — invalid inputs ─────────────────────────────────────────────
+// ── validateSpec - invalid inputs ─────────────────────────────────────────────
 
-describe("validateSpec — invalid inputs", () => {
+describe("validateSpec - invalid inputs", () => {
   it("rejects null, strings, numbers, and arrays", () => {
     expect(validateSpec(null).valid).toBe(false);
     expect(validateSpec("spec").valid).toBe(false);
@@ -536,7 +536,7 @@ describe("validateSpec — invalid inputs", () => {
 
 // ── TypeSpec coverage ─────────────────────────────────────────────────────────
 
-describe("TypeSpec — all Soroban composite tags are distinct", () => {
+describe("TypeSpec - all Soroban composite tags are distinct", () => {
   it("no duplicate composite type discriminants", () => {
     const tags = ["bytes_n", "option", "result", "vec", "map", "tuple", "named"];
     expect(new Set(tags).size).toBe(tags.length);

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { CursorStore } from "../src/CursorStore.js";
 
 // ---------------------------------------------------------------------------
-// Minimal concrete stub — records all get/set calls for assertion
+// Minimal concrete stub - records all get/set calls for assertion
 // ---------------------------------------------------------------------------
 
 class StubCursorStore extends CursorStore {

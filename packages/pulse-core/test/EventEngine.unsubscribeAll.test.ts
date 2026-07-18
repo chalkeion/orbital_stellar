@@ -49,7 +49,7 @@ afterEach(() => {
 });
 
 // ---------------------------------------------------------------------------
-// unsubscribeAll — Horizon registry
+// unsubscribeAll - Horizon registry
 // ---------------------------------------------------------------------------
 
 describe("unsubscribeAll()", () => {
@@ -86,7 +86,7 @@ describe("unsubscribeAll()", () => {
 });
 
 // ---------------------------------------------------------------------------
-// unsubscribeAllContracts() — Soroban / contract registry
+// unsubscribeAllContracts() - Soroban / contract registry
 // ---------------------------------------------------------------------------
 
 describe("unsubscribeAllContracts()", () => {
@@ -150,7 +150,7 @@ describe("unsubscribeAllContracts()", () => {
     expect(engine.status().watcherCount).toBe(1);
   });
 
-  it("is idempotent — calling twice does not throw", () => {
+  it("is idempotent - calling twice does not throw", () => {
     const engine = new EventEngine({ network: "testnet" });
     engine.subscribeContract("CAAA");
     engine.start();
@@ -171,7 +171,7 @@ describe("unsubscribeAllContracts()", () => {
 });
 
 // ---------------------------------------------------------------------------
-// subscribeContract / unsubscribeContract — baseline sanity
+// subscribeContract / unsubscribeContract - baseline sanity
 // ---------------------------------------------------------------------------
 
 describe("subscribeContract() / unsubscribeContract()", () => {

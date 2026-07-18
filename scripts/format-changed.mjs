@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Formats only the package files changed in the working tree
- * (staged + unstaged + untracked) — not the whole codebase.
+ * (staged + unstaged + untracked) - not the whole codebase.
  *
  * Use `pnpm format:all` for a full pass (rarely needed after the first one).
  */

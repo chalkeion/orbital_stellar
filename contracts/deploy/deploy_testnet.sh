@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # This is a MANUAL step: run it yourself with a funded testnet identity you
 # control and are willing to hand this script access to. It is deliberately
-# not wired into CI — contracts are immutable once deployed, so deployment is
+# not wired into CI - contracts are immutable once deployed, so deployment is
 # a one-time act, not a pipeline stage.
 #
 # Usage:
@@ -17,7 +17,7 @@ set -euo pipefail
 #       stellar keys generate orbital-deployer --network testnet --fund
 #     Or point DEPLOYER_IDENTITY at an existing identity name.
 #
-# Writes ../deployed.testnet.json with the resulting contract IDs — commit
+# Writes ../deployed.testnet.json with the resulting contract IDs - commit
 # that file once you're happy with the deployment.
 
 DEPLOYER_IDENTITY="${DEPLOYER_IDENTITY:-orbital-deployer}"

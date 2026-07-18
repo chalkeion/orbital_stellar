@@ -60,7 +60,7 @@ function getSource(): MockEventSource {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("useStellarEvent — filter predicate", () => {
+describe("useStellarEvent - filter predicate", () => {
   it("updates state when filter returns true", () => {
     const filter = vi.fn(() => true);
     const { result } = renderHook(() => useStellarEvent(SERVER, ADDRESS, { filter }));
@@ -102,18 +102,18 @@ describe("useStellarEvent — filter predicate", () => {
 
     act(() => getSource().onopen?.());
 
-    // First event — allowed
+    // First event - allowed
     act(() => getSource().emit(makeEvent("payment.received")));
     expect(result.current.event?.type).toBe("payment.received");
 
-    // Second event — blocked
+    // Second event - blocked
     allow = false;
     act(() => getSource().emit(makeEvent("account.created")));
     expect(result.current.event?.type).toBe("payment.received");
   });
 });
 
-describe("useStellarEvent — onEvent callback", () => {
+describe("useStellarEvent - onEvent callback", () => {
   it("fires onEvent for every incoming event", () => {
     const onEvent = vi.fn();
     renderHook(() => useStellarEvent(SERVER, ADDRESS, { onEvent }));
@@ -160,12 +160,12 @@ describe("useStellarEvent — onEvent callback", () => {
     });
 
     act(() => getSource().onopen?.());
-    // onopen triggers a connected state change — renderCount may increase here
+    // onopen triggers a connected state change - renderCount may increase here
     const renderCountAfterOpen = renderCount;
 
     act(() => getSource().emit(makeEvent("payment.received")));
 
-    // onEvent fired, filter blocked state update — no extra re-render beyond open
+    // onEvent fired, filter blocked state update - no extra re-render beyond open
     expect(onEvent).toHaveBeenCalledOnce();
     expect(renderCount).toBe(renderCountAfterOpen);
   });

@@ -54,7 +54,7 @@ describe("unsubscribeContract(config)", () => {
 
     expect(watcher.stopped).toBe(true);
     expect(configRegistry(engine).size).toBe(0);
-    // A fresh subscribe returns a new watcher — the old key is gone.
+    // A fresh subscribe returns a new watcher - the old key is gone.
     const next = engine.subscribeContract({ filters: [{ contractIds: ["CA1234"] }] });
     expect(next).not.toBe(watcher);
   });
@@ -108,7 +108,7 @@ describe("unsubscribeContract(config)", () => {
   });
 });
 
-describe("unsubscribeAllContracts() — config-based subscriptions", () => {
+describe("unsubscribeAllContracts() - config-based subscriptions", () => {
   it("stops config-based watchers and leaves the Horizon stream running", () => {
     const engine = new EventEngine({ network: "testnet" });
     engine.subscribe("GABC"); // classic Horizon subscription

@@ -3,7 +3,7 @@
  * (`specs/well-known/*.json`, validated against `specs/well-known/schema.json`)
  * into the canonical {@link ContractSpec} shape used everywhere else in this
  * package (publishing, decoding, typegen). The well-known format stays a
- * human-authoring convenience — nothing downstream of this converter should
+ * human-authoring convenience - nothing downstream of this converter should
  * touch it directly.
  */
 
@@ -59,7 +59,7 @@ function mapType(rawType: string): PrimitiveType {
   const mapped = TYPE_MAP[rawType.toLowerCase()];
   if (!mapped) {
     throw new Error(
-      `wellKnownToContractSpec: unsupported well-known type "${rawType}" — only flat primitives are supported`,
+      `wellKnownToContractSpec: unsupported well-known type "${rawType}" - only flat primitives are supported`,
     );
   }
   return mapped;
@@ -72,7 +72,7 @@ function mapField(field: WellKnownFieldRaw): FieldSpec {
 function mapFunction(fn: WellKnownFunctionRaw): FunctionSpec {
   if (fn.outputs.length > 1) {
     throw new Error(
-      `wellKnownToContractSpec: function "${fn.name}" has ${fn.outputs.length} outputs — Soroban functions return at most one value`,
+      `wellKnownToContractSpec: function "${fn.name}" has ${fn.outputs.length} outputs - Soroban functions return at most one value`,
     );
   }
   return {
@@ -98,7 +98,7 @@ function mapEvent(ev: WellKnownEventRaw): EventSpec {
 /**
  * Converts a well-known spec (already validated against
  * `specs/well-known/schema.json`) into the canonical {@link ContractSpec}.
- * Throws if the input uses a type this converter doesn't understand — the
+ * Throws if the input uses a type this converter doesn't understand - the
  * well-known format is deliberately flat/primitive-only today.
  */
 export function wellKnownToContractSpec(raw: WellKnownSpecRaw): ContractSpec {

@@ -522,7 +522,7 @@ export type SorobanConfig = {
 /**
  * One network's connection details in a multi-network `CoreConfig.network` array.
  * Each source becomes an independent, internally-managed single-network
- * `EventEngine` — same reconnect/cursor/decode behavior as a standalone engine,
+ * `EventEngine` - same reconnect/cursor/decode behavior as a standalone engine,
  * just fanned out and merged under one parent engine.
  */
 export type NetworkSourceConfig = {
@@ -538,12 +538,12 @@ export type CoreConfig = {
   /**
    * The Stellar network to connect to. Pass an array of `NetworkSourceConfig`
    * to run Horizon (+ optionally Soroban RPC) against multiple networks from
-   * one engine — e.g. mirroring testnet and mainnet simultaneously. Events
+   * one engine - e.g. mirroring testnet and mainnet simultaneously. Events
    * from a multi-network engine carry a `network` field identifying their
    * source, and `status()` reports a per-network breakdown via `networks`.
    */
   network: Network | NetworkSourceConfig[];
-  /** Optional override for the Horizon server URL. When set, `network` is still used for chain context but the connection is made to this URL. Useful for private nodes, regional mirrors, or futurenet. Ignored when `network` is an array — set `horizonUrl` per source instead. */
+  /** Optional override for the Horizon server URL. When set, `network` is still used for chain context but the connection is made to this URL. Useful for private nodes, regional mirrors, or futurenet. Ignored when `network` is an array - set `horizonUrl` per source instead. */
   horizonUrl?: string;
   /** Optional reconnection configuration. Applied to every source when `network` is an array. */
   reconnect?: ReconnectConfig;
@@ -557,13 +557,13 @@ export type CoreConfig = {
   /**
    * ABI registry client used to enrich `contract.emitted` events with
    * `decodedData`. Defaults to resolving the bundled well-known specs (and,
-   * once deployed, Orbital's on-chain registry) when omitted — pass
+   * once deployed, Orbital's on-chain registry) when omitted - pass
    * `false` to opt out of registry resolution entirely and keep
    * `decodedData` always `undefined`, or pass an explicit client to use
    * only that client.
    */
   abiRegistry?: AbiRegistryClientLike | false;
-  /** Soroban RPC configuration. Ignored when `network` is an array — set `soroban` per source instead. */
+  /** Soroban RPC configuration. Ignored when `network` is an array - set `soroban` per source instead. */
   soroban?: SorobanConfig;
 };
 
@@ -584,14 +584,14 @@ export type HealthCheckResult = {
 export type SubscribeOptions = {
   /** Optional predicate applied before each event is emitted to this watcher.
    *  Return `false` to suppress delivery. If the predicate throws, the event
-   *  is suppressed and a warning is logged — the engine continues running. */
+   *  is suppressed and a warning is logged - the engine continues running. */
   filter?: (event: NormalizedEvent) => boolean;
-  /** Optional human-friendly label for observability — appears in log lines and lifecycle notifications. */
+  /** Optional human-friendly label for observability - appears in log lines and lifecycle notifications. */
   name?: string;
 };
 
 // ---------------------------------------------------------------------------
-// Contract events (Phase 1 — Soroban)
+// Contract events (Phase 1 - Soroban)
 // ---------------------------------------------------------------------------
 
 export type ContractEventType = "contract.invoked" | "contract.emitted";
@@ -694,7 +694,7 @@ export type ContractSubscriptionFilter = {
    * topics array. Use `null` as a wildcard for a position.
    * Omit to match any topics.
    *
-   * @example ["transfer", null] — matches events whose first topic is "transfer"
+   * @example ["transfer", null] - matches events whose first topic is "transfer"
    */
   topicFilters?: (string | null)[];
 };
@@ -703,7 +703,7 @@ export type ContractSubscriptionFilter = {
 export type ContractSubscribeOptions = {
   filters?: ContractSubscriptionFilter[];
   filter?: (event: NormalizedEvent) => boolean;
-  /** Optional human-friendly label for observability — appears in log lines and lifecycle notifications. */
+  /** Optional human-friendly label for observability - appears in log lines and lifecycle notifications. */
   name?: string;
 };
 
@@ -718,7 +718,7 @@ export type ContractSubscribeOptions = {
 export * as events from "./events.js";
 
 // ---------------------------------------------------------------------------
-// Phase 1 — new RPC-shaped contract subscription API
+// Phase 1 - new RPC-shaped contract subscription API
 // ---------------------------------------------------------------------------
 
 export type ContractFilter = {

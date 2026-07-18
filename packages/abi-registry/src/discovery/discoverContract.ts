@@ -13,10 +13,10 @@ export type DiscoverContractSpecOptions = {
 
 /**
  * Discovers a deployed contract's interface: fetches its WASM bytecode via
- * RPC, then parses the embedded `contractspecv0` section — no human, no JSON
+ * RPC, then parses the embedded `contractspecv0` section - no human, no JSON
  * file. Throws `NoEmbeddedSpecError` for non-Rust/stripped contracts, or for
- * any contract with no WASM to fetch in the first place — verified against
- * a real mainnet USDC lookup: Stellar Asset Contracts (SACs — exactly what
+ * any contract with no WASM to fetch in the first place - verified against
+ * a real mainnet USDC lookup: Stellar Asset Contracts (SACs - exactly what
  * USDC/EURC/AQUA/the native XLM wrapper are) use
  * `ContractExecutable::StellarAsset`, not `::Wasm`, so there's no code to
  * fetch, and the SDK doesn't surface that cleanly (it throws from deep
@@ -26,8 +26,8 @@ export type DiscoverContractSpecOptions = {
  * indexer) should fall back to a manually published registry override in
  * that case, per maintainer.md.
  *
- * `version` and `name` aren't intrinsic to WASM bytecode — they're
- * publishing concepts, not code concepts — so this fills in placeholders
+ * `version` and `name` aren't intrinsic to WASM bytecode - they're
+ * publishing concepts, not code concepts - so this fills in placeholders
  * (`version: "0.0.0"`, `name: contractId`) that satisfy `validateSpec`.
  * Callers that go on to publish the result should set a real version first.
  */

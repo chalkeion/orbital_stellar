@@ -1,6 +1,6 @@
 # @orbital-stellar/pulse-notify
 
-**React hooks for live Stellar events.** Drop a hook into any component and receive real-time payment, activity, or custom event streams from an Orbital server — with automatic reconnection and zero wiring.
+**React hooks for live Stellar events.** Drop a hook into any component and receive real-time payment, activity, or custom event streams from an Orbital server - with automatic reconnection and zero wiring.
 
 ```bash
 pnpm add @orbital-stellar/pulse-notify react
@@ -10,7 +10,7 @@ Requires React 18 or 19. Designed for Next.js App Router, Vite, Remix, and plain
 
 ## What it does
 
-`pulse-notify` opens a browser-native `EventSource` connection to your Orbital server, subscribes to an address, and re-renders your component whenever a new event arrives. Hook instances watching the same `serverUrl`, `address`, and `token` share one connection internally while keeping their own event filters. It is intentionally thin — no global store, no custom cache, no peer-dependency on a state manager.
+`pulse-notify` opens a browser-native `EventSource` connection to your Orbital server, subscribes to an address, and re-renders your component whenever a new event arrives. Hook instances watching the same `serverUrl`, `address`, and `token` share one connection internally while keeping their own event filters. It is intentionally thin - no global store, no custom cache, no peer-dependency on a state manager.
 
 You point the hook at your own Orbital server (self-hosted or managed) and pass the address you want to watch.
 
@@ -130,7 +130,7 @@ const { event, connected, error } = useStellarEvent(
   { event: "payment.received" }
 );
 
-// Multiple types — subscribe to both without opening two connections
+// Multiple types - subscribe to both without opening two connections
 const { event } = useStellarEvent(
   "https://events.example.com",
   "GABC...",
@@ -145,7 +145,7 @@ const { event } = useStellarEvent(
 );
 ```
 
-Also accepts a single config object — see [Stable config](#stable-config) for when that matters.
+Also accepts a single config object - see [Stable config](#stable-config) for when that matters.
 
 ### `useStellarPayment(serverUrl, address)`
 
@@ -205,13 +205,13 @@ const { event } = useContractEvent<ContractEmittedEvent>({
 |---|---|---|---|
 | `serverUrl` | `string` | ✓ | Base URL of the Orbital server |
 | `contractId` | `string` | ✓ | Soroban contract address (C…) |
-| `topics` | `string[]` | — | Filter `contract.emitted` events; all topics must be present |
-| `token` | `string` | — | API key forwarded as `?token=` |
-| `initialEvent` | `T \| null` | — | SSR seed; replaced on first live event |
-| `filter` | `(event) => boolean` | — | Client-side predicate run after topic matching |
-| `withCredentials` | `boolean` | — | Send cookies for same-origin SSE |
-| `onEvent` | `(event) => void` | — | Side-effect callback fired before `filter` |
-| `hideAfterMs` | `number` | — | Pause connection after tab is hidden for this many ms (default 30 000) |
+| `topics` | `string[]` | - | Filter `contract.emitted` events; all topics must be present |
+| `token` | `string` | - | API key forwarded as `?token=` |
+| `initialEvent` | `T \| null` | - | SSR seed; replaced on first live event |
+| `filter` | `(event) => boolean` | - | Client-side predicate run after topic matching |
+| `withCredentials` | `boolean` | - | Send cookies for same-origin SSE |
+| `onEvent` | `(event) => void` | - | Side-effect callback fired before `filter` |
+| `hideAfterMs` | `number` | - | Pause connection after tab is hidden for this many ms (default 30 000) |
 
 **SSE endpoint contract:**
 
@@ -272,7 +272,7 @@ type EventState<T extends NormalizedEvent = NormalizedEvent> = {
 
 ## Type narrowing
 
-`useStellarEvent` is generic — pass a narrower union as `T` to get full IDE support and avoid manual casts. Use TypeScript's `Extract` to pull specific event types out of `NormalizedEvent`:
+`useStellarEvent` is generic - pass a narrower union as `T` to get full IDE support and avoid manual casts. Use TypeScript's `Extract` to pull specific event types out of `NormalizedEvent`:
 
 ```tsx
 import type { NormalizedEvent } from "@orbital-stellar/pulse-core";
@@ -293,7 +293,7 @@ function Wallet({ address }: { address: string }) {
   if (!event) return null;
 
   // event.type is now "payment.received" | "payment.sent" | "trustline.added"
-  // — TS narrows the rest of the shape per branch.
+  // - TS narrows the rest of the shape per branch.
   switch (event.type) {
     case "payment.received":
     case "payment.sent":
@@ -304,7 +304,7 @@ function Wallet({ address }: { address: string }) {
 }
 ```
 
-The default `T = NormalizedEvent` keeps the existing untyped behavior — pass `<T>` only when you want narrowing.
+The default `T = NormalizedEvent` keeps the existing untyped behavior - pass `<T>` only when you want narrowing.
 
 Every render returns the *most recent* event. If you need history, accumulate it yourself in component state:
 
@@ -319,12 +319,12 @@ useEffect(() => {
 
 ## Stable config
 
-`useStellarEvent`'s `useEffect` depends on each primitive field — `serverUrl`, `address`, `event`, `token` — not on the config object's identity. The hook itself is safe from reference-equality churn.
+`useStellarEvent`'s `useEffect` depends on each primitive field - `serverUrl`, `address`, `event`, `token` - not on the config object's identity. The hook itself is safe from reference-equality churn.
 
-That said, passing a fresh `{...}` literal to the object form of the hook is still a code smell: React recreates the object every render, which is wasteful and obscures what the hook actually depends on. Prefer the primitives-first signature at inline call sites — because you're passing scalars directly, there's nothing to stabilise:
+That said, passing a fresh `{...}` literal to the object form of the hook is still a code smell: React recreates the object every render, which is wasteful and obscures what the hook actually depends on. Prefer the primitives-first signature at inline call sites - because you're passing scalars directly, there's nothing to stabilise:
 
 ```tsx
-// ✅ Primitives-first — always stable, no extra work needed
+// ✅ Primitives-first - always stable, no extra work needed
 function MyComponent({ address }: { address: string }) {
   const { event } = useStellarEvent(
     "https://events.example.com",
@@ -334,10 +334,10 @@ function MyComponent({ address }: { address: string }) {
 }
 ```
 
-**Array literals need the same treatment.** `["payment.received", "payment.sent"]` is a new reference every render, just like an object literal. The hook serialises the array internally so the effect stays stable — but if you're passing the array from props or building it inline, hoist or memoize it so your component doesn't re-render unnecessarily:
+**Array literals need the same treatment.** `["payment.received", "payment.sent"]` is a new reference every render, just like an object literal. The hook serialises the array internally so the effect stays stable - but if you're passing the array from props or building it inline, hoist or memoize it so your component doesn't re-render unnecessarily:
 
 ```tsx
-// ✅ Hoisted constant — created once
+// ✅ Hoisted constant - created once
 const PAYMENT_EVENTS = ["payment.received", "payment.sent"];
 
 function MyComponent({ address }: { address: string }) {
@@ -348,7 +348,7 @@ function MyComponent({ address }: { address: string }) {
   );
 }
 
-// ✅ useMemo — when the list depends on props or state
+// ✅ useMemo - when the list depends on props or state
 function MyComponent({ address, types }: { address: string; types: string[] }) {
   const options = useMemo(() => ({ event: types }), [types]);
   const { event } = useStellarEvent("https://events.example.com", address, options);
@@ -358,7 +358,7 @@ function MyComponent({ address, types }: { address: string; types: string[] }) {
 If you need the object form and the config depends on props or state, wrap it in `useMemo`:
 
 ```tsx
-// ✅ Object form with useMemo — recreated only when deps change
+// ✅ Object form with useMemo - recreated only when deps change
 function MyComponent({ address, token }: { address: string; token?: string }) {
   const config = useMemo(
     () => ({ serverUrl: "https://events.example.com", address, token }),
@@ -370,7 +370,7 @@ function MyComponent({ address, token }: { address: string; token?: string }) {
 ```
 
 ```tsx
-// ❌ Inline object literal — new reference every render
+// ❌ Inline object literal - new reference every render
 function MyComponent({ address }: { address: string }) {
   const { event } = useStellarEvent({
     serverUrl: "https://events.example.com",
@@ -401,11 +401,11 @@ Same-origin `httpOnly` cookies travel automatically with SSE when `withCredentia
 useStellarEvent(serverUrl, address, { withCredentials: true });
 ```
 
-If the server is cross-origin, it must respond with `Access-Control-Allow-Credentials: true` and an explicit `Access-Control-Allow-Origin` value — not `*`.
+If the server is cross-origin, it must respond with `Access-Control-Allow-Credentials: true` and an explicit `Access-Control-Allow-Origin` value - not `*`.
 
 ## Server-side rendering
 
-The hooks are client-only — they rely on `EventSource`, which does not exist in Node. In Next.js App Router, mark the consuming component with `"use client"`. In Remix or Vite SSR, gate the hook behind a client-only boundary.
+The hooks are client-only - they rely on `EventSource`, which does not exist in Node. In Next.js App Router, mark the consuming component with `"use client"`. In Remix or Vite SSR, gate the hook behind a client-only boundary.
 
 ## Offline replay / Last-Event-ID
 
@@ -439,7 +439,7 @@ const { event, connected, caughtUp } = useStellarEvent(serverUrl, address);
 
 if (!connected) return <div>Reconnecting…</div>;
 if (!caughtUp)  return <div>Catching up on missed events…</div>;
-// Now live — render event
+// Now live - render event
 ```
 
 `caughtUp` transitions `false → true` as soon as the first post-reconnect event arrives. It does not wait for the server to signal "end of replay" (SSE has no such primitive), so additional events may still be in flight.
@@ -452,12 +452,12 @@ if (!caughtUp)  return <div>Catching up on missed events…</div>;
 
 ## Related documents
 
-- [Offline replay / Last-Event-ID](#offline-replay--last-event-id) — `caughtUp` flag, backend `id:` contract
-- [`docs/ARCHITECTURE.md` § 7 React hook internals](../../docs/ARCHITECTURE.md#7-react-hook-internals) — design choices (stable dep-array, dual call signature, generic narrowing)
+- [Offline replay / Last-Event-ID](#offline-replay--last-event-id) - `caughtUp` flag, backend `id:` contract
+- [`docs/ARCHITECTURE.md` § 7 React hook internals](../../docs/ARCHITECTURE.md#7-react-hook-internals) - design choices (stable dep-array, dual call signature, generic narrowing)
 - [`docs/COOKBOOK.md` § 10 Render live payments in React with type narrowing](../../docs/COOKBOOK.md#10-render-live-payments-in-react-with-type-narrowing)
-- [`docs/COOKBOOK.md` § 11 Stand up an SSE endpoint in Next.js](../../docs/COOKBOOK.md#11-stand-up-an-sse-endpoint-in-nextjs) — the backend the hooks expect
-- [`SECURITY.md` § Best practices for consumers § pulse-notify](../../SECURITY.md#pulse-notify) — token handling, SSR boundary
-- [`CHANGELOG.md`](../../CHANGELOG.md) — release notes
+- [`docs/COOKBOOK.md` § 11 Stand up an SSE endpoint in Next.js](../../docs/COOKBOOK.md#11-stand-up-an-sse-endpoint-in-nextjs) - the backend the hooks expect
+- [`SECURITY.md` § Best practices for consumers § pulse-notify](../../SECURITY.md#pulse-notify) - token handling, SSR boundary
+- [`CHANGELOG.md`](../../CHANGELOG.md) - release notes
 
 ## License
 

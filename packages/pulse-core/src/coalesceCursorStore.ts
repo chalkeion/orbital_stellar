@@ -91,7 +91,7 @@ export class CoalescingStore extends CursorStore {
   /**
    * Immediately flushes all pending writes to the inner store.
    *
-   * Serializes with any in-progress scheduled flush — waits for it to
+   * Serializes with any in-progress scheduled flush - waits for it to
    * complete before draining the buffer, ensuring each entry is written
    * exactly once.
    *
@@ -105,7 +105,7 @@ export class CoalescingStore extends CursorStore {
   /**
    * Cancels the recurring flush timer.
    *
-   * Does NOT flush pending writes — call {@link flush} first if you need
+   * Does NOT flush pending writes - call {@link flush} first if you need
    * a clean shutdown. Any buffered values remaining after `dispose()` are
    * discarded.
    */
@@ -146,7 +146,7 @@ export class CoalescingStore extends CursorStore {
  * processed before `flush()` was called.
  *
  * **Timer cleanup**: Call `dispose()` to cancel the background flush timer.
- * `dispose()` does NOT flush pending writes — call `flush()` first if needed.
+ * `dispose()` does NOT flush pending writes - call `flush()` first if needed.
  *
  * @param inner - The underlying CursorStore that performs durable writes.
  * @param options - Configuration options.

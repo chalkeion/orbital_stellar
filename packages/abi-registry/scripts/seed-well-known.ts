@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * Publishes the bundled well-known specs (USDC, EURC, AQUA, native XLM
- * wrapper — deliberately not `sac-interface.json`, which is a placeholder
+ * wrapper - deliberately not `sac-interface.json`, which is a placeholder
  * reference address, not a real deployed contract) through the live on-chain
  * registry contract.
  *
- * This is a MANUAL, gated step — it submits real signed transactions. Run it
+ * This is a MANUAL, gated step - it submits real signed transactions. Run it
  * yourself once the registry contract is deployed
  * (contracts/deploy/deploy_testnet.sh) and its contract ID + a funded
  * publisher secret are available.
@@ -13,7 +13,7 @@
  * The on-chain record stores a `pointer` (this script points it at this
  * repo's raw GitHub content at `main`) and a hash of the spec at that
  * pointer. That means the written `specs/published/*.json` files need to be
- * committed and pushed to `main` for the pointer to actually resolve —
+ * committed and pushed to `main` for the pointer to actually resolve -
  * commit them before (or immediately after) running this script.
  *
  * Usage:
@@ -42,7 +42,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const WELL_KNOWN_DIR = resolve(__dirname, "../specs/well-known");
 const PUBLISHED_DIR = resolve(__dirname, "../specs/published");
 
-// sac-interface.json is deliberately excluded — its contract_id is a
+// sac-interface.json is deliberately excluded - its contract_id is a
 // placeholder reference address, not a real deployed contract.
 const WELL_KNOWN_FILES = ["usdc.json", "eurc.json", "aqua.json", "native-asset-wrapper.json"];
 

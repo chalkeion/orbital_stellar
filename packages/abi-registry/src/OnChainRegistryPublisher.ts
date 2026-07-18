@@ -39,7 +39,7 @@ export type OnChainRegistryPublisherConfig = {
 /**
  * Publishes {@link ContractSpec}s to the on-chain Orbital ABI registry
  * contract. Hashes the spec's canonical JSON, then invokes the registry's
- * `publish(publisher, contract_id, version, spec_hash, pointer)` entrypoint —
+ * `publish(publisher, contract_id, version, spec_hash, pointer)` entrypoint -
  * the contract stores the hash + pointer, not the spec body, so integrity is
  * verified by re-hashing whatever a resolver fetches from `pointer` and
  * comparing it to the on-chain `spec_hash` (see {@link OnChainAbiRegistryClient}).
@@ -64,7 +64,7 @@ export class OnChainRegistryPublisher implements RegistryPublisher {
     }
     if (!contractSpec.pointer) {
       throw new Error(
-        "OnChainRegistryPublisher.publish: spec.pointer is required — set it to where the spec blob will be hosted before publishing",
+        "OnChainRegistryPublisher.publish: spec.pointer is required - set it to where the spec blob will be hosted before publishing",
       );
     }
 

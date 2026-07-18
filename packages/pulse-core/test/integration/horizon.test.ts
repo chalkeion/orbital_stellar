@@ -152,7 +152,7 @@ describe("Horizon Integration Tests", () => {
       // Give the stream a moment to open
       await new Promise((r) => setTimeout(r, 500));
 
-      // Stop the watcher — should trigger onStop and remove it from the registry
+      // Stop the watcher - should trigger onStop and remove it from the registry
       watcher.stop();
 
       expect(

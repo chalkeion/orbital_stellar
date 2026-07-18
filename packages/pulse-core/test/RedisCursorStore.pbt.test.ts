@@ -136,12 +136,12 @@ describe("RedisCursorStore PBT", () => {
   // Validates: Requirements 1.6, 3.3, 4.4
   // ---------------------------------------------------------------------------
 
-  it("Property 10: getMany returns null for every key never written — consistent across default, Postgres mock, and Redis mock", async () => {
+  it("Property 10: getMany returns null for every key never written - consistent across default, Postgres mock, and Redis mock", async () => {
     await fc.assert(
       fc.asyncProperty(fc.array(safeKey, { minLength: 1, maxLength: 20 }), async (keys) => {
         const { redis } = makeInMemoryRedis();
         const store = new RedisCursorStore(redis);
-        // Nothing written — all keys are missing
+        // Nothing written - all keys are missing
 
         const result = await store.getMany(keys);
 

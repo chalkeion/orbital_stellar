@@ -5,7 +5,7 @@ import { __resetConnectionPoolForTests } from "../src/connectionPool.ts";
 import type { NormalizedEvent } from "@orbital-stellar/pulse-core";
 
 // ---------------------------------------------------------------------------
-// Minimal EventSource stub — mirrors the pattern used in other test files.
+// Minimal EventSource stub - mirrors the pattern used in other test files.
 // ---------------------------------------------------------------------------
 
 class MockEventSource {
@@ -102,7 +102,7 @@ describe("useStellarHistory", () => {
 
     const types = ["payment.received", "account.created", "trustline.added"];
 
-    // Each event must be in its own act() — useStellarActivity only keeps the
+    // Each event must be in its own act() - useStellarActivity only keeps the
     // most recent event in state, so batching all emits in one act() would
     // only add the last one to the history.
     for (const [i, type] of types.entries()) {
@@ -133,7 +133,7 @@ describe("useStellarHistory", () => {
     expect(result.current.history).toHaveLength(capacity);
 
     // The oldest events are evicted; only the most recent `capacity` remain.
-    // Events are indexed 0..4 — after eviction we expect indices 2, 3, 4.
+    // Events are indexed 0..4 - after eviction we expect indices 2, 3, 4.
     const timestamps = result.current.history.map((e) => e.timestamp);
     expect(timestamps).toEqual([
       new Date(2 * 1000).toISOString(),
@@ -156,7 +156,7 @@ describe("useStellarHistory", () => {
     }
     expect(result.current.history).toHaveLength(100);
 
-    // The 101st event triggers eviction — oldest (index 0) is dropped.
+    // The 101st event triggers eviction - oldest (index 0) is dropped.
     act(() => {
       src.emit(makeEvent("payment.received", 100));
     });
@@ -210,7 +210,7 @@ describe("useStellarHistory", () => {
     // Force a re-render without any new event.
     rerender();
 
-    // History must still have exactly one entry — no double-count.
+    // History must still have exactly one entry - no double-count.
     expect(result.current.history).toHaveLength(1);
   });
 });

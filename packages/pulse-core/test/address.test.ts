@@ -1,5 +1,5 @@
 /**
- * address.ts — branded address type tests
+ * address.ts - branded address type tests
  *
  * Covers:
  *  - Runtime predicate correctness (is* guards)
@@ -28,13 +28,13 @@ import type { NormalizedEvent } from "../src/index.js";
 // Representative valid addresses (real StrKey-encoded values)
 // ---------------------------------------------------------------------------
 
-// Ed25519 public key — starts with G
+// Ed25519 public key - starts with G
 const VALID_ACCOUNT = "GBAZF32CQRU6NZKSOLNAM6F7UR2WAVTE2JEYINXJNAKU6673OBGICC2P";
 
-// Muxed account — starts with M
+// Muxed account - starts with M
 const VALID_MUXED = "MAAAAAABAAAAAACBSLXUFBDJ43SVE4W2AZ4L7JDVMBLGJUSJQQ3OS2AVJ557W4CMQFRN2";
 
-// Soroban contract — starts with C
+// Soroban contract - starts with C
 const VALID_CONTRACT = "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE";
 
 // ---------------------------------------------------------------------------
@@ -200,7 +200,7 @@ describe("toContractAddress", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Exhaustive switch over NormalizedEvent — compile-time narrowing proof
+// Exhaustive switch over NormalizedEvent - compile-time narrowing proof
 //
 // This function must compile without error.  If any event branch is missing,
 // TypeScript will report an error on the `_exhaustive` assignment.
@@ -295,14 +295,14 @@ function assertNarrowedAddresses(event: NormalizedEvent): string {
     }
 
     default: {
-      // Exhaustiveness check — TypeScript errors here if a case is missing
+      // Exhaustiveness check - TypeScript errors here if a case is missing
       const _exhaustive: never = event;
       return _exhaustive;
     }
   }
 }
 
-describe("NormalizedEvent exhaustive switch — address narrowing", () => {
+describe("NormalizedEvent exhaustive switch - address narrowing", () => {
   it("compiles and narrows payment addresses to AccountAddress | MuxedAddress", () => {
     const event: NormalizedEvent = {
       type: "payment.received",

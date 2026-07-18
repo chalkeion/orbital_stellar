@@ -77,7 +77,7 @@ export function PulseNotifyDevtools(): React.ReactElement | null {
 
   return (
     <div style={{ padding: 12, fontFamily: "Inter, system-ui, sans-serif", fontSize: 12 }}>
-      <h3 style={{ margin: "0 0 8px 0" }}>Pulse Notify — Active Connections</h3>
+      <h3 style={{ margin: "0 0 8px 0" }}>Pulse Notify - Active Connections</h3>
       <div
         style={{
           maxHeight: 360,
@@ -98,11 +98,11 @@ export function PulseNotifyDevtools(): React.ReactElement | null {
             </div>
             <div>
               <strong>Connected:</strong> {c.connected ? "yes" : "no"}{" "}
-              {c.error ? ` — ${c.error}` : ""}
+              {c.error ? ` - ${c.error}` : ""}
             </div>
             <div>
               <strong>Last event:</strong>{" "}
-              {c.lastEvent ? new Date(c.lastEvent).toLocaleString() : "—"}
+              {c.lastEvent ? new Date(c.lastEvent).toLocaleString() : "-"}
             </div>
           </div>
         ))}

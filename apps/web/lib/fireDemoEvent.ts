@@ -14,7 +14,7 @@ export type FireDemoEventResult = { txHash: string; ledger: number; contractId: 
 export class DemoEmitterNotConfiguredError extends Error {
   constructor() {
     super(
-      "DEMO_EMITTER_CONTRACT_ID and DEMO_EMITTER_SECRET are not configured — the demo-emitter contract hasn't been deployed to this environment yet.",
+      "DEMO_EMITTER_CONTRACT_ID and DEMO_EMITTER_SECRET are not configured - the demo-emitter contract hasn't been deployed to this environment yet.",
     );
     this.name = "DemoEmitterNotConfiguredError";
   }
@@ -23,12 +23,12 @@ export class DemoEmitterNotConfiguredError extends Error {
 /**
  * Invokes the deployed `orbital-demo-emitter` contract's no-arg `ping()`
  * (see contracts/demo-emitter) on testnet and waits for confirmation. Used
- * by the "Fire test event" button on /demo/contracts — the visitor's
+ * by the "Fire test event" button on /demo/contracts - the visitor's
  * already-open SSE stream against this same contract ID surfaces the
  * resulting `contract.emitted` event within a few seconds.
  *
  * `DEMO_EMITTER_SECRET` is deliberately a separate key from
- * `SOROBAN_INVOKER_SECRET` (the registry's nightly-test invoker) — it can
+ * `SOROBAN_INVOKER_SECRET` (the registry's nightly-test invoker) - it can
  * only ever call this one harmless no-arg function, so its blast radius if
  * leaked is far smaller.
  */

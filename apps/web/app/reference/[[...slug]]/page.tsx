@@ -1,34 +1,34 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { getReferencePage, getAllReferenceSlugs, getReferencePackages } from '@/lib/reference'
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { getReferencePage, getAllReferenceSlugs, getReferencePackages } from "@/lib/reference";
 
 type Props = {
-  params: Promise<{ slug?: string[] }>
-}
+  params: Promise<{ slug?: string[] }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-  const { slug } = await params
-  if (!slug || slug.length === 0) return { title: 'API Reference — Orbital Stellar Docs' }
-  const page = await getReferencePage(slug)
-  if (!page) return {}
-  return { title: `${page.title} — Orbital Stellar Reference` }
+  const { slug } = await params;
+  if (!slug || slug.length === 0) return { title: "API Reference - Orbital Stellar Docs" };
+  const page = await getReferencePage(slug);
+  if (!page) return {};
+  return { title: `${page.title} - Orbital Stellar Reference` };
 }
 
 export function generateStaticParams() {
-  return [{ slug: [] }, ...getAllReferenceSlugs().map((slug) => ({ slug }))]
+  return [{ slug: [] }, ...getAllReferenceSlugs().map((slug) => ({ slug }))];
 }
 
 export default async function ReferencePage({ params }: Props) {
-  const { slug } = await params
+  const { slug } = await params;
 
   if (!slug || slug.length === 0) {
-    const packages = getReferencePackages()
+    const packages = getReferencePackages();
     return (
       <div className="px-10 lg:px-14 py-12">
         <header className="mb-10">
           <h1
             className="text-4xl font-bold text-white mb-3 leading-tight"
-            style={{ fontFamily: 'var(--font-instrument-serif)' }}
+            style={{ fontFamily: "var(--font-instrument-serif)" }}
           >
             API Reference
           </h1>
@@ -49,18 +49,18 @@ export default async function ReferencePage({ params }: Props) {
           ))}
         </ul>
       </div>
-    )
+    );
   }
 
-  const page = await getReferencePage(slug)
-  if (!page) notFound()
+  const page = await getReferencePage(slug);
+  if (!page) notFound();
 
   return (
     <div className="px-10 lg:px-14 py-12">
       <header className="mb-10">
         <h1
           className="text-4xl font-bold text-white mb-3 leading-tight"
-          style={{ fontFamily: 'var(--font-instrument-serif)' }}
+          style={{ fontFamily: "var(--font-instrument-serif)" }}
         >
           {page.title}
         </h1>
@@ -70,5 +70,5 @@ export default async function ReferencePage({ params }: Props) {
 
       <article className="doc-content" dangerouslySetInnerHTML={{ __html: page.content }} />
     </div>
-  )
+  );
 }

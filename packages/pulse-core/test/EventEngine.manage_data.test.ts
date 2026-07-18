@@ -60,7 +60,7 @@ function buildEngine(): {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("EventEngine — manage_data normalization", () => {
+describe("EventEngine - manage_data normalization", () => {
   it('emits "data.set" when data_value is present', () => {
     const { engine, simulateRecord } = buildEngine();
     const watcher = engine.subscribe("GABC1234");

@@ -20,7 +20,7 @@ fn ping_returns_incrementing_count() {
 
 #[test]
 fn ping_requires_no_auth() {
-    // No env.mock_all_auths() and no require_auth() call in ping() — this
+    // No env.mock_all_auths() and no require_auth() call in ping() - this
     // should succeed without any authorization setup at all.
     let env = Env::default();
     let client = setup(&env);

@@ -7,7 +7,7 @@ description: HMAC-signed webhook delivery with automatic retry, Node + edge veri
 
 `@orbital-stellar/pulse-webhooks` wraps a `pulse-core` `Watcher` and delivers events to one or more HTTPS endpoints. Each delivery is signed with HMAC-SHA256 so your server can verify authenticity. On transient failure each URL is retried independently with exponential backoff; on permanent failure a `webhook.failed` event is emitted.
 
-Two verifiers are exported for the receiver side: `verifyWebhook` (Node.js `crypto`) and `verifyWebhookEdge` (Web Crypto API — works in Cloudflare Workers, Vercel Edge, Deno, and browsers).
+Two verifiers are exported for the receiver side: `verifyWebhook` (Node.js `crypto`) and `verifyWebhookEdge` (Web Crypto API - works in Cloudflare Workers, Vercel Edge, Deno, and browsers).
 
 ## Installation
 
@@ -41,8 +41,8 @@ new WebhookDelivery(watcher, {
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `url` | `string \| string[]` | — | Destination endpoint(s). Must be HTTPS in production |
-| `secret` | `string` | — | Shared secret used to sign payloads |
+| `url` | `string \| string[]` | - | Destination endpoint(s). Must be HTTPS in production |
+| `secret` | `string` | - | Shared secret used to sign payloads |
 | `retries` | `number` | `3` | Retry attempts before emitting `webhook.failed` |
 | `deliveryTimeoutMs` | `number` | `10_000` | Per-attempt abort threshold |
 | `allowPrivateNetworks` | `boolean` | `false` | Bypass SSRF checks (development only) |
@@ -73,7 +73,7 @@ const event = verifyWebhook(
 
 Returns the parsed `NormalizedEvent` on success, `null` on any failure (bad signature, malformed JSON, length mismatch).
 
-Uses `crypto.timingSafeEqual` under the hood — never roll your own HMAC comparison.
+Uses `crypto.timingSafeEqual` under the hood - never roll your own HMAC comparison.
 
 ## verifyWebhookEdge (Cloudflare Workers / Vercel Edge / Deno / browsers)
 
@@ -88,7 +88,7 @@ const event = await verifyWebhookEdge(
 );
 ```
 
-Async — returns a `Promise<NormalizedEvent | null>`. Uses Web Crypto API (`crypto.subtle`) for HMAC-SHA256 and constant-time comparison. No Node.js dependency.
+Async - returns a `Promise<NormalizedEvent | null>`. Uses Web Crypto API (`crypto.subtle`) for HMAC-SHA256 and constant-time comparison. No Node.js dependency.
 
 **Key differences from `verifyWebhook`:**
 
@@ -117,7 +117,7 @@ By default, deliveries to private network ranges are blocked:
 - Private: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
 - Link-local: `169.254.0.0/16`
 
-DNS resolution is checked against the blocklist before delivery to defeat DNS rebinding. Set `allowPrivateNetworks: true` to bypass — never in production.
+DNS resolution is checked against the blocklist before delivery to defeat DNS rebinding. Set `allowPrivateNetworks: true` to bypass - never in production.
 
 ## License
 

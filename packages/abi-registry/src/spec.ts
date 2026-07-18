@@ -27,7 +27,7 @@ export type PrimitiveType =
   | "void"
   /**
    * The generic Soroban error-value slot (`scvError` on the wire). Appears
-   * as the error arm of `Result<T, Error>` return types — the XDR spec
+   * as the error arm of `Result<T, Error>` return types - the XDR spec
    * format encodes it as this generic placeholder even when the Rust
    * signature names a specific `#[contracterror]` enum; the specific enum
    * is a separate `types` entry, correlated by convention rather than a
@@ -38,10 +38,10 @@ export type PrimitiveType =
 /** Fixed-length byte array, e.g. `bytes_n<32>`. */
 export type BytesNType = { readonly type: "bytes_n"; readonly size: number };
 
-/** Soroban `Option<T>` — a value that may be present or absent. */
+/** Soroban `Option<T>` - a value that may be present or absent. */
 export type OptionType = { readonly type: "option"; readonly inner: TypeSpec };
 
-/** Soroban `Result<T, E>` — either an `Ok` value or an `Err` value. */
+/** Soroban `Result<T, E>` - either an `Ok` value or an `Err` value. */
 export type ResultType = {
   readonly type: "result";
   readonly ok: TypeSpec;
@@ -200,7 +200,7 @@ export type ContractSpec = {
   readonly xdrEntries?: ReadonlyArray<string>;
   /**
    * Off-chain locator for the full spec blob (e.g. a URL). Required to
-   * publish through {@link OnChainRegistryPublisher} — the on-chain registry
+   * publish through {@link OnChainRegistryPublisher} - the on-chain registry
    * stores this pointer alongside a hash of the canonical spec JSON so a
    * resolver can fetch the blob and verify it wasn't tampered with. Not
    * interpreted by this package; purely a value the caller round-trips.
@@ -362,7 +362,7 @@ function validateEventSpec(ev: unknown, path: string, errors: string[]): void {
 
 /**
  * Validates that `spec` conforms to the {@link ContractSpec} shape and all
- * structural invariants.  Returns a {@link ValidationResult} — never throws.
+ * structural invariants.  Returns a {@link ValidationResult} - never throws.
  *
  * For full JSON Schema–based validation run the spec through
  * `schema/spec.schema.json` using a JSON Schema validator such as Ajv.

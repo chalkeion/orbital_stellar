@@ -5,68 +5,64 @@ import { hideBin } from "yargs/helpers";
 
 async function main() {
   yargs(hideBin(process.argv))
-    .command(
-      "cursor",
-      "Manage cursor backups",
-      (yargs) => {
-        yargs
-          .command(
-            "dump",
-            "Dumps all cursors as line-delimited JSON to stdout",
-            () => {},
-            async () => {
-              const { PostgresCursorStore } = await import("../src/PostgresCursorStore.js");
-              const { Pool } = await import("pg");
+    .command("cursor", "Manage cursor backups", (yargs) => {
+      yargs
+        .command(
+          "dump",
+          "Dumps all cursors as line-delimited JSON to stdout",
+          () => {},
+          async () => {
+            const { PostgresCursorStore } = await import("../src/PostgresCursorStore.js");
+            const { Pool } = await import("pg");
 
-              const pg = new Pool();
-              const cursorStore = new PostgresCursorStore(pg);
+            const pg = new Pool();
+            const cursorStore = new PostgresCursorStore(pg);
 
-              try {
-                const result = await pg.query("SELECT stream_key, cursor FROM cursor_store");
-                for (const row of result.rows) {
-                  console.log(JSON.stringify(row));
-                }
-              } finally {
-                await pg.end();
+            try {
+              const result = await pg.query("SELECT stream_key, cursor FROM cursor_store");
+              for (const row of result.rows) {
+                console.log(JSON.stringify(row));
               }
+            } finally {
+              await pg.end();
             }
-          )
-          .command(
-            "restore",
-            "Restores cursors from line-delimited JSON from stdin",
-            () => {},
-            async () => {
-              const { PostgresCursorStore } = await import("../src/PostgresCursorStore.js");
-              const { Pool } = await import("pg");
+          },
+        )
+        .command(
+          "restore",
+          "Restores cursors from line-delimited JSON from stdin",
+          () => {},
+          async () => {
+            const { PostgresCursorStore } = await import("../src/PostgresCursorStore.js");
+            const { Pool } = await import("pg");
 
-              const pg = new Pool();
-              const cursorStore = new PostgresCursorStore(pg);
+            const pg = new Pool();
+            const cursorStore = new PostgresCursorStore(pg);
 
-              const readline = await import("readline");
-              const rl = readline.createInterface({
-                input: process.stdin,
-                terminal: false,
-              });
+            const readline = await import("readline");
+            const rl = readline.createInterface({
+              input: process.stdin,
+              terminal: false,
+            });
 
-              try {
-                for await (const line of rl) {
-                  if (!line.trim()) continue;
-                  try {
-                    const { stream_key, cursor } = JSON.parse(line);
-                    await cursorStore.set(stream_key, cursor);
-                  } catch (error) {
-                    console.error("Error parsing line or restoring cursor:", error);
-                    process.exit(1);
-                  }
+            try {
+              for await (const line of rl) {
+                if (!line.trim()) continue;
+                try {
+                  const { stream_key, cursor } = JSON.parse(line);
+                  await cursorStore.set(stream_key, cursor);
+                } catch (error) {
+                  console.error("Error parsing line or restoring cursor:", error);
+                  process.exit(1);
                 }
-              } finally {
-                await pg.end();
               }
+            } finally {
+              await pg.end();
             }
-          )
-          .demandCommand(1, "Please provide a command (dump or restore)");
-      }
-    )
+          },
+        )
+        .demandCommand(1, "Please provide a command (dump or restore)");
+    })
     .command(
       "typegen <contractId>",
       "Generates TypeScript types + Zod schemas for a deployed Soroban contract's spec",
@@ -133,8 +129,8 @@ async function main() {
         if (!spec) {
           console.error(
             registryContractId
-              ? "[orbital typegen] Not found in the on-chain registry — falling back to live WASM discovery."
-              : "[orbital typegen] No registry contract configured — discovering directly from the deployed WASM.",
+              ? "[orbital typegen] Not found in the on-chain registry - falling back to live WASM discovery."
+              : "[orbital typegen] No registry contract configured - discovering directly from the deployed WASM.",
           );
           spec = await discoverContractSpec({
             rpcUrl: argv.rpcUrl,

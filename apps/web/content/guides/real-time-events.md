@@ -5,8 +5,8 @@ description: Stream live Stellar events with @orbital-stellar/pulse-core and Rea
 
 There are two ways to consume Orbital events in real time:
 
-1. **Server-side** — `@orbital-stellar/pulse-core` opens a streaming connection to Horizon directly. Use this in Node.js, edge workers, or background processes.
-2. **Browser-side** — `@orbital-stellar/pulse-notify` React hooks open a browser `EventSource` to a backend you operate (which uses `pulse-core` under the hood).
+1. **Server-side** - `@orbital-stellar/pulse-core` opens a streaming connection to Horizon directly. Use this in Node.js, edge workers, or background processes.
+2. **Browser-side** - `@orbital-stellar/pulse-notify` React hooks open a browser `EventSource` to a backend you operate (which uses `pulse-core` under the hood).
 
 The server-side path is the lowest layer; the React hooks sit on top.
 
@@ -37,7 +37,7 @@ watcher.on("*", (event) => {
 });
 ```
 
-Reconnection is handled automatically — `pulse-core` uses AWS Full Jitter backoff and exposes notification events (`engine.reconnecting`, `engine.reconnected`, `engine.rate_limited`, `engine.stopped`) you can subscribe to for observability.
+Reconnection is handled automatically - `pulse-core` uses AWS Full Jitter backoff and exposes notification events (`engine.reconnecting`, `engine.reconnected`, `engine.rate_limited`, `engine.stopped`) you can subscribe to for observability.
 
 Always call `engine.stop()` in your shutdown path.
 
@@ -92,7 +92,7 @@ const { event, connected, error } = useStellarEvent(
   { event: "payment.received" },
 );
 
-// Multiple types — one connection
+// Multiple types - one connection
 const { event } = useStellarEvent(
   "https://events.example.com",
   "GABC...",
@@ -139,7 +139,7 @@ useEffect(() => {
 
 ## Type narrowing
 
-`useStellarEvent` is generic — pass a narrower union as `T` to get full IDE support and avoid manual casts:
+`useStellarEvent` is generic - pass a narrower union as `T` to get full IDE support and avoid manual casts:
 
 ```tsx
 import type { NormalizedEvent } from "@orbital-stellar/pulse-core";

@@ -29,7 +29,7 @@ function isError(r: unknown): r is { error: string } {
 // Input validation
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — input validation", () => {
+describe("decodeContractEvent - input validation", () => {
   it("returns error when rawEvent is null", () => {
     const result = decodeContractEvent(USDC_SPEC, null);
     expect(isError(result)).toBe(true);
@@ -51,7 +51,7 @@ describe("decodeContractEvent — input validation", () => {
     expect(isError(result)).toBe(true);
   });
 
-  it("never throws — always returns a result object", () => {
+  it("never throws - always returns a result object", () => {
     const inputs = [undefined, null, 42, "string", [], {}, { topics: null }];
     for (const input of inputs) {
       expect(() => decodeContractEvent(USDC_SPEC, input)).not.toThrow();
@@ -66,7 +66,7 @@ describe("decodeContractEvent — input validation", () => {
 // Primitive type decoding
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — primitive types", () => {
+describe("decodeContractEvent - primitive types", () => {
   it("decodes u32 topic", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [{ sym: "transfer" }, { u32: 42 }],
@@ -164,7 +164,7 @@ describe("decodeContractEvent — primitive types", () => {
 // String / bytes / address types
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — string, bytes, address", () => {
+describe("decodeContractEvent - string, bytes, address", () => {
   it("decodes str", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [{ sym: "event" }],
@@ -218,7 +218,7 @@ describe("decodeContractEvent — string, bytes, address", () => {
 // vec and map
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — vec and map", () => {
+describe("decodeContractEvent - vec and map", () => {
   it("decodes vec of u32 values", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [{ sym: "event" }],
@@ -297,7 +297,7 @@ describe("decodeContractEvent — vec and map", () => {
 // Custom struct
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — custom struct", () => {
+describe("decodeContractEvent - custom struct", () => {
   it("decodes a multi-key object as a struct", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [{ sym: "transfer" }],
@@ -319,7 +319,7 @@ describe("decodeContractEvent — custom struct", () => {
 // functionName extraction
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — functionName", () => {
+describe("decodeContractEvent - functionName", () => {
   it("extracts functionName from first topic sym", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [{ sym: "transfer" }, { address: "GABC" }],
@@ -352,7 +352,7 @@ describe("decodeContractEvent — functionName", () => {
 // Real testnet event simulation
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — real testnet event simulation", () => {
+describe("decodeContractEvent - real testnet event simulation", () => {
   /**
    * Simulates a USDC transfer event as it would appear from the Soroban RPC.
    * Topics: [sym("transfer"), address(from), address(to)]
@@ -441,7 +441,7 @@ describe("decodeContractEvent — real testnet event simulation", () => {
 // Error cases
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — error cases", () => {
+describe("decodeContractEvent - error cases", () => {
   it("returns error for malformed map entry (not an object)", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [{ sym: "event" }],
@@ -451,12 +451,12 @@ describe("decodeContractEvent — error cases", () => {
   });
 
   it("returns error for vec containing non-decodable value", () => {
-    // This should not throw — it should return an error
+    // This should not throw - it should return an error
     decodeContractEvent(USDC_SPEC, {
       topics: [{ sym: "event" }],
       data: { vec: [{ unknownType: Symbol("bad") }] },
     });
-    // Symbol is not a supported type — should return error or decode as string
+    // Symbol is not a supported type - should return error or decode as string
     // Either outcome is acceptable as long as it doesn't throw
     expect(() =>
       decodeContractEvent(USDC_SPEC, {
@@ -498,7 +498,7 @@ const XDR_MAP_AMOUNT_FEE =
 const XDR_ADDR_ACCOUNT = "AAAAEgAAAAAAAAAAhDflkmmxIDmPcG1YeLJsUujIK7380twSPWjBSTHEQL4=";
 const XDR_ADDR_PUBKEY = "GCCDPZMSNGYSAOMPOBWVQ6FSNRJORSBLXX6NFXASHVUMCSJRYRAL4SHE";
 
-describe("decodeContractEvent — raw XDR base64 topics and data", () => {
+describe("decodeContractEvent - raw XDR base64 topics and data", () => {
   it("decodes XDR base64 sym topic as string", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [XDR_SYM_TRANSFER],
@@ -611,7 +611,7 @@ describe("decodeContractEvent — raw XDR base64 topics and data", () => {
     expect((result as DecodedEvent).data).toBe(strkey);
   });
 
-  it("decodes XDR base64 sym as sym in topics — XDR sym extraction works for functionName", () => {
+  it("decodes XDR base64 sym as sym in topics - XDR sym extraction works for functionName", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       topics: [XDR_SYM_USDC],
       data: null,
@@ -625,7 +625,7 @@ describe("decodeContractEvent — raw XDR base64 topics and data", () => {
 // contractId validation
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — contractId validation", () => {
+describe("decodeContractEvent - contractId validation", () => {
   it("succeeds when event contractId matches spec contractId", () => {
     const result = decodeContractEvent(USDC_SPEC, {
       contractId: USDC_SPEC.contractId,
@@ -658,7 +658,7 @@ describe("decodeContractEvent — contractId validation", () => {
 // Canonical ContractSpec acceptance (camelCase, functions/events/types, xdrEntries)
 // ---------------------------------------------------------------------------
 
-describe("decodeContractEvent — accepts the canonical ContractSpec shape", () => {
+describe("decodeContractEvent - accepts the canonical ContractSpec shape", () => {
   const CANONICAL_SPEC: CanonicalContractSpec = {
     version: "1.0.0",
     name: "USDC",

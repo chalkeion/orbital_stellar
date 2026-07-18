@@ -25,7 +25,7 @@ jobs:
         id: filter
         with:
           filters: |
-            # Root manifests + lockfile affect every workspace project — a
+            # Root manifests + lockfile affect every workspace project - a
             # dependency-only change must not skip the test jobs.
             packages:
               - 'packages/**'

@@ -10,10 +10,10 @@ description: Add Orbital packages to your project.
 
 ## Install the packages
 
-Install only the packages you need — each is independently usable.
+Install only the packages you need - each is independently usable.
 
 ```bash
-# Event engine — required by everything else
+# Event engine - required by everything else
 pnpm add @orbital-stellar/pulse-core
 
 # Webhook delivery (optional)
@@ -38,24 +38,24 @@ All four packages ship with full TypeScript types. No `@types/*` packages are ne
 }
 ```
 
-The event union (`NormalizedEvent`) is a discriminated union — `switch` on `event.type` and TypeScript narrows the rest of the shape per branch.
+The event union (`NormalizedEvent`) is a discriminated union - `switch` on `event.type` and TypeScript narrows the rest of the shape per branch.
 
 ## Edge runtimes
 
 `@orbital-stellar/pulse-webhooks` exports two verifiers:
 
-- **`verifyWebhook`** — Node.js (`crypto` module)
-- **`verifyWebhookEdge`** — Web Crypto API; works in Cloudflare Workers, Vercel Edge, Deno, and browsers
+- **`verifyWebhook`** - Node.js (`crypto` module)
+- **`verifyWebhookEdge`** - Web Crypto API; works in Cloudflare Workers, Vercel Edge, Deno, and browsers
 
 Pick the one that matches your runtime. The signing side (`WebhookDelivery`) requires Node.js for now.
 
 ## React
 
-`@orbital-stellar/pulse-notify` is browser-only — it uses `EventSource`, which doesn't exist in Node. In Next.js App Router, mark consuming components with `"use client"`. In Remix or Vite SSR, gate the hook behind a client-only boundary.
+`@orbital-stellar/pulse-notify` is browser-only - it uses `EventSource`, which doesn't exist in Node. In Next.js App Router, mark consuming components with `"use client"`. In Remix or Vite SSR, gate the hook behind a client-only boundary.
 
 ## Trying the reference composition (optional)
 
-Want to see the SDKs composed end-to-end before building your own backend? Clone the repo and run the marketing site — it ships a sandboxed Next.js route handler that subscribes to a Stellar address and streams events as SSE:
+Want to see the SDKs composed end-to-end before building your own backend? Clone the repo and run the marketing site - it ships a sandboxed Next.js route handler that subscribes to a Stellar address and streams events as SSE:
 
 ```bash
 git clone https://github.com/determined-001/orbital_stellar.git
@@ -70,8 +70,8 @@ Open `http://localhost:3000` for the site, or hit the route directly:
 curl -N http://localhost:3000/api/events/GABC...
 ```
 
-The reference handler lives at `apps/web/app/api/events/[address]/route.ts` — copy and adapt it. **It's sandboxed for the public demo** (1 concurrent stream per IP, 25s session cap); strip the limits in `apps/web/lib/demo-limits.ts` for production use, or use Orbital Cloud (in development).
+The reference handler lives at `apps/web/app/api/events/[address]/route.ts` - copy and adapt it. **It's sandboxed for the public demo** (1 concurrent stream per IP, 25s session cap); strip the limits in `apps/web/lib/demo-limits.ts` for production use, or use Orbital Cloud (in development).
 
 ## Next step
 
-→ [Quick Start](./quick-start) — wire up your first event subscription in five minutes.
+→ [Quick Start](./quick-start) - wire up your first event subscription in five minutes.

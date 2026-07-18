@@ -163,7 +163,7 @@ export class AbiRegistryClient {
   }
 
   /**
-   * POST /specs with the full list of IDs — one round-trip regardless of batch size.
+   * POST /specs with the full list of IDs - one round-trip regardless of batch size.
    */
   private async fetchBatch(contractIds: string[]): Promise<Record<string, XdrContractSpec | null>> {
     const response = await this.transport(`${this.baseUrl}/specs`, {

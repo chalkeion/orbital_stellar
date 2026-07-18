@@ -1,5 +1,5 @@
 /**
- * WebSocket reconnect — proves a dropped connection is retried with jittered
+ * WebSocket reconnect - proves a dropped connection is retried with jittered
  * backoff (mirroring pulse-core's full-jitter algorithm) instead of staying
  * dead, and that an intentional unsubscribe() does not trigger a reconnect.
  */

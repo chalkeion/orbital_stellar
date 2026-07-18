@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SorobanRpcClient } from "../src/SorobanRpcClient.js";
 
-describe("SorobanRpcClient — authenticated RPC providers", () => {
+describe("SorobanRpcClient - authenticated RPC providers", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -23,7 +23,7 @@ describe("SorobanRpcClient — authenticated RPC providers", () => {
     });
   });
 
-  describe("request() — header forwarding", () => {
+  describe("request() - header forwarding", () => {
     it("forwards configured headers on every request", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
@@ -99,7 +99,7 @@ describe("SorobanRpcClient — authenticated RPC providers", () => {
     });
   });
 
-  describe("request() — error handling", () => {
+  describe("request() - error handling", () => {
     it("throws when the server responds with a non-OK status", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: false,

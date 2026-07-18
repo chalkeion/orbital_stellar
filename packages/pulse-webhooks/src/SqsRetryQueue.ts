@@ -1,7 +1,7 @@
 import type { RetryQueue, RetryRecord } from "./RetryQueue.js";
 
 // ---------------------------------------------------------------------------
-// SqsLike — minimal interface over the AWS SDK v3 SQSClient methods this queue
+// SqsLike - minimal interface over the AWS SDK v3 SQSClient methods this queue
 // needs. By accepting an interface rather than a concrete SDK class the queue
 // stays dependency-free and trivially testable with a mock.
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ export type DeleteMessageOutput = Record<string, unknown>;
 
 /**
  * Minimal SQS-shaped interface. Compatible with the output of
- * `new SQSClient({...})` from `@aws-sdk/client-sqs` — no direct dependency on
+ * `new SQSClient({...})` from `@aws-sdk/client-sqs` - no direct dependency on
  * the SDK is required.
  */
 export type SqsLike = {
@@ -99,7 +99,7 @@ export type SqsRetryQueueOptions = {
    * How long (ms) a dequeued record stays hidden from other consumers before
    * SQS automatically makes it visible again. This mirrors the semantics of
    * {@link RedisRetryQueue} and {@link MemoryRetryQueue}: a worker crash
-   * between dequeue and ack will not lose the retry — SQS will redeliver it
+   * between dequeue and ack will not lose the retry - SQS will redeliver it
    * after the visibility timeout.
    *
    * Backoff interaction: the visibility timeout governs *in-flight* records
@@ -161,7 +161,7 @@ const SQS_MAX_VISIBILITY_TIMEOUT_S = 43_200;
  *    On `dequeue`, every message is received with the configured
  *    `visibilityTimeoutMs` (default 30 s). If the consuming worker crashes or
  *    fails to call `ack` before the timeout expires, SQS automatically makes
- *    the message visible again — no explicit `nack` required.
+ *    the message visible again - no explicit `nack` required.
  *    `nack` re-enqueues the record with a fresh `DelaySeconds` derived from
  *    `requeueDelayMs`, then deletes the original message so there is no
  *    double-delivery.
@@ -267,7 +267,7 @@ export class SqsRetryQueue implements RetryQueue {
    * Receive one due record from SQS.
    *
    * The `nowMs` parameter is accepted for interface compatibility but is not
-   * forwarded to SQS — the queue's `DelaySeconds` already encodes the
+   * forwarded to SQS - the queue's `DelaySeconds` already encodes the
    * "not before" constraint. A message is only returned by SQS once its delay
    * (or visibility timeout after a prior receive) has elapsed.
    *
@@ -327,7 +327,7 @@ export class SqsRetryQueue implements RetryQueue {
   }
 
   /**
-   * Negatively acknowledge a record — re-enqueue it with a backoff delay,
+   * Negatively acknowledge a record - re-enqueue it with a backoff delay,
    * then delete the original in-flight message.
    *
    * SQS does not have a native "change message body + delay" operation, so the
@@ -373,7 +373,7 @@ export class SqsRetryQueue implements RetryQueue {
   /**
    * Evict one message from the queue as a backpressure mechanism.
    *
-   * SQS does not support ordered eviction of the "newest" message — we receive
+   * SQS does not support ordered eviction of the "newest" message - we receive
    * one message (without the normal visibility-timeout tracking) and delete it
    * immediately. The evicted record is returned for observability. In a standard
    * queue this will be an arbitrary message; in a FIFO queue it will be the

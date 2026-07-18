@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Reports public exports (from each package's entry points) that have no
- * TSDoc comment. Warn-only for now while the existing backlog is paid down —
+ * TSDoc comment. Warn-only for now while the existing backlog is paid down -
  * does not fail the build. See issue #709.
  */
 import ts from "typescript";

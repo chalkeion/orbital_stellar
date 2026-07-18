@@ -93,7 +93,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("EventEngine — pause/resume per source", () => {
+describe("EventEngine - pause/resume per source", () => {
   describe("pauseSource() and resumeSource()", () => {
     it("pauses Horizon source and stops emitting Horizon events", () => {
       const engine = new EventEngine({ network: "testnet", abiRegistry: false });
@@ -110,14 +110,14 @@ describe("EventEngine — pause/resume per source", () => {
       // Pause Horizon source
       engine.pauseSource("horizon");
 
-      // Emit another payment event — should be dropped
+      // Emit another payment event - should be dropped
       latestStream().handlers.onmessage(makePaymentRecord({ from: "GABC", to: "GDEF" }));
       expect(received).toHaveLength(1);
 
       // Resume Horizon source
       engine.resumeSource("horizon");
 
-      // Emit another payment event — should be received
+      // Emit another payment event - should be received
       latestStream().handlers.onmessage(makePaymentRecord({ from: "GABC", to: "GDEF" }));
       expect(received).toHaveLength(2);
     });
@@ -137,14 +137,14 @@ describe("EventEngine — pause/resume per source", () => {
       // Pause Soroban source
       engine.pauseSource("soroban");
 
-      // Emit another contract invoked event — should be dropped
+      // Emit another contract invoked event - should be dropped
       latestStream().handlers.onmessage(makeContractInvokedRecord());
       expect(received).toHaveLength(1);
 
       // Resume Soroban source
       engine.resumeSource("soroban");
 
-      // Emit another contract invoked event — should be received
+      // Emit another contract invoked event - should be received
       latestStream().handlers.onmessage(makeContractInvokedRecord());
       expect(received).toHaveLength(2);
     });
@@ -229,7 +229,7 @@ describe("EventEngine — pause/resume per source", () => {
       // Pause Horizon source
       engine.pauseSource("horizon");
 
-      // Emit second event while paused — should be dropped
+      // Emit second event while paused - should be dropped
       latestStream().handlers.onmessage(
         makePaymentRecord({ from: "GABC", to: "GDEF", amount: "20" }),
       );
@@ -238,7 +238,7 @@ describe("EventEngine — pause/resume per source", () => {
       // Resume Horizon source
       engine.resumeSource("horizon");
 
-      // Emit third event — should be received
+      // Emit third event - should be received
       latestStream().handlers.onmessage(
         makePaymentRecord({ from: "GABC", to: "GDEF", amount: "30" }),
       );
@@ -336,14 +336,14 @@ describe("EventEngine — pause/resume per source", () => {
       // Pause Soroban source
       engine.pauseSource("soroban");
 
-      // Emit another contract emitted event — should be dropped
+      // Emit another contract emitted event - should be dropped
       latestStream().handlers.onmessage(makeContractEmittedRecord());
       expect(received).toHaveLength(1);
 
       // Resume Soroban source
       engine.resumeSource("soroban");
 
-      // Emit another contract emitted event — should be received
+      // Emit another contract emitted event - should be received
       latestStream().handlers.onmessage(makeContractEmittedRecord());
       expect(received).toHaveLength(2);
     });
@@ -367,7 +367,7 @@ describe("EventEngine — pause/resume per source", () => {
       // Pause Horizon source
       engine.pauseSource("horizon");
 
-      // Emit another payment event — should be dropped
+      // Emit another payment event - should be dropped
       latestStream().handlers.onmessage(makePaymentRecord({ from: "GABC", to: "GDEF" }));
       expect(paymentEvents).toHaveLength(1);
       expect(allEvents).toHaveLength(1);
@@ -375,7 +375,7 @@ describe("EventEngine — pause/resume per source", () => {
       // Resume Horizon source
       engine.resumeSource("horizon");
 
-      // Emit another payment event — should be received
+      // Emit another payment event - should be received
       latestStream().handlers.onmessage(makePaymentRecord({ from: "GABC", to: "GDEF" }));
       expect(paymentEvents).toHaveLength(2);
       expect(allEvents).toHaveLength(2);
@@ -425,7 +425,7 @@ describe("EventEngine — pause/resume per source", () => {
   });
 });
 
-describe("EventEngine — graceful shutdown", () => {
+describe("EventEngine - graceful shutdown", () => {
   beforeEach(() => {
     streamInstances.length = 0;
   });

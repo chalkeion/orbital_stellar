@@ -165,7 +165,7 @@ export class EventEngine {
   > = new Map();
   /**
    * Registry for config-object-based contract subscriptions.
-   * Keyed by {@link stableFilterKey} — the same canonical key used by
+   * Keyed by {@link stableFilterKey} - the same canonical key used by
    * `subscribeContract(config)` for deduplication and by
    * `unsubscribeContract(config)` for lookup.
    */
@@ -243,7 +243,7 @@ export class EventEngine {
     if (Array.isArray(config.network)) {
       this.networkSources = this.buildNetworkSources(config.network, config);
 
-      // Placeholders for fields with no meaning at the orchestrator level —
+      // Placeholders for fields with no meaning at the orchestrator level -
       // never read, since every public method fans out to networkSources
       // before reaching the single-network logic that reads them.
       this.server = null as unknown as Horizon.Server;
@@ -346,7 +346,7 @@ export class EventEngine {
    *
    * In multi-network mode this runs once per sub-engine (each one re-runs
    * the full constructor independently) rather than once at the
-   * orchestrator level — a `false`/omitted value threads through
+   * orchestrator level - a `false`/omitted value threads through
    * `buildNetworkSources` unresolved so each sub-engine still sees the
    * original `false` vs. omitted distinction; the tradeoff is one separate
    * default-client instance per network instead of one shared instance,
@@ -525,7 +525,7 @@ export class EventEngine {
         const name = this.subscriptionNames.get(address);
         if (name !== undefined) {
           this.log.warn(
-            `[pulse-core] subscribe() called for ${name} (${address}) which already has an active watcher — filter option ignored.`,
+            `[pulse-core] subscribe() called for ${name} (${address}) which already has an active watcher - filter option ignored.`,
             { address, hasFilter: true },
           );
         } else {
@@ -601,9 +601,9 @@ export class EventEngine {
   subscribeContract(id: string, options?: ContractSubscribeOptions): Watcher;
   /**
    * Subscribes to Soroban contract events using an RPC-shaped filter config.
-   * Deduplicates by a stable key over the filter shape — repeated calls with
+   * Deduplicates by a stable key over the filter shape - repeated calls with
    * semantically equal configs return the same Watcher instance.
-   * Throws synchronously when the filter shape is invalid — more than 5 filters,
+   * Throws synchronously when the filter shape is invalid - more than 5 filters,
    * a filter with more than 5 contractIds, or a malformed topic segment array
    * (each segment must be '*', '**', or a base64-encoded XDR scval).
    * @param config - Filter configuration mirroring the RPC getEvents filter shape.
@@ -655,7 +655,7 @@ export class EventEngine {
     if (existing) {
       if (options?.filter) {
         this.log.warn(
-          `[pulse-core] subscribeContract() called for ${this.describeSubscription(id)} which already has an active watcher — filter option ignored.`,
+          `[pulse-core] subscribeContract() called for ${this.describeSubscription(id)} which already has an active watcher - filter option ignored.`,
           { id, hasFilter: true },
         );
       }
@@ -757,7 +757,7 @@ export class EventEngine {
         return undefined;
       },
       async saveCursor(_cursor: string): Promise<void> {
-        // intentional no-op — replay does not persist cursor progress
+        // intentional no-op - replay does not persist cursor progress
       },
     };
 
@@ -794,7 +794,7 @@ export class EventEngine {
       entry.watcher.stop();
     }
 
-    // Config-based subscriptions (subscribeContract(config)). Snapshot first —
+    // Config-based subscriptions (subscribeContract(config)). Snapshot first -
     // each watcher's stop handler mutates contractConfigRegistry.
     for (const watcher of [...this.contractConfigRegistry.values()]) {
       watcher.emit("engine.stopped", {
@@ -978,8 +978,8 @@ export class EventEngine {
    * Stops the SSE stream and all active watchers.
    * Cleans up all resources and resets reconnection state.
    *
-   * Resolves only once the Soroban subscriber's graceful shutdown completes —
-   * i.e. after any in-flight `getEvents` poll has been aborted and settled — so
+   * Resolves only once the Soroban subscriber's graceful shutdown completes -
+   * i.e. after any in-flight `getEvents` poll has been aborted and settled - so
    * that no further Soroban events are emitted once the returned promise
    * resolves (#636).
    */
@@ -1737,7 +1737,7 @@ export class EventEngine {
       changes.home_domain = r.home_domain;
     }
 
-    // set_flags, clear_flags, and inflation_dest are intentionally not tracked — operations
+    // set_flags, clear_flags, and inflation_dest are intentionally not tracked - operations
     // that only modify those fields are dropped as no-ops.
     if (Object.keys(changes).length === 0) return null;
 
@@ -2412,7 +2412,7 @@ export class EventEngine {
     event: PendingPaymentEvent,
     type: PaymentEventType,
   ): Timestamped<PaymentEvent> {
-    // `timestampDate` is a non-enumerable getter, so spreading drops it —
+    // `timestampDate` is a non-enumerable getter, so spreading drops it -
     // re-attach it to the resolved event so derived payment events carry it too.
     return withTimestampDate({
       ...event,

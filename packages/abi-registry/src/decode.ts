@@ -4,7 +4,7 @@
  * Decodes a raw Soroban contract event against a known {@link XdrContractSpec},
  * mapping each topic and the data payload to a typed JavaScript value.
  *
- * The decoder never throws — shape mismatches and unknown types are returned
+ * The decoder never throws - shape mismatches and unknown types are returned
  * as a structured `{ error: string }` result.
  *
  * ## Supported Soroban types
@@ -61,7 +61,7 @@ export type DecodedEvent = {
   data: DecodedValue;
 };
 
-/** Returned when decoding fails — never throws. */
+/** Returned when decoding fails - never throws. */
 export type DecodeError = {
   error: string;
 };
@@ -84,7 +84,7 @@ export type DecodeResult = DecodedEvent | DecodeError;
  *   (`ContractEmittedEvent` or `ContractInvokedEvent`). Must have `topics`
  *   (array) and `data` fields.
  * @returns A {@link DecodedEvent} on success, or `{ error: string }` on
- *   any shape mismatch or unsupported type — never throws.
+ *   any shape mismatch or unsupported type - never throws.
  */
 export function decodeContractEvent(
   spec: XdrContractSpec | ContractSpec,
@@ -124,7 +124,7 @@ function _decode(spec: XdrContractSpec, rawEvent: unknown): DecodeResult {
   }
 
   // --- Validate contractId against spec when present in the event AND the spec ---
-  // (a ContractSpec's contractId is optional — "" after normalization means "unknown",
+  // (a ContractSpec's contractId is optional - "" after normalization means "unknown",
   // in which case there's nothing meaningful to compare against.)
   if (spec.contractId && "contractId" in event && event["contractId"] !== undefined) {
     if (event["contractId"] !== spec.contractId) {
@@ -201,23 +201,23 @@ export function decodeScVal(raw: unknown): DecodeValueResult {
     return { value: raw };
   }
 
-  // Plain string — try raw XDR base64 first; fall back to opaque string
+  // Plain string - try raw XDR base64 first; fall back to opaque string
   if (typeof raw === "string") {
     try {
       const scval = xdr.ScVal.fromXDR(raw, "base64");
       return decodeXdrScVal(scval);
     } catch {
-      // Not valid XDR base64 — treat as opaque string (address strkey, symbol, etc.)
+      // Not valid XDR base64 - treat as opaque string (address strkey, symbol, etc.)
     }
     return { value: raw };
   }
 
-  // Array — treat as vec
+  // Array - treat as vec
   if (Array.isArray(raw)) {
     return decodeVec(raw);
   }
 
-  // Object — inspect the discriminant key
+  // Object - inspect the discriminant key
   if (typeof raw === "object") {
     return decodeScValObject(raw as Record<string, unknown>);
   }
@@ -285,12 +285,12 @@ function decodeScValObject(obj: Record<string, unknown>): DecodeValueResult {
         return decodeMap(inner);
 
       default:
-        // Unknown single-key discriminant — treat as opaque string
+        // Unknown single-key discriminant - treat as opaque string
         return { value: String(inner) };
     }
   }
 
-  // Multi-key object — treat as a custom struct
+  // Multi-key object - treat as a custom struct
   return decodeStruct(obj);
 }
 

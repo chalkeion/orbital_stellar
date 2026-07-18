@@ -1,5 +1,5 @@
 /**
- * Minimal XDR-backed contract spec — carries the raw on-chain entries.
+ * Minimal XDR-backed contract spec - carries the raw on-chain entries.
  * For the rich ABI surface (functions, events, type descriptors) use
  * {@link ContractSpec} from `./spec.js`.
  */

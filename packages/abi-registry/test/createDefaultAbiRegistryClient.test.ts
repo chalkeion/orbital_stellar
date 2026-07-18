@@ -6,7 +6,7 @@ const USDC = "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75";
 
 describe("createDefaultAbiRegistryClient", () => {
   it("resolves bundled well-known specs offline, with no on-chain registry contract deployed yet", async () => {
-    // Documents current repo state — see registryConstants.ts's doc comment.
+    // Documents current repo state - see registryConstants.ts's doc comment.
     // Once contracts/deploy/deploy_testnet.sh has run and this constant is
     // populated, this test's premise (and the second assertion below) will
     // need updating to reflect a live on-chain link.

@@ -19,7 +19,7 @@ Thank you for your interest in contributing. This guide covers everything you ne
 ## Prerequisites
 
 - **Node.js** 20 or 22 (both are tested in CI)
-- **pnpm** 10 — install with `npm install -g pnpm@10`
+- **pnpm** 10 - install with `npm install -g pnpm@10`
 - **Git**
 
 ---
@@ -91,11 +91,11 @@ pnpm --filter orbital/web dev
 
 ## Coding standards
 
-- **TypeScript strict mode** is on everywhere — no `any`, no type assertions without justification.
+- **TypeScript strict mode** is on everywhere - no `any`, no type assertions without justification.
 - **No comments** that describe what the code does. Only add a comment when the *why* is non-obvious (a hidden constraint, a workaround for a specific upstream bug, a subtle invariant).
 - **No unused exports.** If you add a public export, it must be used or documented.
 - **Error handling at system boundaries only.** Don't add try/catch inside internal functions unless there is a clear, specific failure mode to handle.
-- **Conventional commits** — prefix your commit messages:
+- **Conventional commits** - prefix your commit messages:
   - `feat:` new behaviour
   - `fix:` bug fix
   - `docs:` documentation only
@@ -127,7 +127,7 @@ CI runs tests on Node 20 and Node 22. Make sure your changes pass on both.
    ```bash
    pnpm -r typecheck && pnpm test
    ```
-5. **Open the PR** against `main`. Fill in the template — what changed, why, and how to test it.
+5. **Open the PR** against `main`. Fill in the template - what changed, why, and how to test it.
 6. **Respond to review feedback.** A maintainer will review within a few days.
 
 PRs that change public APIs require a description of the migration path. Breaking changes will not be merged until a major version is planned.
@@ -150,7 +150,7 @@ Orbital participates in the [Drips Stellar Wave Program](https://drips.network).
 1. Comment on the issue to signal intent.
 2. A maintainer will assign it to you.
 3. Submit your PR within **14 days** of assignment. If you need more time, comment on the issue and we will extend it.
-4. Issues tagged `good-first-issue` are scoped for newcomers — start there if this is your first contribution.
+4. Issues tagged `good-first-issue` are scoped for newcomers - start there if this is your first contribution.
 
 One open issue per contributor at a time for `good-first-issue` items.
 
@@ -158,11 +158,11 @@ One open issue per contributor at a time for `good-first-issue` items.
 
 ## Adding yourself to the contributors list
 
-Orbital uses the [all-contributors](https://allcontributors.org) specification to recognize every kind of contribution — code, docs, design, infrastructure, bug reports, reviews, ideas, and more.
+Orbital uses the [all-contributors](https://allcontributors.org) specification to recognize every kind of contribution - code, docs, design, infrastructure, bug reports, reviews, ideas, and more.
 
 The contributor table in the [README](README.md#contributors) is maintained by the all-contributors GitHub Action. If your work has been merged and your name is not in the table, you can add yourself in one of two ways.
 
-### Option 1 — Ask the bot (recommended)
+### Option 1 - Ask the bot (recommended)
 
 Comment on any open issue or pull request:
 
@@ -188,12 +188,12 @@ Use as many [contribution types](https://allcontributors.org/docs/en/emoji-key) 
 
 The full key lives at [allcontributors.org/docs/en/emoji-key](https://allcontributors.org/docs/en/emoji-key).
 
-### Option 2 — Open a pull request manually
+### Option 2 - Open a pull request manually
 
 Edit `.all-contributorsrc`, add an entry under `"contributors"` with your GitHub login, display name, avatar URL (`https://github.com/<username>.png?size=100`), profile URL, and a `contributions` array. Then run `npx all-contributors generate` to re-render the README table and commit both files together.
 
 ### What the table represents
 
-The curated table in the README is the **all-contributors** set — explicitly recognized contributions across every category. It is not the same as the full git author list. For the complete commit history including everyone who has ever pushed code, see the [GitHub contributor graph](https://github.com/determined-001/orbital_stellar/graphs/contributors).
+The curated table in the README is the **all-contributors** set - explicitly recognized contributions across every category. It is not the same as the full git author list. For the complete commit history including everyone who has ever pushed code, see the [GitHub contributor graph](https://github.com/determined-001/orbital_stellar/graphs/contributors).
 
-If you contributed before all-contributors was adopted (`v0.1.0` release timeframe) and your name is in the git history but not the table, please open an issue or comment on a PR with your preferred GitHub login — we will add you.
+If you contributed before all-contributors was adopted (`v0.1.0` release timeframe) and your name is in the git history but not the table, please open an issue or comment on a PR with your preferred GitHub login - we will add you.

@@ -1,5 +1,5 @@
 /**
- * SorobanSubscriber — graceful shutdown tests
+ * SorobanSubscriber - graceful shutdown tests
  *
  * Verifies the guarantee: after `stop()` resolves, no further events are
  * emitted from the Soroban path, even when a `getEvents` call is in-flight
@@ -37,7 +37,7 @@ function makeDeferred(): { promise: Promise<void>; resolve: () => void } {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("SorobanSubscriber — graceful shutdown", () => {
+describe("SorobanSubscriber - graceful shutdown", () => {
   let fakeRpc: FakeSorobanRpc;
   let cursorStore: MemoryCursorStore;
   let emittedEvents: unknown[];
@@ -48,7 +48,7 @@ describe("SorobanSubscriber — graceful shutdown", () => {
     emittedEvents = [];
   });
 
-  it("stop() before pollOnce() — poll is a no-op and emits nothing", async () => {
+  it("stop() before pollOnce() - poll is a no-op and emits nothing", async () => {
     const subscriber = new SorobanSubscriber({
       rpc: fakeRpc,
       cursorStore,
@@ -64,7 +64,7 @@ describe("SorobanSubscriber — graceful shutdown", () => {
     expect(fakeRpc.callCount).toBe(0);
   });
 
-  it("stop() after pollOnce() completes — no further events on a second poll", async () => {
+  it("stop() after pollOnce() completes - no further events on a second poll", async () => {
     const subscriber = new SorobanSubscriber({
       rpc: fakeRpc,
       cursorStore,
@@ -84,7 +84,7 @@ describe("SorobanSubscriber — graceful shutdown", () => {
     expect(emittedEvents).toHaveLength(countAfterFirst);
   });
 
-  it("stop() while getEvents is in-flight — aborts the request and emits nothing", async () => {
+  it("stop() while getEvents is in-flight - aborts the request and emits nothing", async () => {
     const { promise: stallPromise, resolve: releaseStall } = makeDeferred();
     fakeRpc.stallUntil = stallPromise;
 
@@ -96,7 +96,7 @@ describe("SorobanSubscriber — graceful shutdown", () => {
       },
     });
 
-    // Start a poll — it will block inside getEvents waiting for stallPromise.
+    // Start a poll - it will block inside getEvents waiting for stallPromise.
     const pollPromise = subscriber.pollOnce();
 
     // Stop the subscriber while the poll is stalled.
@@ -113,7 +113,7 @@ describe("SorobanSubscriber — graceful shutdown", () => {
     expect(emittedEvents).toHaveLength(0);
   });
 
-  it("stop() while getEvents is in-flight — stop() resolves only after the poll settles", async () => {
+  it("stop() while getEvents is in-flight - stop() resolves only after the poll settles", async () => {
     const { promise: stallPromise, resolve: releaseStall } = makeDeferred();
     fakeRpc.stallUntil = stallPromise;
 
@@ -145,7 +145,7 @@ describe("SorobanSubscriber — graceful shutdown", () => {
     expect(order).toEqual(["poll-settled", "stop-resolved"]);
   });
 
-  it("stop() called from within onEvent — remaining events in the page are dropped", async () => {
+  it("stop() called from within onEvent - remaining events in the page are dropped", async () => {
     const subscriber = new SorobanSubscriber({
       rpc: fakeRpc,
       cursorStore,
@@ -163,7 +163,7 @@ describe("SorobanSubscriber — graceful shutdown", () => {
     expect(emittedEvents).toHaveLength(1);
   });
 
-  it("stop() is idempotent — calling it multiple times does not throw", async () => {
+  it("stop() is idempotent - calling it multiple times does not throw", async () => {
     const subscriber = new SorobanSubscriber({
       rpc: fakeRpc,
       cursorStore,

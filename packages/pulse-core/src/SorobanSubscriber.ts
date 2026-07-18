@@ -10,7 +10,7 @@ import { SorobanRpcError } from "./errors.js";
 import { EventEmitter } from "events";
 
 /**
- * SorobanSubscriber — polls a Soroban RPC for contract events and forwards
+ * SorobanSubscriber - polls a Soroban RPC for contract events and forwards
  * them to a caller-supplied handler.
  *
  * Graceful shutdown guarantee
@@ -89,7 +89,7 @@ export interface SorobanSubscriberOptions {
    * When set, the subscriber operates in bounded-replay mode: polling stops
    * (and `onDone` is called) once every event whose ledger is strictly less
    * than `endLedger` has been delivered.  The cursor store is **not** updated
-   * during replay — progress is ephemeral and intentionally discarded.
+   * during replay - progress is ephemeral and intentionally discarded.
    */
   endLedger?: number;
   /** Called once when a bounded replay run has delivered all events up to endLedger. */
@@ -171,7 +171,7 @@ export class SorobanSubscriber extends EventEmitter {
 
   /**
    * True while `_doPoll` is executing.  Used by `stop()` to avoid a deadlock
-   * when `stop()` is called from within an `onEvent` handler — in that case
+   * when `stop()` is called from within an `onEvent` handler - in that case
    * we must not await `inflightPoll` because we are already inside it.
    */
   private isPolling = false;
@@ -345,7 +345,7 @@ export class SorobanSubscriber extends EventEmitter {
    *   caller is guaranteed no further events will be emitted.
    *
    * When called from within an `onEvent` handler (i.e. from inside the poll
-   * itself) the await is skipped to avoid a deadlock — the poll will naturally
+   * itself) the await is skipped to avoid a deadlock - the poll will naturally
    * terminate on the next `isStopped` check after `onEvent` returns.
    */
   async stop(): Promise<void> {
@@ -399,7 +399,7 @@ export class SorobanSubscriber extends EventEmitter {
 
       // Coalesce identical filters (order-preserving) so duplicate subscriptions
       // share a single filter slot. This minimises the number of getEvents calls
-      // under the 5-filter cap — e.g. 6 subscriptions on the same contract collapse
+      // under the 5-filter cap - e.g. 6 subscriptions on the same contract collapse
       // to one filter, hence one call instead of two.
       const uniqueFilters = this.coalesceFilters(flatFilters);
 
@@ -431,7 +431,7 @@ export class SorobanSubscriber extends EventEmitter {
       const promises = rpcCalls.map((filters) => this.fetchEvents(currentCursor, filters, signal));
       results = await Promise.all(promises);
     } catch (err) {
-      // An aborted request is expected during shutdown — swallow it silently.
+      // An aborted request is expected during shutdown - swallow it silently.
       if (this.isAbortError(err)) return;
       // Route classified RPC errors to the retry/terminal handlers when present.
       if (err instanceof SorobanRpcError) {
@@ -533,7 +533,7 @@ export class SorobanSubscriber extends EventEmitter {
     }
 
     // A bounded replay that fetched no further events has exhausted the stream
-    // before reaching endLedger — finish so onDone fires exactly once.
+    // before reaching endLedger - finish so onDone fires exactly once.
     if (this.isReplayMode && uniqueEvents.length === 0) {
       this.finishReplay();
       return;

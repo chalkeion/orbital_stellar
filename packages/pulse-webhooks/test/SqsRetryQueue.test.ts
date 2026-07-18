@@ -399,7 +399,7 @@ describe("SqsRetryQueue", () => {
       clock = 4_999;
       expect(await queue.dequeue()).toBeNull();
 
-      // After timeout — SQS makes it visible again
+      // After timeout - SQS makes it visible again
       clock = 5_000;
       const redelivered = await queue.dequeue();
       expect(redelivered).toEqual(record);

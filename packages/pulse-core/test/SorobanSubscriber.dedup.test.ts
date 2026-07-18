@@ -258,7 +258,7 @@ describe("SorobanSubscriber – deduplication", () => {
   it("uses a default dedup window of 1024", async () => {
     const sub = makeSubscriber(); // default cap
 
-    // 1025 distinct events — adding the 1025th evicts the first.
+    // 1025 distinct events - adding the 1025th evicts the first.
     stub.page = Array.from({ length: 1025 }, (_, i) => makeEvent(`d-${i}`));
     await sub.pollOnce();
     expect(emitted).toHaveLength(1025);

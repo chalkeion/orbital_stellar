@@ -33,7 +33,9 @@ fn publish_then_resolve_latest_and_get_version() {
     assert_eq!(latest.pointer, pointer);
     assert_eq!(latest.publisher, publisher);
 
-    let fetched = client.get_version(&contract_id, &publisher, &version).unwrap();
+    let fetched = client
+        .get_version(&contract_id, &publisher, &version)
+        .unwrap();
     assert_eq!(fetched, latest);
 }
 
@@ -92,7 +94,13 @@ fn different_publishers_are_independently_scoped() {
     let version = String::from_str(&env, "1.0.0");
     let pointer = String::from_str(&env, "https://example.com/a.json");
 
-    client.publish(&publisher_a, &contract_id, &version, &hash(&env, 1), &pointer);
+    client.publish(
+        &publisher_a,
+        &contract_id,
+        &version,
+        &hash(&env, 1),
+        &pointer,
+    );
 
     assert!(client.latest(&contract_id, &publisher_b).is_none());
     assert!(client.latest(&contract_id, &publisher_a).is_some());
@@ -109,7 +117,9 @@ fn unknown_contract_or_version_resolves_to_none() {
     let version = String::from_str(&env, "1.0.0");
 
     assert!(client.latest(&contract_id, &publisher).is_none());
-    assert!(client.get_version(&contract_id, &publisher, &version).is_none());
+    assert!(client
+        .get_version(&contract_id, &publisher, &version)
+        .is_none());
     assert_eq!(client.list_versions(&contract_id, &publisher).len(), 0);
 }
 
@@ -137,7 +147,7 @@ fn rejects_empty_version_and_pointer() {
 #[should_panic]
 fn publish_requires_publisher_auth() {
     let env = Env::default();
-    // Deliberately no mock_all_auths() — publish() must fail without it.
+    // Deliberately no mock_all_auths() - publish() must fail without it.
     let client = setup(&env);
 
     let publisher = Address::generate(&env);

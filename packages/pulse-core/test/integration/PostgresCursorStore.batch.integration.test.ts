@@ -78,7 +78,7 @@ describe("PostgresCursorStore batch integration tests", () => {
     expect(result["batch-test-set-3"]).toBe("cursor-333");
   });
 
-  it("setMany upserts — overwrites existing cursors without creating extra rows", async () => {
+  it("setMany upserts - overwrites existing cursors without creating extra rows", async () => {
     await store.set("batch-test-upsert-1", "old-cursor");
 
     await store.setMany({

@@ -1,5 +1,5 @@
 /**
- * Transport parity tests — proves SSE and WebSocket deliver the same events
+ * Transport parity tests - proves SSE and WebSocket deliver the same events
  * and that a consumer can switch by changing only the transport config flag.
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
