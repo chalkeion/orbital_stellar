@@ -10,7 +10,7 @@
 
 > **Status**: `v0.1.0` on npm &nbsp;·&nbsp; **Networks**: testnet + mainnet &nbsp;·&nbsp; **License**: MIT
 
-**Stellar's biggest developer-experience gap isn't a missing API — it's that Horizon's firehose still requires every team to build their own event delivery.**
+**Stellar's biggest developer-experience gap isn't a missing API - it's that Horizon's firehose still requires every team to build their own event delivery.**
 
 Orbital ships that delivery layer once, openly: a typed event engine that normalizes Horizon output into application-shaped events, HMAC-signed webhook delivery with retry and edge-runtime verification, a shared ABI registry for Soroban schemas, and React hooks for live data in the browser. Four MIT-licensed packages, designed to be composed.
 
@@ -33,14 +33,14 @@ Orbital ships that delivery layer once, openly: a typed event engine that normal
 
 ## Why this exists
 
-Stellar's official APIs give you the raw firehose — and not much else:
+Stellar's official APIs give you the raw firehose - and not much else:
 
-- **Horizon SSE** drops on idle, requires backoff, and surfaces raw operations rather than application-friendly events.
-- **Stellar RPC** keeps only ~7 days of Soroban history and has no native subscription model.
-- **Webhooks** aren't part of the platform — every project rebuilds HMAC signing, retry, SSRF guards, and edge-runtime verification from scratch.
-- **React integration** doesn't exist — every dashboard rebuilds SSE plumbing and lifecycle management.
+- **Horizon SSE** drops on idle, requires backoff, surfaces raw operations rather than application-friendly events - and is [deprecated in favor of Stellar RPC](https://developers.stellar.org/docs/data/apis/migrate-from-horizon-to-rpc).
+- **Stellar RPC** keeps only ~7 days of history and has no native subscription model - even with Protocol 23's unified event stream, delivery is still yours to build.
+- **Webhooks** aren't part of the platform - every project rebuilds HMAC signing, retry, SSRF guards, and edge-runtime verification from scratch.
+- **React integration** doesn't exist - every dashboard rebuilds SSE plumbing and lifecycle management.
 
-Every serious Stellar app — wallet, dashboard, anchor integration, agent — re-solves the same problem. Orbital ships those primitives once so you can `pnpm add` them instead of rebuilding them.
+Every serious Stellar app - wallet, dashboard, anchor integration, agent - re-solves the same problem. Orbital ships those primitives once so you can `pnpm add` them instead of rebuilding them.
 
 The longer-form thesis, the multi-year vision, and the SCF grant case live in [`PROGRESS.md`](PROGRESS.md), [`ROADMAP.md`](ROADMAP.md), and `docs/proposal.md` (in progress).
 
@@ -50,12 +50,12 @@ The longer-form thesis, the multi-year vision, and the SCF grant case live in [`
 
 | Package | Description | Status |
 |---|---|---|
-| [`@orbital-stellar/pulse-core`](./packages/pulse-core) | EventEngine — Horizon + Soroban subscription, normalization, reconnection, rate-limit handling, cursor persistence | ✅ Shipped |
+| [`@orbital-stellar/pulse-core`](./packages/pulse-core) | EventEngine - Horizon + Soroban subscription, normalization, reconnection, rate-limit handling, cursor persistence | ✅ Shipped |
 | [`@orbital-stellar/pulse-webhooks`](./packages/pulse-webhooks) | HMAC-signed webhook delivery + verification (Node + edge runtimes), durable retry queues | ✅ Shipped |
-| [`@orbital-stellar/pulse-notify`](./packages/pulse-notify) | React hooks — `useStellarEvent`, `useContractEvent`, `useStellarPayment`, `useStellarActivity`, `useStellarAddresses`, `useStellarHistory`, `StellarConnectionStatus`, `StellarEventBoundary` | ✅ Shipped |
+| [`@orbital-stellar/pulse-notify`](./packages/pulse-notify) | React hooks - `useStellarEvent`, `useContractEvent`, `useStellarPayment`, `useStellarActivity`, `useStellarAddresses`, `useStellarHistory`, `StellarConnectionStatus`, `StellarEventBoundary` | ✅ Shipped |
 | [`@orbital-stellar/abi-registry`](./packages/abi-registry) | Canonical Soroban ABI client, schema helpers, and registry publisher interface | ✅ Shipped |
 
-> The full classic-operation taxonomy is shipped (payments, account create/merge/options/bump-sequence, trustlines + auth, offers, claimables, liquidity pools, manage-data), alongside Soroban contract event subscription (`engine.subscribeContract`), cursor persistence, and the ABI registry client — see [`ROADMAP.md`](ROADMAP.md).
+> The full classic-operation taxonomy is shipped (payments, account create/merge/options/bump-sequence, trustlines + auth, offers, claimables, liquidity pools, manage-data), alongside Soroban contract event subscription (`engine.subscribeContract`), cursor persistence, and the ABI registry client - see [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
@@ -174,7 +174,7 @@ flowchart LR
   Hooks --> Browser["React app"]
 ```
 
-The reference composition — a Next.js route handler that subscribes to an address and streams events as SSE, plus an HMAC-signing route for the on-page webhook demo — lives in [`apps/web/app/api`](apps/web/app/api).
+The reference composition - a Next.js route handler that subscribes to an address and streams events as SSE, plus an HMAC-signing route for the on-page webhook demo - lives in [`apps/web/app/api`](apps/web/app/api).
 
 ---
 
@@ -183,7 +183,7 @@ The reference composition — a Next.js route handler that subscribes to an addr
 | Document | What it covers |
 |---|---|
 | [`PROGRESS.md`](PROGRESS.md) | Phase 0 completion status, project structure, architecture overview |
-| [`ROADMAP.md`](ROADMAP.md) | Multi-year vision (Phase 0 → Phase 4), Soroban + cursor persistence + replay store |
+| [`ROADMAP.md`](ROADMAP.md) | Multi-year plan (Phase 0 → Phase 3): the decoding standard, SEP draft, anchor events |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release notes (top-level; per-package changelogs roll up) |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Setup, coding standards, PR process, Drips Wave Program |
 | [`SECURITY.md`](SECURITY.md) | Vulnerability disclosure policy |
@@ -199,16 +199,17 @@ The reference composition — a Next.js route handler that subscribes to an addr
 
 Two paths:
 
-1. **Build your own backend** — install the SDKs, wire them into your existing Node.js or edge worker, deploy on the infrastructure you already operate. The Next.js route handlers in [`apps/web/app/api`](apps/web/app/api) are a copy-paste reference.
-2. **Use Orbital Cloud (in development)** — managed runtime handling multi-region orchestration, persistent webhook registries, replay, and observability. Out of scope for this repository.
+1. **Build your own backend** - install the SDKs, wire them into your existing Node.js or edge worker, deploy on the infrastructure you already operate. The Next.js route handlers in [`apps/web/app/api`](apps/web/app/api) are a copy-paste reference.
+2. **Use Orbital Cloud (in development)** - managed runtime handling multi-region orchestration, persistent webhook registries, replay, and observability. Out of scope for this repository.
 
 ---
 
 ## Roadmap
 
-- **Shipped** — Full classic operation taxonomy, edge-runtime webhook verification, React hooks, Soroban event subscription, ABI registry client, cursor persistence, durable retry queues, npm publish ✅
-- **2027 (Phase 2)** — `@orbital-stellar/hooks`, `@orbital-stellar/payments`, `@orbital-stellar/auth`, first SEP submission
-- **2028+ (Phase 3)** — `@orbital-stellar/x402`, `@orbital-stellar/agent-sdk`, intent compiler
+- **Shipped** - Full classic operation taxonomy, edge-runtime webhook verification, React hooks, Soroban event subscription, ABI registry client, cursor persistence, durable retry queues, npm publish ✅
+- **v1.1.0** - Unified event ingestion via Stellar RPC (CAP-67 / Protocol 23), Horizon SSE demoted to fallback transport
+- **2026 H2 (Phase 2)** - The decoding standard: SEP draft building on SEP-48, `orbital codegen`, semantic taxonomy + entity labels as open data, hosted registry
+- **2027 H1 (Phase 3)** - `@orbital-stellar/anchor-sdk`, SEP-24/31 lifecycle events
 
 Full multi-year plan in [`ROADMAP.md`](ROADMAP.md).
 
@@ -219,7 +220,7 @@ Full multi-year plan in [`ROADMAP.md`](ROADMAP.md).
 Contributions are welcome from the Stellar community. Start here:
 
 - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the dev loop, coding standards, and PR process.
-- Browse [issues tagged `good-first-issue`](https://github.com/determined-001/orbital_stellar/labels/good-first-issue) — scoped, unblocked, reviewer-ready.
+- Browse [issues tagged `good-first-issue`](https://github.com/determined-001/orbital_stellar/labels/good-first-issue) - scoped, unblocked, reviewer-ready.
 - Stellar Wave Program issues are tagged `wave-program` and pay per-merge per complexity points.
 - Run the test suite before submitting: `pnpm -r typecheck && pnpm test`.
 
@@ -229,7 +230,7 @@ All contributors are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md
 
 ## Contributors
 
-Thanks to everyone who has shipped code, docs, or feedback for Orbital. The list below is maintained via the [all-contributors](https://allcontributors.org) bot — see [Adding yourself to the contributors list](CONTRIBUTING.md#adding-yourself-to-the-contributors-list) to add or update your entry.
+Thanks to everyone who has shipped code, docs, or feedback for Orbital. The list below is maintained via the [all-contributors](https://allcontributors.org) bot - see [Adding yourself to the contributors list](CONTRIBUTING.md#adding-yourself-to-the-contributors-list) to add or update your entry.
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section. Update with: npx all-contributors generate -->
 <!-- prettier-ignore-start -->
@@ -249,20 +250,20 @@ Thanks to everyone who has shipped code, docs, or feedback for Orbital. The list
 <!-- prettier-ignore-end -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-Emoji key follows the [all-contributors](https://allcontributors.org/docs/en/emoji-key) spec — 💻 code · 📖 docs · 🎨 design · 🏗️ infrastructure · 🚧 maintenance · 📆 project management · 👀 reviewed PRs · ⚠️ tests.
+Emoji key follows the [all-contributors](https://allcontributors.org/docs/en/emoji-key) spec - 💻 code · 📖 docs · 🎨 design · 🏗️ infrastructure · 🚧 maintenance · 📆 project management · 👀 reviewed PRs · ⚠️ tests.
 
-The list above is the curated **all-contributors** set. For the full commit history including every contributor not yet recognized here, see [GitHub's contributor graph](https://github.com/determined-001/orbital_stellar/graphs/contributors) — if your name is there and not in the table, please [open an issue](https://github.com/determined-001/orbital_stellar/issues/new) or comment `@all-contributors please add @your-username for code` on any issue and the bot will add you.
+The list above is the curated **all-contributors** set. For the full commit history including every contributor not yet recognized here, see [GitHub's contributor graph](https://github.com/determined-001/orbital_stellar/graphs/contributors) - if your name is there and not in the table, please [open an issue](https://github.com/determined-001/orbital_stellar/issues/new) or comment `@all-contributors please add @your-username for code` on any issue and the bot will add you.
 
 ---
 
 ## License
 
-[MIT](LICENSE) — free to use in commercial and open-source projects.
+[MIT](LICENSE) - free to use in commercial and open-source projects.
 
 ---
 
 ## Community
 
-- [GitHub Discussions](https://github.com/determined-001/orbital_stellar/discussions) — questions, ideas, design discussion, and help.
+- [GitHub Discussions](https://github.com/determined-001/orbital_stellar/discussions) - questions, ideas, design discussion, and help.
 - Twitter: _(handle pending)_
 - Discord: _(invite pending)_
