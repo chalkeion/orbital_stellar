@@ -53,6 +53,9 @@ desktop.ini
 
 # ── Internal / not for contributors ──────────────────────────────────────────
 .github/WAVE_ISSUES.md
+.github/WAVE_ISSUES_2.md
 
 # Kiro IDE specs
 .kiro/
+
+maintainer.md
